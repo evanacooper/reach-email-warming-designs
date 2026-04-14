@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GuidedWarmingWidget — Reach Broadcast Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --primary: hsl(210 30% 25%);
+  --primary-fg: hsl(0 0% 100%);
+  --bg: hsl(0 0% 100%);
+  --fg: hsl(225 15% 16%);
+  --muted: hsl(210 10% 96%);
+  --muted-fg: hsl(220 10% 45%);
+  --border: hsl(220 13% 90%);
+  --secondary: hsl(210 15% 94%);
+  --radius: 0.625rem;
+  --green: hsl(142 71% 35%);
+  --green-bg: hsl(142 76% 97%);
+  --green-border: hsl(142 60% 80%);
+  --amber: hsl(38 92% 42%);
+  --amber-bg: hsl(48 96% 97%);
+  --amber-border: hsl(48 90% 78%);
+  --red: hsl(0 72% 42%);
+  --red-bg: hsl(0 86% 97%);
+  --red-border: hsl(0 72% 82%);
+}
+
+html, body { height: 100%; font-family: 'Inter', sans-serif; font-size: 14px; line-height: 1.5; color: var(--fg); background: hsl(220 13% 96%); }
+
+/* ── Chrome shell ── */
+.chrome { max-width: 1140px; margin: 52px auto 32px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.07); }
+.chrome-header { padding: 13px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+.breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted-fg); }
+.breadcrumb-sep { opacity: 0.4; }
+.breadcrumb-cur { color: var(--fg); font-weight: 500; }
+
+/* ── Two-panel ── */
+.panels { display: grid; grid-template-columns: 1fr 1fr; min-height: 600px; }
+.panel-left { border-right: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; gap: 18px; overflow-y: auto; }
+.panel-right { padding: 20px; display: flex; flex-direction: column; gap: 12px; background: var(--muted); }
+
+/* ── Labels ── */
+.section-label { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted-fg); margin-bottom: 8px; }
+
+/* ── BigSelector grid ── */
+.big-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.big-card { border: 2px solid var(--border); border-radius: var(--radius); padding: 14px 12px 12px; cursor: pointer; background: var(--bg); transition: border-color .15s, background .15s; display: flex; flex-direction: column; gap: 3px; min-height: 88px; }
+.big-card:hover { border-color: hsl(210 30% 25% / .35); }
+.big-card.selected { border-color: var(--primary); background: hsl(210 30% 25% / .03); }
+.big-card-icon { opacity: .45; margin-bottom: 4px; }
+.big-card.selected .big-card-icon { opacity: .8; }
+.big-card-title { font-size: 13px; font-weight: 600; color: var(--fg); line-height: 1.2; }
+.big-card-sub { font-size: 11.5px; color: var(--muted-fg); line-height: 1.3; }
+
+/* ── Segment picker list (shown when Select Segments active) ── */
+.segment-list { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.segment-list-header { padding: 9px 12px; background: var(--muted); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+.segment-search { flex: 1; font-size: 12.5px; font-family: 'Inter', sans-serif; border: 1px solid var(--border); border-radius: calc(var(--radius) - 2px); padding: 5px 10px; color: var(--muted-fg); background: var(--bg); outline: none; }
+.segment-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .1s; }
+.segment-row:last-child { border-bottom: none; }
+.segment-row:hover { background: var(--muted); }
+.segment-row.selected { background: hsl(210 30% 25% / .04); }
+.seg-radio { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: border-color .15s; }
+.seg-radio.on { border-color: var(--primary); }
+.seg-radio-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); display: none; }
+.seg-radio.on .seg-radio-dot { display: block; }
+.seg-info { flex: 1; min-width: 0; }
+.seg-name { font-size: 13px; font-weight: 600; color: var(--fg); }
+.seg-meta { font-size: 11.5px; color: var(--muted-fg); margin-top: 1px; }
+.seg-count { font-size: 12px; font-weight: 600; color: var(--primary); background: hsl(210 30% 25% / .08); padding: 2px 9px; border-radius: 100px; white-space: nowrap; }
+.create-row { display: flex; align-items: center; gap: 8px; padding: 10px 12px; cursor: pointer; color: var(--primary); font-size: 13px; font-weight: 600; transition: background .1s; }
+.create-row:hover { background: var(--muted); }
+
+/* ── Warming widget ── */
+.warming-widget { border-radius: var(--radius); border: 1px solid; overflow: hidden; animation: slideIn .18s ease; }
+@keyframes slideIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+
+.ww-green { border-color: var(--green-border); }
+.ww-green .ww-header { background: var(--green-bg); border-bottom-color: var(--green-border); }
+.ww-green .ww-dot { background: var(--green); }
+.ww-green .ww-label { color: var(--green); }
+.ww-green .ww-bar-fill { background: var(--green); }
+
+.ww-amber { border-color: var(--amber-border); }
+.ww-amber .ww-header { background: var(--amber-bg); border-bottom-color: var(--amber-border); }
+.ww-amber .ww-dot { background: var(--amber); }
+.ww-amber .ww-label { color: var(--amber); }
+.ww-amber .ww-bar-fill { background: var(--amber); }
+
+.ww-red { border-color: var(--red-border); }
+.ww-red .ww-header { background: var(--red-bg); border-bottom-color: var(--red-border); }
+.ww-red .ww-dot { background: var(--red); }
+.ww-red .ww-label { color: var(--red); }
+.ww-red .ww-bar-fill { background: var(--red); }
+
+.ww-header { padding: 10px 14px; border-bottom: 1px solid transparent; display: flex; align-items: center; gap: 10px; }
+.ww-status { display: flex; align-items: center; gap: 7px; flex: 1; }
+.ww-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.ww-label { font-size: 13px; font-weight: 600; }
+.ww-pill { font-size: 11.5px; font-weight: 600; padding: 2px 9px; border-radius: 100px; border: 1px solid var(--border); background: var(--bg); color: var(--muted-fg); white-space: nowrap; }
+
+.ww-body { padding: 12px 14px; background: var(--bg); display: flex; flex-direction: column; gap: 10px; }
+.ww-bar-wrap { display: flex; flex-direction: column; gap: 5px; }
+.ww-bar-labels { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--muted-fg); }
+.ww-bar-labels strong { color: var(--fg); font-weight: 600; }
+.ww-bar-track { height: 6px; background: var(--border); border-radius: 100px; overflow: hidden; }
+.ww-bar-fill { height: 100%; border-radius: 100px; transition: width .4s ease; }
+.ww-message { font-size: 13px; color: var(--fg); line-height: 1.55; }
+
+/* Toggle */
+.ww-toggle-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: calc(var(--radius) - 2px); background: var(--muted); border: 1px solid var(--border); cursor: pointer; transition: background .12s; }
+.ww-toggle-row:hover { background: var(--secondary); }
+.toggle { width: 32px; height: 18px; border-radius: 100px; position: relative; flex-shrink: 0; margin-top: 1px; cursor: pointer; transition: background .2s; background: var(--border); }
+.toggle.on { background: var(--primary); }
+.toggle-thumb { position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; background: white; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,.2); transition: left .2s; }
+.toggle.on .toggle-thumb { left: 16px; }
+.toggle-lbl { flex: 1; }
+.toggle-lbl-title { font-size: 13px; font-weight: 600; color: var(--fg); }
+.toggle-lbl-desc { font-size: 12px; color: var(--muted-fg); margin-top: 2px; line-height: 1.4; }
+
+/* ── Right panel ── */
+.stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+.stat-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; }
+.stat-card-lbl { font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--muted-fg); margin-bottom: 4px; }
+.stat-card-val { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 22px; font-weight: 700; color: var(--fg); letter-spacing: -.02em; line-height: 1; }
+.stat-card-sub { font-size: 11.5px; color: var(--muted-fg); margin-top: 3px; }
+
+.recip-table { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; flex: 1; }
+.recip-header { padding: 10px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+.recip-search { flex: 1; font-size: 12.5px; font-family: 'Inter', sans-serif; border: 1px solid var(--border); border-radius: calc(var(--radius)-2px); padding: 5px 10px; color: var(--muted-fg); background: var(--muted); outline: none; }
+.ftabs { display: flex; gap: 2px; }
+.ftab { font-size: 11.5px; font-weight: 500; padding: 4px 9px; border-radius: calc(var(--radius)-3px); border: none; background: none; color: var(--muted-fg); cursor: pointer; font-family: 'Inter', sans-serif; }
+.ftab.active { background: var(--primary); color: white; }
+.recip-row { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-bottom: 1px solid var(--border); font-size: 13px; }
+.recip-row:last-child { border-bottom: none; }
+.avatar { width: 28px; height: 28px; border-radius: 50%; background: hsl(210 30% 25% / .12); color: var(--primary); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.recip-name { font-weight: 500; flex: 1; }
+.recip-email { font-size: 12px; color: var(--muted-fg); }
+.recip-tag { font-size: 10.5px; font-weight: 600; padding: 1px 7px; border-radius: 100px; border: 1px solid var(--green-border); background: var(--green-bg); color: var(--green); }
+
+/* ── Segment builder dialog overlay ── */
+.dialog-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 50; display: flex; align-items: center; justify-content: center; animation: fadeIn .15s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.dialog { background: var(--bg); border-radius: 12px; width: 900px; max-width: 96vw; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.18); }
+.dialog-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; }
+.dialog-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 18px; font-weight: 700; letter-spacing: -.015em; }
+.dialog-sub { font-size: 13px; color: var(--muted-fg); margin-top: 3px; }
+.dialog-close { background: none; border: none; cursor: pointer; color: var(--muted-fg); padding: 4px; border-radius: 4px; }
+.dialog-close:hover { color: var(--fg); background: var(--muted); }
+.dialog-body { display: grid; grid-template-columns: 1fr 340px; flex: 1; min-height: 0; overflow: hidden; }
+.dialog-form { padding: 20px 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+.dialog-right { border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+.dialog-footer { padding: 14px 24px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--bg); }
+
+/* Form elements */
+.form-label { font-size: 13px; font-weight: 600; color: var(--fg); margin-bottom: 5px; display: flex; align-items: center; gap: 4px; }
+.form-label .req { color: hsl(0 72% 50%); }
+.form-input { width: 100%; font-size: 13.5px; font-family: 'Inter', sans-serif; border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 12px; color: var(--fg); outline: none; transition: border-color .15s; }
+.form-input:focus { border-color: var(--primary); }
+.form-input::placeholder { color: var(--muted-fg); }
+
+.conditions-section { border-top: 1px solid var(--border); padding-top: 16px; }
+.conditions-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.conditions-sub { font-size: 12.5px; color: var(--muted-fg); margin-bottom: 12px; }
+
+.condition-row { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--muted); margin-bottom: 8px; }
+.cond-icon { width: 20px; height: 20px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--muted-fg); font-size: 10px; }
+.cond-select { font-size: 12.5px; font-family: 'Inter', sans-serif; border: 1px solid var(--border); border-radius: calc(var(--radius)-2px); padding: 5px 10px; background: var(--bg); color: var(--fg); outline: none; cursor: pointer; }
+.add-condition { width: 100%; padding: 9px; border: 1.5px dashed var(--border); border-radius: var(--radius); background: none; color: var(--muted-fg); font-size: 13px; font-family: 'Inter', sans-serif; cursor: pointer; transition: border-color .12s, color .12s; }
+.add-condition:hover { border-color: var(--primary); color: var(--primary); }
+
+/* Dialog right panel — audience preview + warming widget */
+.dialog-preview-header { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+.dialog-preview-title { font-size: 13.5px; font-weight: 600; }
+.dialog-preview-count { font-size: 12.5px; color: var(--muted-fg); }
+.dialog-preview-rows { flex: 1; overflow-y: auto; }
+.dialog-preview-row { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-bottom: 1px solid var(--border); font-size: 12.5px; }
+.dialog-preview-row:last-child { border-bottom: none; }
+
+/* Warming widget inside dialog — compact variant */
+.dialog-ww { border-top: 1px solid var(--border); }
+.dialog-ww .ww-header { padding: 9px 14px; }
+.dialog-ww .ww-body { padding: 10px 14px; gap: 8px; }
+.dialog-ww .ww-message { font-size: 12.5px; }
+.dialog-ww .ww-toggle-row { padding: 8px 10px; }
+.dialog-ww .toggle-lbl-title { font-size: 12.5px; }
+.dialog-ww .toggle-lbl-desc { font-size: 11.5px; }
+
+/* ── Buttons ── */
+.btn-primary { display: inline-flex; align-items: center; gap: 7px; background: var(--primary); color: var(--primary-fg); font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 600; padding: 8px 18px; border-radius: var(--radius); border: none; cursor: pointer; transition: opacity .15s; }
+.btn-primary:hover { opacity: .88; }
+.btn-ghost { display: inline-flex; align-items: center; gap: 6px; background: none; color: var(--muted-fg); font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 8px 14px; border-radius: var(--radius); border: 1px solid var(--border); cursor: pointer; transition: background .12s, color .12s; }
+.btn-ghost:hover { background: var(--muted); color: var(--fg); }
+.btn-ai { display: inline-flex; align-items: center; gap: 6px; background: none; color: var(--primary); font-family: 'Inter', sans-serif; font-size: 12.5px; font-weight: 600; padding: 6px 12px; border-radius: var(--radius); border: 1px solid var(--border); cursor: pointer; }
+.footer-count { font-size: 13px; color: var(--muted-fg); display: flex; align-items: center; gap: 6px; }
+
+/* ── Demo bar ── */
+.demo-bar { position: fixed; top: 0; right: 0; z-index: 200; display: flex; align-items: center; gap: 6px; padding: 7px 12px; background: hsl(220 13% 93%); border-bottom-left-radius: var(--radius); border: 1px solid var(--border); border-top: none; border-right: none; font-size: 11px; color: var(--muted-fg); font-family: 'Inter', sans-serif; }
+.demo-bar span { font-weight: 600; color: var(--fg); }
+.demo-bar button { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 500; padding: 4px 10px; border: 1px solid var(--border); border-radius: calc(var(--radius)-2px); background: var(--bg); color: var(--muted-fg); cursor: pointer; white-space: nowrap; }
+.demo-bar button.active, .demo-bar button:hover { background: var(--primary); color: white; border-color: var(--primary); }
+
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- Demo bar -->
+<div class="demo-bar">
+  <span>State:</span>
+  <button class="active" onclick="showState('default', this)">1. Default</button>
+  <button onclick="showState('segment-list', this)">2. Segment list</button>
+  <button onclick="showState('segment-selected-green', this)">3. Segment selected (good)</button>
+  <button onclick="showState('segment-selected-amber', this)">4. Segment selected (mixed)</button>
+  <button onclick="showState('segment-selected-red', this)">5. Segment selected (risky)</button>
+  <button onclick="showState('create-segment', this)">6. Create new segment</button>
+</div>
+
+<!-- Broadcast builder chrome -->
+<div class="chrome">
+  <div class="chrome-header">
+    <div class="breadcrumb">
+      <span>Broadcasts</span><span class="breadcrumb-sep">/</span>
+      <span class="breadcrumb-cur">Summer check-in — Audience</span>
+    </div>
+  </div>
+
+  <div class="panels">
+    <!-- LEFT PANEL -->
+    <div class="panel-left">
+
+      <!-- Big selectors -->
+      <div>
+        <div class="section-label">Filter</div>
+        <div class="big-grid">
+          <div class="big-card selected" id="card-engaged" onclick="selectBigCard(this, 'engaged')">
+            <svg class="big-card-icon" width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <circle cx="7" cy="6" r="2.5" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M1.5 14.5c0-2.2 2-3.5 5.5-3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M11 9.5l1.5 1.5L16 7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div class="big-card-title">Engaged Customers</div>
+            <div class="big-card-sub">Recently active contacts</div>
+          </div>
+          <div class="big-card" id="card-segments" onclick="selectBigCard(this, 'segments')">
+            <svg class="big-card-icon" width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <circle cx="7" cy="6" r="2.5" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M1.5 14.5c0-2.2 1.8-3.5 5.5-3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M13 10v6M10 13h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <div class="big-card-title">Select Segments</div>
+            <div class="big-card-sub">Choose from segments</div>
+          </div>
+          <div class="big-card" id="card-individual" onclick="selectBigCard(this, 'individual')">
+            <svg class="big-card-icon" width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <circle cx="9" cy="6" r="2.5" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M3 14.5c0-2.2 2-3.5 6-3.5s6 1.3 6 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <div class="big-card-title">Select Individual</div>
+            <div class="big-card-sub">Pick contacts one by one</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Segment picker list (state 2+) -->
+      <div id="segment-picker" class="hidden">
+        <div class="section-label">Choose a segment</div>
+        <div class="segment-list">
+          <div class="segment-list-header">
+            <input class="segment-search" placeholder="Search segments…" readonly>
+          </div>
+          <div class="segment-row" id="seg-row-engaged" onclick="pickSegment('engaged')">
+            <div class="seg-radio" id="seg-radio-engaged"><div class="seg-radio-dot"></div></div>
+            <div class="seg-info">
+              <div class="seg-name">Engaged Customers</div>
+              <div class="seg-meta">Opened, clicked, or purchased in the last 90 days</div>
+            </div>
+            <div class="seg-count">312 contacts</div>
+          </div>
+          <div class="segment-row" id="seg-row-buyers" onclick="pickSegment('buyers')">
+            <div class="seg-radio" id="seg-radio-buyers"><div class="seg-radio-dot"></div></div>
+            <div class="seg-info">
+              <div class="seg-name">Recent Buyers</div>
+              <div class="seg-meta">Purchased in the last 180 days</div>
+            </div>
+            <div class="seg-count">840 contacts</div>
+          </div>
+          <div class="segment-row" id="seg-row-newsletter" onclick="pickSegment('newsletter')">
+            <div class="seg-radio" id="seg-radio-newsletter"><div class="seg-radio-dot"></div></div>
+            <div class="seg-info">
+              <div class="seg-name">Newsletter Subscribers</div>
+              <div class="seg-meta">Opted in to email marketing</div>
+            </div>
+            <div class="seg-count">4,800 contacts</div>
+          </div>
+          <div class="create-row" onclick="showState('create-segment', document.querySelectorAll('.demo-bar button')[5])">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1.5v11M1.5 7h11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            Create new segment
+          </div>
+        </div>
+      </div>
+
+      <!-- Warming widget (state 3/4/5) -->
+      <div id="warming-widget" class="warming-widget ww-green hidden">
+        <div class="ww-header">
+          <div class="ww-status">
+            <div class="ww-dot"></div>
+            <div class="ww-label" id="ww-label">Highly engaged</div>
+          </div>
+          <div class="ww-pill" id="ww-pill">82% engaged</div>
+        </div>
+        <div class="ww-body">
+          <div class="ww-bar-wrap">
+            <div class="ww-bar-labels">
+              <span>Engagement rate</span>
+              <strong id="ww-bar-pct">82%</strong>
+            </div>
+            <div class="ww-bar-track"><div class="ww-bar-fill" id="ww-bar-fill" style="width:82%"></div></div>
+          </div>
+          <div class="ww-message" id="ww-message">Most contacts in this segment have recently opened or clicked. Strong engagement means better inbox placement.</div>
+          <div class="ww-toggle-row hidden" id="ww-toggle-row" onclick="toggleEngaged()">
+            <div class="toggle" id="ww-toggle"><div class="toggle-thumb"></div></div>
+            <div class="toggle-lbl">
+              <div class="toggle-lbl-title">Send to engaged contacts only</div>
+              <div class="toggle-lbl-desc" id="ww-toggle-desc">Narrows to contacts who opened or clicked in the last 90 days.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="panel-right">
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-card-lbl">Total</div><div class="stat-card-val" id="stat-total">312</div><div class="stat-card-sub">contacts</div></div>
+        <div class="stat-card"><div class="stat-card-lbl">Email</div><div class="stat-card-val" id="stat-email">289</div><div class="stat-card-sub">subscribed</div></div>
+        <div class="stat-card"><div class="stat-card-lbl">SMS</div><div class="stat-card-val" id="stat-sms">194</div><div class="stat-card-sub">subscribed</div></div>
+      </div>
+      <div class="recip-table">
+        <div class="recip-header">
+          <input class="recip-search" placeholder="Search recipients…" readonly>
+          <div class="ftabs"><button class="ftab active">All</button><button class="ftab">Email</button><button class="ftab">SMS</button></div>
+        </div>
+        <div id="recip-list">
+          <div class="recip-row"><div class="avatar">JM</div><div class="recip-name">Jamie Morgan</div><div class="recip-email">jamie@example.com</div><span class="recip-tag">Engaged</span></div>
+          <div class="recip-row"><div class="avatar">SA</div><div class="recip-name">Sofia Alves</div><div class="recip-email">sofia@example.com</div><span class="recip-tag">Engaged</span></div>
+          <div class="recip-row"><div class="avatar">TR</div><div class="recip-name">Tom Richards</div><div class="recip-email">tom@example.com</div><span class="recip-tag">Engaged</span></div>
+          <div class="recip-row"><div class="avatar">LK</div><div class="recip-name">Lena Kim</div><div class="recip-email">lena@example.com</div><span class="recip-tag">Engaged</span></div>
+          <div class="recip-row"><div class="avatar">BC</div><div class="recip-name">Ben Carter</div><div class="recip-email">ben@example.com</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create Segment dialog -->
+<div class="dialog-overlay hidden" id="dialog-overlay" onclick="handleOverlayClick(event)">
+  <div class="dialog" onclick="event.stopPropagation()">
+    <div class="dialog-header">
+      <div>
+        <div class="dialog-title">Create Segment</div>
+        <div class="dialog-sub">Define conditions to target specific contacts</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button class="btn-ai">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1l1.5 3.5L12 6l-3.5 1.5L7 11l-1.5-3.5L2 6l3.5-1.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+          Build with AI
+        </button>
+        <button class="dialog-close" onclick="closeDialog()">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="dialog-body">
+      <!-- Form -->
+      <div class="dialog-form">
+        <div>
+          <div class="form-label">Name <span class="req">*</span></div>
+          <input class="form-input" placeholder="Segment name">
+        </div>
+        <div>
+          <div class="form-label">Description <span style="font-weight:400;color:var(--muted-fg);font-size:12px;">Optional</span></div>
+          <input class="form-input" placeholder="Segment description">
+        </div>
+        <div class="conditions-section">
+          <div class="conditions-title">Audience Conditions</div>
+          <div class="conditions-sub">Contacts must match all conditions to be included</div>
+          <div class="condition-row">
+            <div class="cond-icon">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" stroke="currentColor" stroke-width="1.2"/><path d="M5 3v2.5M5 7v.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            </div>
+            <select class="cond-select"><option>Email Address</option><option>Last Purchase</option><option>Last Email Open</option><option>Last Email Click</option><option>Total Orders</option></select>
+            <select class="cond-select"><option>Equals</option><option>Contains</option><option>Is after</option><option>Is before</option></select>
+            <select class="cond-select" style="flex:1"><option>Select options…</option></select>
+          </div>
+          <button class="add-condition">+ Add Condition</button>
+        </div>
+      </div>
+
+      <!-- Right: preview + warming widget -->
+      <div class="dialog-right">
+        <div class="dialog-preview-header">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 13c0-2.8 2-4.5 6-4.5s6 1.7 6 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="5" r="3" stroke="currentColor" stroke-width="1.5"/></svg>
+          <div class="dialog-preview-title">Audience Preview</div>
+          <div class="dialog-preview-count" id="dialog-count">0 contacts match</div>
+        </div>
+        <div class="dialog-preview-rows" id="dialog-preview-rows">
+          <div style="padding: 32px 16px; text-align:center; color:var(--muted-fg); font-size:13px;">
+            <div style="font-weight:600; color:var(--fg); margin-bottom:4px;">No conditions defined</div>
+            Add conditions to see which contacts match
+          </div>
+        </div>
+
+        <!-- Warming widget — compact, inside dialog -->
+        <div class="dialog-ww warming-widget ww-amber hidden" id="dialog-ww">
+          <div class="ww-header">
+            <div class="ww-status">
+              <div class="ww-dot"></div>
+              <div class="ww-label" id="dialog-ww-label">Mixed engagement</div>
+            </div>
+            <div class="ww-pill" id="dialog-ww-pill">38% engaged</div>
+          </div>
+          <div class="ww-body">
+            <div class="ww-bar-wrap">
+              <div class="ww-bar-labels">
+                <span>Engagement rate</span>
+                <strong id="dialog-ww-pct">38%</strong>
+              </div>
+              <div class="ww-bar-track"><div class="ww-bar-fill" id="dialog-ww-bar" style="width:38%"></div></div>
+            </div>
+            <div class="ww-message" id="dialog-ww-msg">Many contacts in this segment haven't engaged recently. Consider adding a condition to filter to active openers.</div>
+            <div class="ww-toggle-row" onclick="toggleDialogEngaged()">
+              <div class="toggle" id="dialog-ww-toggle"><div class="toggle-thumb"></div></div>
+              <div class="toggle-lbl">
+                <div class="toggle-lbl-title">Add engaged filter</div>
+                <div class="toggle-lbl-desc" id="dialog-ww-toggle-desc">Adds a condition: opened or clicked email in the last 90 days.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dialog-footer">
+      <div class="footer-count">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1.5 11.5c0-2.2 1.6-3.5 5-3.5s5 1.3 5 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="6.5" cy="4.5" r="2.5" stroke="currentColor" stroke-width="1.4"/></svg>
+        <span id="dialog-footer-count">0 contacts match this segment</span>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-ghost" onclick="closeDialog()">Cancel</button>
+        <button class="btn-primary">Create</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let engagedOn = false;
+let dialogEngagedOn = false;
+let currentSeg = null;
+
+const SEGMENTS = {
+  engaged: {
+    ww: 'ww-green', label: 'Highly engaged', pct: 82, msg: 'Most contacts in this segment have recently opened or clicked — strong engagement means better inbox placement and sender reputation.',
+    showToggle: false, toggleDesc: '', pill: '82% engaged',
+    total: '312', email: '289', sms: '194',
+    totalEngaged: '312', emailEngaged: '289', smsEngaged: '194',
+  },
+  buyers: {
+    ww: 'ww-amber', label: 'Mixed engagement', pct: 38, msg: "This segment includes many contacts who haven't interacted with your emails recently. Consider sending to engaged contacts only to protect your sender reputation.",
+    showToggle: true, toggleDesc: 'Narrows from 840 → 319 contacts who opened or clicked in the last 90 days.', pill: '38% engaged',
+    total: '840', email: '761', sms: '502',
+    totalEngaged: '319', emailEngaged: '298', smsEngaged: '204',
+  },
+  newsletter: {
+    ww: 'ww-red', label: 'Low engagement — high risk', pct: 9, msg: "Most of these contacts haven't engaged in over 90 days. Sending to a cold list risks high bounce and complaint rates, which can damage your domain reputation.",
+    showToggle: true, toggleDesc: 'Narrows from 4,800 → 430 contacts who opened or clicked in the last 90 days.', pill: '9% engaged',
+    total: '4,800', email: '4,210', sms: '2,900',
+    totalEngaged: '430', emailEngaged: '401', smsEngaged: '288',
+  },
+};
+
+function showState(state, btn) {
+  document.querySelectorAll('.demo-bar button').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  const picker = document.getElementById('segment-picker');
+  const widget = document.getElementById('warming-widget');
+  const overlay = document.getElementById('dialog-overlay');
+  engagedOn = false;
+
+  // Reset big cards
+  document.querySelectorAll('.big-card').forEach(c => c.classList.remove('selected'));
+
+  picker.classList.add('hidden');
+  widget.classList.add('hidden');
+  overlay.classList.add('hidden');
+  clearSegmentRadios();
+
+  if (state === 'default') {
+    document.getElementById('card-engaged').classList.add('selected');
+    setStats('312', '289', '194');
+
+  } else if (state === 'segment-list') {
+    document.getElementById('card-segments').classList.add('selected');
+    picker.classList.remove('hidden');
+    setStats('—', '—', '—');
+
+  } else if (state === 'segment-selected-green') {
+    document.getElementById('card-segments').classList.add('selected');
+    picker.classList.remove('hidden');
+    pickSegment('engaged');
+
+  } else if (state === 'segment-selected-amber') {
+    document.getElementById('card-segments').classList.add('selected');
+    picker.classList.remove('hidden');
+    pickSegment('buyers');
+
+  } else if (state === 'segment-selected-red') {
+    document.getElementById('card-segments').classList.add('selected');
+    picker.classList.remove('hidden');
+    pickSegment('newsletter');
+
+  } else if (state === 'create-segment') {
+    document.getElementById('card-segments').classList.add('selected');
+    picker.classList.remove('hidden');
+    overlay.classList.remove('hidden');
+    showDialogWidget();
+  }
+}
+
+function clearSegmentRadios() {
+  document.querySelectorAll('.seg-radio').forEach(r => r.classList.remove('on'));
+  document.querySelectorAll('.segment-row').forEach(r => r.classList.remove('selected'));
+  currentSeg = null;
+}
+
+function pickSegment(key) {
+  clearSegmentRadios();
+  currentSeg = key;
+  const s = SEGMENTS[key];
+  const radio = document.getElementById('seg-radio-' + key);
+  const row = document.getElementById('seg-row-' + key);
+  if (radio) radio.classList.add('on');
+  if (row) row.classList.add('selected');
+
+  // Show warming widget
+  const widget = document.getElementById('warming-widget');
+  widget.className = 'warming-widget ' + s.ww;
+  document.getElementById('ww-label').textContent = s.label;
+  document.getElementById('ww-bar-fill').style.width = s.pct + '%';
+  document.getElementById('ww-bar-pct').textContent = s.pct + '%';
+  document.getElementById('ww-pill').textContent = s.pill;
+  document.getElementById('ww-message').textContent = s.msg;
+
+  const toggleRow = document.getElementById('ww-toggle-row');
+  if (s.showToggle) {
+    toggleRow.classList.remove('hidden');
+    document.getElementById('ww-toggle-desc').textContent = s.toggleDesc;
+    document.getElementById('ww-toggle').className = 'toggle';
+  } else {
+    toggleRow.classList.add('hidden');
+  }
+  widget.classList.remove('hidden');
+  engagedOn = false;
+  setStats(s.total, s.email, s.sms);
+}
+
+function toggleEngaged() {
+  if (!currentSeg) return;
+  engagedOn = !engagedOn;
+  const s = SEGMENTS[currentSeg];
+  document.getElementById('ww-toggle').className = 'toggle' + (engagedOn ? ' on' : '');
+  if (engagedOn) {
+    setStats(s.totalEngaged, s.emailEngaged, s.smsEngaged);
+    const widget = document.getElementById('warming-widget');
+    widget.className = 'warming-widget ww-green';
+    document.getElementById('ww-label').textContent = 'Engaged contacts only';
+    document.getElementById('ww-bar-fill').style.width = '100%';
+    document.getElementById('ww-bar-pct').textContent = '100%';
+    document.getElementById('ww-pill').textContent = '100% engaged';
+    document.getElementById('ww-message').textContent = 'Filtered to contacts who opened or clicked in the last 90 days. Your engagement rate will be high and your send reputation protected.';
+  } else {
+    pickSegment(currentSeg);
+  }
+}
+
+function showDialogWidget() {
+  // Simulate some conditions entered → show amber widget
+  document.getElementById('dialog-count').textContent = '840 contacts match';
+  document.getElementById('dialog-footer-count').textContent = '840 contacts match this segment';
+  document.getElementById('dialog-preview-rows').innerHTML = [
+    ['JM','Jamie Morgan','jamie@example.com'],
+    ['SA','Sofia Alves','sofia@example.com'],
+    ['TR','Tom Richards','tom@example.com'],
+    ['LK','Lena Kim','lena@example.com'],
+  ].map(([i,n,e]) =>
+    `<div class="dialog-preview-row"><div class="avatar" style="width:24px;height:24px;font-size:10px;">${i}</div><div style="flex:1;font-size:12.5px;font-weight:500;">${n}</div><div style="font-size:12px;color:var(--muted-fg);">${e}</div></div>`
+  ).join('');
+  document.getElementById('dialog-ww').classList.remove('hidden');
+  dialogEngagedOn = false;
+  document.getElementById('dialog-ww-toggle').className = 'toggle';
+}
+
+function toggleDialogEngaged() {
+  dialogEngagedOn = !dialogEngagedOn;
+  document.getElementById('dialog-ww-toggle').className = 'toggle' + (dialogEngagedOn ? ' on' : '');
+  if (dialogEngagedOn) {
+    document.getElementById('dialog-ww').className = 'dialog-ww warming-widget ww-green';
+    document.getElementById('dialog-ww-label').textContent = 'Engaged contacts only';
+    document.getElementById('dialog-ww-bar').style.width = '100%';
+    document.getElementById('dialog-ww-pct').textContent = '100%';
+    document.getElementById('dialog-ww-pill').textContent = '100% engaged';
+    document.getElementById('dialog-ww-msg').textContent = 'An "opened or clicked in last 90 days" condition will be added to this segment.';
+    document.getElementById('dialog-ww-toggle-desc').textContent = 'Narrows from 840 → 319 contacts. The condition will be added below.';
+    document.getElementById('dialog-count').textContent = '319 contacts match';
+    document.getElementById('dialog-footer-count').textContent = '319 contacts match this segment';
+  } else {
+    document.getElementById('dialog-ww').className = 'dialog-ww warming-widget ww-amber';
+    document.getElementById('dialog-ww-label').textContent = 'Mixed engagement';
+    document.getElementById('dialog-ww-bar').style.width = '38%';
+    document.getElementById('dialog-ww-pct').textContent = '38%';
+    document.getElementById('dialog-ww-pill').textContent = '38% engaged';
+    document.getElementById('dialog-ww-msg').textContent = "Many contacts in this segment haven't engaged recently. Consider adding a condition to filter to active openers.";
+    document.getElementById('dialog-ww-toggle-desc').textContent = 'Adds a condition: opened or clicked email in the last 90 days.';
+    document.getElementById('dialog-count').textContent = '840 contacts match';
+    document.getElementById('dialog-footer-count').textContent = '840 contacts match this segment';
+  }
+}
+
+function closeDialog() {
+  document.getElementById('dialog-overlay').classList.add('hidden');
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('dialog-overlay')) closeDialog();
+}
+
+function selectBigCard(el, mode) {
+  document.querySelectorAll('.big-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  const picker = document.getElementById('segment-picker');
+  const widget = document.getElementById('warming-widget');
+  if (mode === 'segments') {
+    picker.classList.remove('hidden');
+    widget.classList.add('hidden');
+    clearSegmentRadios();
+    setStats('—','—','—');
+  } else {
+    picker.classList.add('hidden');
+    widget.classList.add('hidden');
+    clearSegmentRadios();
+    setStats(mode === 'engaged' ? '312' : '—', mode === 'engaged' ? '289' : '—', mode === 'engaged' ? '194' : '—');
+  }
+}
+
+function setStats(total, email, sms) {
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-email').textContent = email;
+  document.getElementById('stat-sms').textContent = sms;
+}
+
+// Init
+showState('default', document.querySelector('.demo-bar button.active'));
+</script>
+</body>
+</html>

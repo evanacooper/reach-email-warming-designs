@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampaignPausedBanner — Reach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --primary: hsl(210 30% 25%);
+  --primary-fg: hsl(0 0% 100%);
+  --bg: hsl(0 0% 100%);
+  --fg: hsl(225 15% 16%);
+  --muted: hsl(210 10% 96%);
+  --muted-fg: hsl(220 10% 45%);
+  --border: hsl(220 13% 90%);
+  --radius: 0.625rem;
+  --red: hsl(0 72% 42%);
+  --red-bg: hsl(0 86% 97%);
+  --red-border: hsl(0 60% 87%);
+  --red-dark: hsl(0 72% 32%);
+  --amber: hsl(38 92% 42%);
+  --amber-bg: hsl(48 96% 97%);
+  --amber-border: hsl(48 90% 78%);
+  --green: hsl(142 71% 35%);
+  --green-bg: hsl(142 76% 97%);
+  --green-border: hsl(142 60% 80%);
+}
+
+html, body { height: 100%; font-family: 'Inter', sans-serif; font-size: 14px; line-height: 1.5; color: var(--fg); background: hsl(220 13% 96%); }
+
+/* ── Demo bar ── */
+.demo-bar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  display: flex; align-items: center; gap: 8px; padding: 7px 16px;
+  background: hsl(220 13% 93%); border-bottom: 1px solid var(--border);
+  font-size: 11px; color: var(--muted-fg); font-family: 'Inter', sans-serif;
+}
+.demo-bar span { font-weight: 600; color: var(--fg); }
+.demo-bar button {
+  font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 500;
+  padding: 4px 10px; border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 2px); background: var(--bg);
+  color: var(--muted-fg); cursor: pointer; white-space: nowrap;
+}
+.demo-bar button.active, .demo-bar button:hover { background: var(--primary); color: white; border-color: var(--primary); }
+
+/* ── App shell ── */
+.app { margin-top: 37px; display: flex; flex-direction: column; min-height: calc(100vh - 37px); }
+
+/* ══════════════════════════════════
+   LAYER 1 — Global warning banner
+   Sits above everything in Engage
+   ══════════════════════════════════ */
+.global-banner {
+  background: var(--red-bg);
+  border-bottom: 1px solid var(--red-border);
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.global-banner-icon {
+  width: 28px; height: 28px; flex-shrink: 0;
+  background: hsl(0 72% 42% / .12);
+  border-radius: calc(var(--radius) - 2px);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--red);
+}
+
+.global-banner-text { flex: 1; min-width: 0; font-size: 13px; color: var(--fg); line-height: 1.45; }
+.global-banner-text strong { font-weight: 600; }
+
+.global-banner-link {
+  font-size: 13px; font-weight: 600; color: var(--red-dark);
+  text-decoration: underline; text-underline-offset: 2px;
+  cursor: pointer; white-space: nowrap; flex-shrink: 0;
+}
+.global-banner-link:hover { opacity: .75; }
+
+/* ══════════════════════════════════
+   Engage nav tabs
+   ══════════════════════════════════ */
+.engage-nav {
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.engage-tabs { display: flex; gap: 0; }
+.engage-tab {
+  font-size: 13px; font-weight: 500; padding: 12px 14px;
+  color: var(--muted-fg); border-bottom: 2px solid transparent;
+  cursor: pointer; transition: color .12s; margin-bottom: -1px;
+  display: flex; align-items: center; gap: 6px;
+}
+.engage-tab.active { color: var(--fg); border-bottom-color: var(--fg); font-weight: 600; }
+.engage-tab:hover:not(.active) { color: var(--fg); }
+
+.btn-new-broadcast {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--primary); color: var(--primary-fg);
+  font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
+  padding: 8px 16px; border-radius: var(--radius); border: none; cursor: pointer;
+}
+
+/* ══════════════════════════════════
+   LAYER 2 — Broadcasts list
+   ══════════════════════════════════ */
+.list-chrome {
+  background: var(--bg);
+  margin: 20px 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.list-search-row {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.list-search {
+  font-size: 12.5px; font-family: 'Inter', sans-serif;
+  border: 1px solid var(--border); border-radius: calc(var(--radius) - 2px);
+  padding: 6px 12px; width: 220px; color: var(--muted-fg);
+  background: var(--muted); outline: none;
+}
+
+.list-showing { font-size: 12.5px; color: var(--muted-fg); }
+
+.list-table { width: 100%; border-collapse: collapse; }
+.list-table th {
+  font-size: 11.5px; font-weight: 600; color: var(--muted-fg);
+  padding: 9px 16px; text-align: left; border-bottom: 1px solid var(--border);
+  background: var(--muted);
+}
+.list-table th:not(:first-child) { text-align: right; }
+.list-table th:last-child { text-align: right; }
+
+.list-table td {
+  padding: 11px 16px; border-bottom: 1px solid var(--border);
+  font-size: 13px; vertical-align: middle;
+}
+.list-table tr:last-child td { border-bottom: none; }
+.list-table tr:hover td { background: hsl(210 10% 98%); }
+
+/* Paused row highlight */
+.list-table tr.paused-row td { background: var(--red-bg); }
+.list-table tr.paused-row:hover td { background: hsl(0 86% 95%); }
+
+.row-name { font-weight: 600; color: var(--fg); }
+.row-desc { font-size: 11.5px; color: var(--muted-fg); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px; }
+.row-num { text-align: right; color: var(--muted-fg); }
+
+/* Status badges in list */
+.list-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12px; font-weight: 500; padding: 3px 10px;
+  border-radius: calc(var(--radius) - 1px);
+  border: 1px solid var(--border);
+  background: var(--muted); color: var(--muted-fg);
+  white-space: nowrap;
+}
+.list-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.badge-draft { }
+.badge-sent { background: hsl(213 93% 96%); border-color: hsl(213 60% 82%); color: hsl(213 70% 38%); }
+.badge-paused-list {
+  background: var(--red-bg); border-color: var(--red-border); color: var(--red);
+  font-weight: 600;
+  cursor: pointer;
+}
+.badge-paused-list:hover { background: hsl(0 86% 94%); }
+
+/* ── Paused indicator icon next to name ── */
+.paused-indicator {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11.5px; font-weight: 600; color: var(--red);
+  background: var(--red-bg); border: 1px solid var(--red-border);
+  padding: 2px 7px; border-radius: 100px; margin-left: 8px;
+  vertical-align: middle;
+}
+.paused-indicator svg { flex-shrink: 0; }
+
+/* ══════════════════════════════════
+   LAYER 3 — Broadcast detail view
+   ══════════════════════════════════ */
+.detail-chrome {
+  background: var(--bg);
+  margin: 20px 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.detail-header {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+}
+
+.back-btn {
+  width: 30px; height: 30px; flex-shrink: 0;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: none; cursor: pointer; color: var(--muted-fg);
+  display: flex; align-items: center; justify-content: center;
+}
+.back-btn:hover { background: var(--muted); }
+
+.detail-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: -.015em; }
+.detail-subtitle { font-size: 12.5px; color: var(--muted-fg); margin-top: 2px; }
+
+.status-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12px; font-weight: 600; padding: 4px 10px;
+  border-radius: calc(var(--radius) - 1px);
+  background: var(--red-bg); border: 1px solid var(--red-border); color: var(--red);
+}
+
+.detail-tabs {
+  border-bottom: 1px solid var(--border);
+  display: flex; padding: 0 20px;
+}
+.detail-tab {
+  font-size: 13px; font-weight: 500; padding: 10px 14px;
+  color: var(--muted-fg); border-bottom: 2px solid transparent;
+  cursor: pointer; margin-bottom: -1px;
+}
+.detail-tab.active { color: var(--fg); border-bottom-color: var(--fg); font-weight: 600; }
+
+.detail-content { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+
+/* ── Detail banner ── */
+.detail-banner {
+  border: 1.5px solid var(--red-border);
+  border-radius: var(--radius);
+  background: var(--red-bg);
+  overflow: hidden;
+}
+
+.detail-banner-main {
+  padding: 16px 18px;
+  display: flex; align-items: flex-start; gap: 14px;
+}
+
+.detail-banner-icon {
+  width: 38px; height: 38px; flex-shrink: 0;
+  background: hsl(0 72% 42% / .12);
+  border-radius: calc(var(--radius) - 1px);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--red); margin-top: 1px;
+}
+
+.detail-banner-body { flex: 1; min-width: 0; }
+
+.detail-banner-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 15px; font-weight: 700; color: var(--red-dark);
+  letter-spacing: -.01em; margin-bottom: 5px;
+}
+
+.detail-banner-reason { font-size: 13px; color: var(--fg); line-height: 1.55; }
+.detail-banner-reason strong { font-weight: 600; }
+
+.metric-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.metric-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: var(--radius);
+  border: 1px solid var(--red-border); background: var(--bg); font-size: 12.5px;
+}
+.mc-lbl { color: var(--muted-fg); font-weight: 500; }
+.mc-val { font-weight: 700; color: var(--red); }
+.mc-thresh { color: var(--muted-fg); font-size: 11.5px; }
+.mc-val-neutral { font-weight: 700; color: var(--fg); }
+
+.progress-row {
+  display: flex; align-items: center; gap: 10px; margin-top: 12px;
+  font-size: 12.5px; color: var(--muted-fg);
+}
+.progress-bar { flex: 1; height: 5px; background: hsl(0 72% 42% / .15); border-radius: 100px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 100px; background: var(--red); }
+
+/* ── Actions footer ── */
+.detail-banner-actions {
+  border-top: 1px solid var(--red-border);
+  padding: 14px 18px;
+  background: hsl(0 72% 42% / .035);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.action-hint {
+  font-size: 12.5px; color: var(--fg); line-height: 1.4;
+  display: flex; align-items: flex-start; gap: 7px;
+}
+.action-hint svg { flex-shrink: 0; color: var(--muted-fg); margin-top: 1px; }
+
+.action-btns { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+.btn-primary-action {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
+  padding: 8px 16px; border-radius: var(--radius);
+  background: var(--primary); color: var(--primary-fg); border: none;
+  cursor: pointer; transition: opacity .15s;
+}
+.btn-primary-action:hover { opacity: .88; }
+
+.btn-doc-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500;
+  padding: 8px 14px; border-radius: var(--radius);
+  background: var(--bg); color: var(--red-dark);
+  border: 1.5px solid var(--red-border); cursor: pointer;
+  transition: background .12s;
+}
+.btn-doc-link:hover { background: hsl(0 72% 42% / .05); }
+
+/* ── Stats ── */
+.stats-section {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+}
+.stats-head {
+  padding: 11px 16px; border-bottom: 1px solid var(--border);
+  font-size: 11px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--muted-fg);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.stats-head-sub { font-size: 12px; font-weight: 400; letter-spacing: 0; text-transform: none; }
+.stats-grid { display: grid; grid-template-columns: repeat(6, 1fr); }
+.stat-cell {
+  padding: 13px 16px; border-right: 1px solid var(--border);
+}
+.stat-cell:last-child { border-right: none; }
+.stat-lbl { font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted-fg); margin-bottom: 4px; }
+.stat-val { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 20px; font-weight: 700; color: var(--fg); letter-spacing: -.02em; line-height: 1; }
+.stat-val.bad { color: var(--red); }
+.stat-sub { font-size: 11.5px; color: var(--muted-fg); margin-top: 4px; }
+.exceeded-tag { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; color: var(--red); }
+.exceeded-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--red); }
+
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="demo-bar">
+  <span>View:</span>
+  <button class="active" onclick="setView('list', this)">Broadcasts list</button>
+  <button onclick="setView('detail', this)">Broadcast detail</button>
+</div>
+
+<div class="app">
+
+  <!-- ══ LAYER 1: Global warning banner (always visible in Engage) ══ -->
+  <div class="global-banner">
+    <div class="global-banner-icon">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M8 1.5L1.5 13.5h13L8 1.5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="M8 6v3.5M8 11v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="global-banner-text">
+      <strong>A broadcast was paused to protect your sending reputation.</strong>
+      "Summer check-in" was automatically paused after your bounce rate exceeded safe limits.
+    </div>
+    <span class="global-banner-link" onclick="setView('detail', document.querySelectorAll('.demo-bar button')[1])">Review broadcast →</span>
+  </div>
+
+  <!-- ══ Engage nav tabs ══ -->
+  <div class="engage-nav">
+    <div class="engage-tabs">
+      <div class="engage-tab">Automations</div>
+      <div class="engage-tab active" id="tab-broadcasts">Broadcasts</div>
+      <div class="engage-tab">Segments</div>
+      <div class="engage-tab">Insights</div>
+    </div>
+    <button class="btn-new-broadcast">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      New Broadcast
+    </button>
+  </div>
+
+  <!-- ══ LAYER 2: Broadcasts list ══ -->
+  <div id="view-list">
+    <div class="list-chrome">
+      <div class="list-search-row">
+        <input class="list-search" placeholder="Search..." readonly>
+        <span class="list-showing">Showing 1–10 of 12 items</span>
+      </div>
+      <table class="list-table">
+        <thead>
+          <tr>
+            <th style="text-align:left;">Name</th>
+            <th>Sales</th>
+            <th>Email Sent</th>
+            <th>SMS Sent</th>
+            <th>Last Modified</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Paused row — highlighted -->
+          <tr class="paused-row" style="cursor:pointer;" onclick="setView('detail', document.querySelectorAll('.demo-bar button')[1])">
+            <td>
+              <div class="row-name">
+                Summer check-in
+                <span class="paused-indicator">
+                  <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                    <path d="M5.5 1L1 9.5h9L5.5 1z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                    <path d="M5.5 4.5v2M5.5 8v.3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                  </svg>
+                  Paused by Reach
+                </span>
+              </div>
+              <div class="row-desc">Bounce rate exceeded — send paused to protect your domain</div>
+            </td>
+            <td class="row-num">$0</td>
+            <td class="row-num">500</td>
+            <td class="row-num">0</td>
+            <td class="row-num">Today</td>
+            <td style="text-align:right;">
+              <span class="list-badge badge-paused-list">
+                <span class="list-badge-dot"></span>Paused
+              </span>
+            </td>
+          </tr>
+          <!-- Normal rows -->
+          <tr>
+            <td><div class="row-name">Spring sale announcement</div><div class="row-desc">Seasonal promotion for spring collection</div></td>
+            <td class="row-num">$240</td><td class="row-num">847</td><td class="row-num">0</td><td class="row-num">3 days ago</td>
+            <td style="text-align:right;"><span class="list-badge badge-sent"><span class="list-badge-dot"></span>Sent</span></td>
+          </tr>
+          <tr>
+            <td><div class="row-name">Welcome — new customers</div><div class="row-desc"></div></td>
+            <td class="row-num">$0</td><td class="row-num">0</td><td class="row-num">0</td><td class="row-num">5 days ago</td>
+            <td style="text-align:right;"><span class="list-badge badge-draft"><span class="list-badge-dot"></span>Draft</span></td>
+          </tr>
+          <tr>
+            <td><div class="row-name">Memorial Day special</div><div class="row-desc">Memorial Day deals and offers</div></td>
+            <td class="row-num">$0</td><td class="row-num">0</td><td class="row-num">0</td><td class="row-num">6 days ago</td>
+            <td style="text-align:right;"><span class="list-badge badge-draft"><span class="list-badge-dot"></span>Draft</span></td>
+          </tr>
+          <tr>
+            <td><div class="row-name">Lapsed customers — re-engagement</div><div class="row-desc"></div></td>
+            <td class="row-num">$40</td><td class="row-num">312</td><td class="row-num">0</td><td class="row-num">2 weeks ago</td>
+            <td style="text-align:right;"><span class="list-badge badge-sent"><span class="list-badge-dot"></span>Sent</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ LAYER 3: Broadcast detail ══ -->
+  <div id="view-detail" class="hidden">
+    <div class="detail-chrome">
+
+      <div class="detail-header">
+        <button class="back-btn" onclick="setView('list', document.querySelectorAll('.demo-bar button')[0])">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div style="flex:1;">
+          <div class="detail-title">Summer check-in</div>
+          <div class="detail-subtitle">One-time broadcast · Started Jun 12, 2026</div>
+        </div>
+        <div class="status-pill">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1L1 10h10L6 1z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M6 4.5v2.5M6 8.5v.3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          Paused by Reach
+        </div>
+      </div>
+
+      <div class="detail-tabs">
+        <div class="detail-tab">Workflow</div>
+        <div class="detail-tab">Recipients</div>
+        <div class="detail-tab active">Insights</div>
+      </div>
+
+      <div class="detail-content">
+
+        <!-- Detail banner -->
+        <div class="detail-banner">
+          <div class="detail-banner-main">
+            <div class="detail-banner-icon">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M10 2.5L2 17h16L10 2.5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                <path d="M10 8v4M10 14v.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="detail-banner-body">
+              <div class="detail-banner-title">This send was paused to protect your domain</div>
+              <div class="detail-banner-reason">
+                After <strong>500 sends</strong>, your <strong>bounce rate hit 2.4%</strong> — above the 2% threshold. Reach automatically paused this broadcast to stop further damage to your sending reputation. Emails already sent are unaffected.
+              </div>
+              <div class="metric-chips">
+                <div class="metric-chip"><span class="mc-lbl">Bounce rate</span><span class="mc-val">2.4%</span><span class="mc-thresh">· limit 2%</span></div>
+                <div class="metric-chip"><span class="mc-lbl">Complaint rate</span><span class="mc-val-neutral">0.08%</span><span class="mc-thresh">· within limit</span></div>
+                <div class="metric-chip"><span class="mc-lbl">Sent at pause</span><span class="mc-val-neutral">500</span><span class="mc-thresh">of 1,240</span></div>
+              </div>
+              <div class="progress-row">
+                <span>500 of 1,240 sent</span>
+                <div class="progress-bar"><div class="progress-fill" style="width:40%;"></div></div>
+                <span>40% complete</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-banner-actions">
+            <div class="action-hint">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.3"/><path d="M7 4.5v2.75M7 9v.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+              <span>High bounces usually mean the audience includes invalid or inactive addresses. Narrow to your most engaged contacts and resend — or clean your list first.</span>
+            </div>
+            <div class="action-btns">
+              <button class="btn-doc-link">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 2h6l3 3v6H2V2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M8 2v3h3M4 6h5M4 8h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                How to clean your list
+              </button>
+              <button class="btn-primary-action">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="7" cy="6" r="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M1.5 11.5c0-2 1.6-3.2 5.5-3.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M10 9.5l1.5 1.5L14 8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Narrow to engaged contacts
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-section">
+          <div class="stats-head">
+            Email performance
+            <span class="stats-head-sub">Based on 500 sends</span>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-cell">
+              <div class="stat-lbl">Sent</div>
+              <div class="stat-val">500</div>
+              <div class="stat-sub">of 1,240 total</div>
+            </div>
+            <div class="stat-cell">
+              <div class="stat-lbl">Open rate</div>
+              <div class="stat-val">18.4%</div>
+              <div class="stat-sub">&nbsp;</div>
+            </div>
+            <div class="stat-cell">
+              <div class="stat-lbl">Bounce rate</div>
+              <div class="stat-val bad">2.4%</div>
+              <div class="stat-sub"><span class="exceeded-tag"><span class="exceeded-dot"></span>Exceeded limit</span></div>
+            </div>
+            <div class="stat-cell">
+              <div class="stat-lbl">Spam complaints</div>
+              <div class="stat-val">0.08%</div>
+              <div class="stat-sub">Within limit</div>
+            </div>
+            <div class="stat-cell">
+              <div class="stat-lbl">Clicks</div>
+              <div class="stat-val">43</div>
+              <div class="stat-sub">&nbsp;</div>
+            </div>
+            <div class="stat-cell">
+              <div class="stat-lbl">Unsubscribed</div>
+              <div class="stat-val">0.6%</div>
+              <div class="stat-sub">&nbsp;</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function setView(view, btn) {
+  document.querySelectorAll('.demo-bar button').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.getElementById('view-list').classList.toggle('hidden', view !== 'list');
+  document.getElementById('view-detail').classList.toggle('hidden', view !== 'detail');
+}
+setView('list', document.querySelector('.demo-bar button.active'));
+</script>
+</body>
+</html>

@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Engage First Broadcast — Reach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --primary: hsl(210 30% 25%);
+  --primary-fg: hsl(0 0% 100%);
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(225 15% 16%);
+  --card: hsl(0 0% 100%);
+  --muted: hsl(210 10% 96%);
+  --muted-fg: hsl(220 10% 45%);
+  --border: hsl(220 13% 90%);
+  --secondary: hsl(210 15% 94%);
+  --radius: 0.625rem;
+
+  --green: hsl(142 71% 35%);
+  --green-bg: hsl(142 76% 97%);
+  --green-border: hsl(142 60% 80%);
+  --amber: hsl(38 92% 42%);
+  --amber-bg: hsl(48 96% 97%);
+  --amber-border: hsl(48 90% 78%);
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--foreground);
+  background: var(--background);
+}
+
+/* ════════════════════════════════════════
+   FULL-PAGE SHELL
+   Matches EngageOnboarding: fixed inset-0, flex col
+   ════════════════════════════════════════ */
+.page {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--background);
+  z-index: 10;
+}
+
+/* ── Top header (matches EngageOnboarding header) ── */
+.page-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.page-header-text h1 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--foreground);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.page-header-text p {
+  font-size: 13.5px;
+  color: var(--muted-fg);
+  margin-top: 3px;
+}
+
+.page-header-close {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--muted-fg);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.page-header-close:hover { background: var(--muted); color: var(--foreground); }
+
+/* ── Main area: sidebar + content ── */
+.page-main {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── Sidebar (matches CustomWizardSidebar) ── */
+.sidebar {
+  width: 200px;
+  flex-shrink: 0;
+  padding: 24px 16px 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.sidebar-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.12s;
+  position: relative;
+}
+
+.sidebar-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 21px;
+  top: 30px;
+  width: 1.5px;
+  height: calc(100% - 14px);
+  background: var(--border);
+}
+
+.sidebar-step.active {
+  background: var(--secondary);
+}
+
+.sidebar-step-indicator {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+  background: var(--background);
+  transition: border-color 0.15s, background 0.15s;
+  position: relative;
+  z-index: 1;
+}
+
+.sidebar-step.active .sidebar-step-indicator {
+  border-color: var(--primary);
+  background: var(--primary);
+}
+
+.sidebar-step.completed .sidebar-step-indicator {
+  border-color: var(--green);
+  background: var(--green);
+}
+
+.sidebar-step-indicator-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary-fg);
+  display: none;
+}
+
+.sidebar-step.active .sidebar-step-indicator-dot { display: block; }
+
+.sidebar-step-check {
+  display: none;
+  color: white;
+}
+.sidebar-step.completed .sidebar-step-check { display: block; }
+.sidebar-step.completed .sidebar-step-indicator-dot { display: none; }
+
+.sidebar-step-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted-fg);
+  line-height: 1.3;
+  padding-top: 1px;
+}
+
+.sidebar-step.active .sidebar-step-label { color: var(--foreground); font-weight: 600; }
+.sidebar-step.completed .sidebar-step-label { color: var(--muted-fg); }
+
+/* ── Content area ── */
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0 24px 0 0;
+}
+
+.content-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px 0 24px 0;
+}
+
+/* ── Step content wrapper ── */
+.step { display: none; }
+.step.active { display: block; max-width: 600px; }
+
+/* ── Step heading ── */
+.step-heading {
+  margin-bottom: 24px;
+}
+
+.step-heading h2 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--foreground);
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+.step-heading p {
+  font-size: 13.5px;
+  color: var(--muted-fg);
+  margin-top: 5px;
+  line-height: 1.5;
+}
+
+/* ── Cards / rows ── */
+.card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.card-header {
+  padding: 10px 14px;
+  background: var(--muted);
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted-fg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-body {
+  padding: 16px 14px;
+}
+
+.card-row {
+  padding: 13px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.card-row:last-child { border-bottom: none; }
+
+/* ── Situation cards (step 1) ── */
+.stat-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+/* ── Warming timeline (step 1) ── */
+.warming-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 16px;
+}
+
+.timeline-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 13px 14px;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  position: relative;
+}
+.timeline-row:first-child { border-radius: var(--radius) var(--radius) 0 0; }
+.timeline-row:last-child { border-bottom: 1px solid var(--border); border-radius: 0 0 var(--radius) var(--radius); }
+
+.timeline-week {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted-fg);
+  white-space: nowrap;
+  min-width: 56px;
+  padding-top: 1px;
+}
+
+.timeline-content { flex: 1; min-width: 0; }
+.timeline-title { font-size: 13px; font-weight: 600; color: var(--foreground); }
+.timeline-desc { font-size: 12px; color: var(--muted-fg); margin-top: 2px; line-height: 1.4; }
+
+.timeline-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 100px;
+  white-space: nowrap;
+  align-self: flex-start;
+  margin-top: 1px;
+}
+.timeline-badge-now { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+.timeline-badge-next { background: var(--muted); color: var(--muted-fg); border: 1px solid var(--border); }
+
+/* ── Threshold / what-to-watch card ── */
+.threshold-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.threshold-item {
+  padding: 12px 14px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.threshold-item:nth-child(2n) { border-right: none; }
+.threshold-item:nth-last-child(-n+2) { border-bottom: none; }
+
+.threshold-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted-fg);
+  margin-bottom: 4px;
+}
+
+.threshold-value {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--foreground);
+  letter-spacing: -0.015em;
+  line-height: 1;
+}
+
+.threshold-goal {
+  font-size: 11.5px;
+  color: var(--muted-fg);
+  margin-top: 4px;
+  line-height: 1.3;
+}
+
+.threshold-goal strong { color: var(--green); font-weight: 600; }
+
+.stat-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  background: var(--muted);
+}
+
+.stat-card-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted-fg);
+  margin-bottom: 8px;
+}
+
+.stat-card-value {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--foreground);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.stat-card-desc {
+  font-size: 12px;
+  color: var(--muted-fg);
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 100px;
+}
+.badge-new { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+.badge-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+/* ── Explainer ── */
+.explainer {
+  background: hsl(210 30% 25% / 0.04);
+  border: 1px solid hsl(210 30% 25% / 0.14);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.explainer-icon {
+  width: 32px;
+  height: 32px;
+  background: hsl(210 30% 25% / 0.1);
+  border-radius: calc(var(--radius) - 2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--primary);
+}
+
+.explainer p {
+  font-size: 13px;
+  color: var(--foreground);
+  line-height: 1.55;
+}
+
+.explainer strong { font-weight: 600; }
+
+/* ── Segment selector ── */
+.segment-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.segment-option:last-child { border-bottom: none; }
+.segment-option:hover { background: var(--muted); }
+.segment-option.selected { background: hsl(210 30% 25% / 0.03); }
+
+.segment-radio {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s;
+}
+.segment-option.selected .segment-radio { border-color: var(--primary); }
+.radio-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); display: none; }
+.segment-option.selected .radio-dot { display: block; }
+
+.segment-info { flex: 1; min-width: 0; }
+.segment-name { font-size: 13.5px; font-weight: 600; color: var(--foreground); }
+.segment-meta { font-size: 12px; color: var(--muted-fg); margin-top: 1px; }
+
+.contact-pill {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+  background: hsl(210 30% 25% / 0.08);
+  padding: 2px 9px;
+  border-radius: 100px;
+  white-space: nowrap;
+}
+
+/* ── Warming widget ── */
+.warming {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--green-border);
+  background: var(--green-bg);
+  margin-top: 12px;
+}
+.warming-icon { flex-shrink: 0; margin-top: 1px; }
+.warming-body { flex: 1; min-width: 0; }
+.warming-title { font-size: 13px; font-weight: 600; color: var(--green); }
+.warming-desc { font-size: 12px; color: var(--foreground); opacity: 0.7; margin-top: 2px; }
+
+/* ── Toggle row ── */
+.toggle-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--muted);
+}
+
+.toggle {
+  width: 36px;
+  height: 20px;
+  background: var(--primary);
+  border-radius: 100px;
+  position: relative;
+  flex-shrink: 0;
+  margin-top: 1px;
+  cursor: pointer;
+}
+
+.toggle-thumb {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 16px;
+  height: 16px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.toggle-label { flex: 1; }
+.toggle-label-title { font-size: 13px; font-weight: 600; color: var(--foreground); }
+.toggle-label-desc { font-size: 12px; color: var(--muted-fg); margin-top: 2px; line-height: 1.4; }
+.toggle-label-desc strong { color: var(--foreground); font-weight: 600; }
+
+/* ── Content tips (step 3) ── */
+.tip-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.tip-item {
+  display: flex;
+  gap: 14px;
+  padding: 16px 14px;
+  border-bottom: 1px solid var(--border);
+  align-items: flex-start;
+}
+.tip-item:last-child { border-bottom: none; }
+
+.tip-number {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: hsl(210 30% 25% / 0.1);
+  color: var(--primary);
+  font-size: 11.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.tip-body { flex: 1; min-width: 0; }
+
+.tip-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--foreground);
+  line-height: 1.3;
+}
+
+.tip-desc {
+  font-size: 13px;
+  color: var(--muted-fg);
+  margin-top: 3px;
+  line-height: 1.5;
+}
+
+/* ── Subject examples ── */
+.example-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.example-chip {
+  font-size: 12px;
+  padding: 5px 11px;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  color: var(--foreground);
+  background: var(--card);
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
+  font-family: 'Inter', sans-serif;
+}
+.example-chip:hover {
+  border-color: var(--primary);
+  background: hsl(210 30% 25% / 0.04);
+}
+
+/* ── Bottom footer / actions ── */
+.content-footer {
+  padding: 16px 0 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--primary);
+  color: var(--primary-fg);
+  font-family: 'Inter', sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 9px 18px;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btn-primary:hover { opacity: 0.88; }
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  color: var(--muted-fg);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 9px 0;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.btn-ghost:hover { color: var(--foreground); }
+
+/* ── Re-open entry point (shown in automations list) ── */
+.reopen-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  background: hsl(210 30% 25% / 0.04);
+  border: 1px solid hsl(210 30% 25% / 0.14);
+  border-radius: var(--radius);
+  margin: 20px 24px 0;
+}
+
+.reopen-banner-text {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.reopen-banner-icon {
+  width: 32px;
+  height: 32px;
+  background: hsl(210 30% 25% / 0.1);
+  border-radius: calc(var(--radius) - 2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.reopen-banner-copy strong {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--foreground);
+  display: block;
+}
+
+.reopen-banner-copy span {
+  font-size: 12.5px;
+  color: var(--muted-fg);
+}
+
+.btn-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--primary);
+  color: var(--primary-fg);
+  font-family: 'Inter', sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+.btn-sm:hover { opacity: 0.88; }
+
+/* ── Demo toggle ── */
+.demo-bar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  background: hsl(220 13% 93%);
+  border-bottom-left-radius: var(--radius);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-right: none;
+  font-size: 11px;
+  color: var(--muted-fg);
+  font-family: 'Inter', sans-serif;
+}
+
+.demo-bar button {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--card);
+  color: var(--muted-fg);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.demo-bar button.active, .demo-bar button:hover {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+/* ── Automations list placeholder (dismissed state) ── */
+.automations-list-placeholder {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.automations-list-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.automations-list-header h1 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--muted-fg);
+  font-size: 13.5px;
+  padding: 40px;
+  text-align: center;
+}
+
+.empty-state svg { opacity: 0.3; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<!-- Demo switcher (top-right corner) -->
+<div class="demo-bar">
+  View:
+  <button class="active" onclick="setView('ftue', this)">FTUE (first visit)</button>
+  <button onclick="setView('dismissed', this)">Dismissed state</button>
+</div>
+
+<!-- ════════════════════════════════════════
+     FTUE FULL-PAGE TAKEOVER
+     ════════════════════════════════════════ -->
+<div class="page" id="ftue-page">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div class="page-header-text">
+      <h1>Send your first email</h1>
+      <p>A quick walkthrough to help your first send land in the inbox.</p>
+    </div>
+    <button class="page-header-close" onclick="setView('dismissed', document.querySelectorAll('.demo-bar button')[1])">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+        <path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      Skip for now
+    </button>
+  </div>
+
+  <!-- Main: sidebar + content -->
+  <div class="page-main">
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="sidebar-step completed" data-step="1" onclick="goToStep(1)">
+        <div class="sidebar-step-indicator">
+          <svg class="sidebar-step-check" width="10" height="10" viewBox="0 0 10 10" fill="none">
+            <path d="M2 5l2.5 2.5L8 3" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div class="sidebar-step-indicator-dot"></div>
+        </div>
+        <span class="sidebar-step-label">Your situation</span>
+      </div>
+
+      <div class="sidebar-step active" data-step="2" onclick="goToStep(2)">
+        <div class="sidebar-step-indicator">
+          <svg class="sidebar-step-check" width="10" height="10" viewBox="0 0 10 10" fill="none">
+            <path d="M2 5l2.5 2.5L8 3" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div class="sidebar-step-indicator-dot"></div>
+        </div>
+        <span class="sidebar-step-label">Choose your audience</span>
+      </div>
+
+      <div class="sidebar-step" data-step="3" onclick="goToStep(3)">
+        <div class="sidebar-step-indicator">
+          <svg class="sidebar-step-check" width="10" height="10" viewBox="0 0 10 10" fill="none">
+            <path d="M2 5l2.5 2.5L8 3" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div class="sidebar-step-indicator-dot"></div>
+        </div>
+        <span class="sidebar-step-label">Write your email</span>
+      </div>
+    </nav>
+
+    <!-- Content -->
+    <div class="content">
+      <div class="content-scroll">
+
+        <!-- ── STEP 1: Your Situation ── -->
+        <div class="step" id="step-1">
+          <div class="step-heading">
+            <h2>Before your first email — here's where you stand</h2>
+            <p>Your sending reputation starts at zero. Here's what that means and how to build it the right way.</p>
+          </div>
+
+          <div class="stat-cards">
+            <div class="stat-card">
+              <div class="stat-card-label">Your domain</div>
+              <div style="margin-bottom: 6px;">
+                <span class="badge badge-new"><span class="badge-dot"></span>New sender</span>
+              </div>
+              <div class="stat-card-desc">First time sending from this domain via Reach.</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-label">Engaged contacts</div>
+              <div class="stat-card-value">47</div>
+              <div class="stat-card-desc">Customers who've purchased or interacted recently.</div>
+            </div>
+          </div>
+
+          <div class="explainer" style="margin-bottom: 20px;">
+            <div class="explainer-icon">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM8 5a.75.75 0 110 1.5A.75.75 0 018 5zm0 2.5a.75.75 0 01.75.75v3a.75.75 0 01-1.5 0v-3A.75.75 0 018 7.5z" fill="currentColor"/>
+              </svg>
+            </div>
+            <p><strong>Your domain reputation is invisible but consequential.</strong> Email providers like Gmail and Apple Mail score every domain they've never seen before. A new domain that blasts a large list often gets routed to spam — or blocked entirely. Starting small with people who know you builds the trust score that gets your future emails delivered.</p>
+          </div>
+
+          <!-- Warming timeline -->
+          <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted-fg); margin-bottom: 8px;">How warming works</div>
+          <div class="warming-timeline" style="margin-bottom: 20px;">
+            <div class="timeline-row">
+              <div class="timeline-week">Week 1–2</div>
+              <div class="timeline-content">
+                <div class="timeline-title">Start with your most engaged contacts</div>
+                <div class="timeline-desc">Send only to people who've recently opened, clicked, or purchased. Aim for open rates above 30%.</div>
+              </div>
+              <span class="timeline-badge timeline-badge-now">You are here</span>
+            </div>
+            <div class="timeline-row">
+              <div class="timeline-week">Week 3–4</div>
+              <div class="timeline-content">
+                <div class="timeline-title">Expand to a broader audience</div>
+                <div class="timeline-desc">Once you're consistently above 20% open rates, you can safely add more contacts to your sends.</div>
+              </div>
+              <span class="timeline-badge timeline-badge-next">Coming soon</span>
+            </div>
+            <div class="timeline-row">
+              <div class="timeline-week">Week 5+</div>
+              <div class="timeline-content">
+                <div class="timeline-title">Reach your full list</div>
+                <div class="timeline-desc">A warmed domain means reliable inbox delivery across all your contacts.</div>
+              </div>
+              <span class="timeline-badge timeline-badge-next">Coming soon</span>
+            </div>
+          </div>
+
+          <!-- Thresholds to watch -->
+          <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted-fg); margin-bottom: 8px;">What to watch</div>
+          <div class="threshold-grid">
+            <div class="threshold-item">
+              <div class="threshold-label">Open rate</div>
+              <div class="threshold-value">30%+</div>
+              <div class="threshold-goal">Target for first sends. <strong>Good sign</strong></div>
+            </div>
+            <div class="threshold-item">
+              <div class="threshold-label">Spam complaints</div>
+              <div class="threshold-value">&lt; 0.1%</div>
+              <div class="threshold-goal">Gmail's 2024 mandate. Reach pauses your send if exceeded.</div>
+            </div>
+            <div class="threshold-item">
+              <div class="threshold-label">Hard bounces</div>
+              <div class="threshold-value">&lt; 2%</div>
+              <div class="threshold-goal">Industry standard. Reach pauses your send if exceeded.</div>
+            </div>
+            <div class="threshold-item">
+              <div class="threshold-label">Unsubscribes</div>
+              <div class="threshold-value">&lt; 0.1%</div>
+              <div class="threshold-goal">Keep this low by sending to people who know you first.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── STEP 2: Choose Your Audience ── -->
+        <div class="step active" id="step-2">
+          <div class="step-heading">
+            <h2>Start with your Engaged Customers</h2>
+            <p>These are contacts who've recently opened, clicked, or purchased — people who already know your business. The best first audience.</p>
+          </div>
+
+          <div class="card" id="audience-card">
+            <div class="card-header">Choose your audience</div>
+
+            <div class="segment-option selected" id="opt-engaged" onclick="selectAudience('engaged')">
+              <div class="segment-radio"><div class="radio-dot"></div></div>
+              <div class="segment-info">
+                <div class="segment-name">Engaged Customers <span style="font-size:11px; font-weight:600; color: var(--green); background: var(--green-bg); border: 1px solid var(--green-border); padding: 1px 7px; border-radius: 100px; margin-left: 6px;">Recommended</span></div>
+                <div class="segment-meta">Opened, clicked, or purchased in the last 90 days</div>
+              </div>
+              <div class="contact-pill">47 contacts</div>
+            </div>
+
+            <div id="warming-widget" class="warming" style="margin: 0 14px 14px; border-radius: var(--radius);">
+              <svg class="warming-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <circle cx="10" cy="10" r="9" fill="hsl(142 71% 35% / 0.15)" stroke="hsl(142 71% 35%)" stroke-width="1.5"/>
+                <path d="M6 10l3 3 5-5" stroke="hsl(142 71% 35%)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <div class="warming-body">
+                <div class="warming-title">Good starting audience</div>
+                <div class="warming-desc">47 contacts is a safe first-send volume. These people already know your business and are more likely to open.</div>
+              </div>
+            </div>
+
+            <div class="segment-option" id="opt-custom" onclick="selectAudience('custom')">
+              <div class="segment-radio"><div class="radio-dot"></div></div>
+              <div class="segment-info">
+                <div class="segment-name">I'll choose my own segment</div>
+                <div class="segment-meta">Pick any audience in the broadcast builder</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── STEP 3: Write Your Email ── -->
+        <div class="step" id="step-3">
+          <div class="step-heading">
+            <h2>What to write for your first email</h2>
+            <p>Your first email doesn't need to be complicated. The goal is a simple, genuine message from your business.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-header">Tips for a good first email</div>
+            <div class="tip-list">
+              <div class="tip-item">
+                <div class="tip-number">1</div>
+                <div class="tip-body">
+                  <div class="tip-title">Keep it short</div>
+                  <div class="tip-desc">2–4 short paragraphs is ideal. People skim. Get to the point quickly and make it easy to read on a phone.</div>
+                </div>
+              </div>
+              <div class="tip-item">
+                <div class="tip-number">2</div>
+                <div class="tip-body">
+                  <div class="tip-title">Write from a person, not a company</div>
+                  <div class="tip-desc">Use "I" or "we" rather than your business name. Personalize your sign-off with your name and role. It builds trust.</div>
+                </div>
+              </div>
+              <div class="tip-item">
+                <div class="tip-number">3</div>
+                <div class="tip-body">
+                  <div class="tip-title">Have one clear purpose</div>
+                  <div class="tip-desc">A welcome note, a seasonal update, a new offering, a simple thank-you. Pick one thing and say it well. Don't try to cover everything.</div>
+                </div>
+              </div>
+              <div class="tip-item">
+                <div class="tip-number">4</div>
+                <div class="tip-body">
+                  <div class="tip-title">Include one clear next step</div>
+                  <div class="tip-desc">A call, a booking link, a reply — give readers one thing to do. Multiple CTAs split attention and reduce action.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">Subject line examples</div>
+            <div class="card-body">
+              <div style="font-size: 13px; color: var(--muted-fg); margin-bottom: 12px;">These are starting points — edit them to match your voice.</div>
+              <div class="example-chips">
+                <button class="example-chip">A quick note from us</button>
+                <button class="example-chip">We wanted to check in</button>
+                <button class="example-chip">Something we wanted to share</button>
+                <button class="example-chip">An update from [Business Name]</button>
+                <button class="example-chip">Thanks for being a customer</button>
+                <button class="example-chip">We have something new</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /content-scroll -->
+
+      <!-- Footer actions -->
+      <div class="content-footer">
+        <button class="btn-ghost" id="back-btn" onclick="handleBack()" style="visibility:hidden">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Back
+        </button>
+        <button class="btn-primary" id="next-btn" onclick="handleNext()">
+          Next: Choose your audience
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /page-main -->
+</div><!-- /page -->
+
+<!-- ════════════════════════════════════════
+     DISMISSED STATE — AUTOMATIONS LIST
+     ════════════════════════════════════════ -->
+<div class="page" id="dismissed-page" style="display:none;">
+  <div class="automations-list-placeholder">
+    <div class="automations-list-header">
+      <h1>Broadcasts</h1>
+      <button class="btn-sm" onclick="setView('ftue', document.querySelectorAll('.demo-bar button')[0])">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+          <path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+        New broadcast
+      </button>
+    </div>
+
+    <!-- Re-open entry point -->
+    <div class="reopen-banner">
+      <div class="reopen-banner-text">
+        <div class="reopen-banner-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM8 5a.75.75 0 110 1.5A.75.75 0 018 5zm0 2.5a.75.75 0 01.75.75v3a.75.75 0 01-1.5 0v-3A.75.75 0 018 7.5z" fill="currentColor"/>
+          </svg>
+        </div>
+        <div class="reopen-banner-copy">
+          <strong>Ready to send your first email?</strong>
+          <span>We'll walk you through choosing a good audience and what to write.</span>
+        </div>
+      </div>
+      <button class="btn-sm" onclick="setView('ftue', document.querySelectorAll('.demo-bar button')[0])">
+        Get started
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M2 6h8M7 3l3 3-3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="empty-state">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+        <rect x="6" y="10" width="28" height="22" rx="3" stroke="currentColor" stroke-width="2"/>
+        <path d="M6 16l14 9 14-9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div style="font-weight:600; color: var(--foreground);">No broadcasts yet</div>
+      <div>Your sent and scheduled broadcasts will appear here.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentStep = 2; // Start on step 2 to show sidebar in context
+
+function selectAudience(choice) {
+  const engaged = document.getElementById('opt-engaged');
+  const custom = document.getElementById('opt-custom');
+  const warming = document.getElementById('warming-widget');
+
+  if (choice === 'engaged') {
+    engaged.classList.add('selected');
+    custom.classList.remove('selected');
+    warming.style.display = 'flex';
+  } else {
+    custom.classList.add('selected');
+    engaged.classList.remove('selected');
+    warming.style.display = 'none';
+  }
+}
+
+function goToStep(n) {
+  // Update step content
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step-' + n).classList.add('active');
+
+  // Update sidebar
+  document.querySelectorAll('.sidebar-step').forEach((el, i) => {
+    const stepNum = i + 1;
+    el.classList.remove('active', 'completed');
+    if (stepNum < n) el.classList.add('completed');
+    else if (stepNum === n) el.classList.add('active');
+  });
+
+  currentStep = n;
+  updateFooter();
+  document.querySelector('.content-scroll').scrollTop = 0;
+}
+
+function updateFooter() {
+  const backBtn = document.getElementById('back-btn');
+  const nextBtn = document.getElementById('next-btn');
+
+  backBtn.style.visibility = currentStep === 1 ? 'hidden' : 'visible';
+
+  if (currentStep === 1) {
+    nextBtn.innerHTML = 'Next: Choose your audience <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  } else if (currentStep === 2) {
+    nextBtn.innerHTML = 'Next: Write your email <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  } else {
+    nextBtn.innerHTML = 'Open broadcast builder <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  }
+}
+
+function handleNext() {
+  if (currentStep < 3) goToStep(currentStep + 1);
+  // else → launch broadcast builder (link to actual builder)
+}
+
+function handleBack() {
+  if (currentStep > 1) goToStep(currentStep - 1);
+}
+
+function setView(view, btn) {
+  document.querySelectorAll('.demo-bar button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('ftue-page').style.display = view === 'ftue' ? 'flex' : 'none';
+  document.getElementById('dismissed-page').style.display = view === 'dismissed' ? 'flex' : 'none';
+}
+
+// Init: show step 1
+goToStep(1);
+</script>
+</body>
+</html>
