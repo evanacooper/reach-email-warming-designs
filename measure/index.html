@@ -1,0 +1,1697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reach Dashboard v2 — Acquire & Measure</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; background: #e5e7eb; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+
+/* ─── Partner shell (Fieldstone partner host app) ─── */
+.partner-shell {
+  width: 1300px;
+  height: 860px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.08);
+}
+
+/* Partner topbar */
+.partner-topbar {
+  height: 52px;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 16px;
+  flex-shrink: 0;
+}
+.partner-logo { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 800; color: #1e3a5f; letter-spacing: -0.5px; }
+.partner-logo-icon { width: 28px; height: 28px; background: #1e3a5f; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+.partner-search { flex: 1; max-width: 480px; height: 32px; background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 6px; display: flex; align-items: center; padding: 0 10px; gap: 6px; color: #9ca3af; font-size: 13px; margin-left: 16px; }
+.partner-topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.partner-branch-select { display: flex; align-items: center; gap: 5px; padding: 5px 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 12px; font-weight: 500; color: #374151; background: white; cursor: pointer; }
+.partner-cta { background: #1e3a5f; color: white; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 5px; cursor: pointer; }
+.partner-avatar { width: 28px; height: 28px; background: #dbeafe; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #1e40af; }
+.partner-notif { position: relative; }
+.partner-notif-dot { width: 7px; height: 7px; background: #ef4444; border-radius: 50%; position: absolute; top: -2px; right: -2px; border: 1.5px solid white; }
+
+/* Partner body: sidebar + content */
+.partner-body { display: flex; flex: 1; overflow: hidden; }
+
+/* Partner sidebar */
+.partner-sidebar {
+  width: 210px;
+  background: white;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  padding: 12px 0;
+}
+.partner-sidebar-section { padding: 4px 12px 2px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #9ca3af; margin-top: 8px; }
+.partner-nav { display: flex; align-items: center; gap: 8px; padding: 7px 14px; font-size: 13px; color: #6b7280; cursor: pointer; border-radius: 0; font-weight: 500; border-left: 2px solid transparent; }
+.partner-nav:hover { background: #f9fafb; color: #111827; }
+.partner-nav.active { background: #eff6ff; color: #1e3a5f; font-weight: 600; border-left-color: #1e3a5f; }
+.partner-nav svg { width: 15px; height: 15px; flex-shrink: 0; }
+.partner-nav-badge { font-size: 10px; background: #dbeafe; color: #1e40af; padding: 1px 5px; border-radius: 10px; margin-left: auto; font-weight: 700; }
+
+/* Main area: breadcrumb + iframe */
+.partner-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #f8f9fa; }
+.partner-breadcrumb {
+  height: 36px;
+  background: white;
+  border-bottom: 1px solid #f3f4f6;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 6px;
+  font-size: 12px;
+  color: #6b7280;
+  flex-shrink: 0;
+}
+.partner-breadcrumb .crumb-active { color: #111827; font-weight: 600; }
+.partner-breadcrumb .sep { color: #d1d5db; }
+
+/* ─── The iframe area — this is what Reach controls ─── */
+.reach-iframe { flex: 1; overflow-y: auto; overflow-x: hidden; background: #f9fafb; display: flex; flex-direction: column; }
+
+/* ═══════════════════════════════════════
+   SHARED REACH UI PRIMITIVES
+═══════════════════════════════════════ */
+
+.reach-topbar {
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0 20px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.reach-topbar-left { display: flex; align-items: center; gap: 10px; }
+.reach-page-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #9ca3af; }
+.reach-page-title { font-size: 14px; font-weight: 700; color: #111827; }
+.reach-topbar-right { display: flex; align-items: center; gap: 8px; }
+.date-picker { display: flex; align-items: center; gap: 5px; padding: 4px 10px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 11px; color: #374151; background: white; cursor: pointer; font-weight: 500; }
+.btn-sm { padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid; }
+.btn-secondary { background: white; color: #374151; border-color: #e5e7eb; }
+.reach-content { padding: 16px 20px; flex: 1; }
+
+/* Tables */
+.data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.data-table th { text-align: left; padding: 7px 10px; font-size: 10px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 2px solid #f3f4f6; background: #f9fafb; white-space: nowrap; }
+.data-table td { padding: 8px 10px; border-bottom: 1px solid #f9fafb; color: #374151; vertical-align: middle; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:not(.total-row):hover td { background: #fafafa; cursor: pointer; }
+.text-right { text-align: right; }
+.text-muted { color: #9ca3af; font-size: 10px; }
+.text-green { color: #10b981; }
+.text-indigo { color: #6366f1; }
+.text-red { color: #ef4444; }
+.text-amber { color: #d97706; }
+.font-semibold { font-weight: 600; }
+
+.platform-badge { display: inline-flex; align-items: center; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+.platform-badge.google { background: #dbeafe; color: #1d4ed8; }
+.platform-badge.meta { background: #ede9fe; color: #6d28d9; }
+.lead-status { display: inline-flex; align-items: center; padding: 1px 7px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+.lead-status.new-s { background: #dbeafe; color: #2563eb; }
+.lead-status.contacted { background: #f0fdf4; color: #15803d; }
+.lead-status.converted { background: #d1fae5; color: #059669; }
+.lead-status.stale { background: #fef3c7; color: #d97706; }
+.campaign-status { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+.campaign-status.active { background: #d1fae5; color: #065f46; }
+.campaign-status.paused { background: #fff7ed; color: #c2410c; }
+.campaign-status .status-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.campaign-status.active .status-dot { background: #10b981; }
+.campaign-status.paused .status-dot { background: #f97316; }
+
+.callout { border-radius: 7px; padding: 10px 13px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-size: 11px; }
+.callout.warning { background: #fffbeb; border: 1px solid #fde68a; color: #b45309; }
+.callout.info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8; }
+.callout.success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d; }
+
+/* Horizontal bar chart */
+.hbar { display: flex; flex-direction: column; gap: 6px; }
+.hbar-row { display: flex; align-items: center; gap: 8px; }
+.hbar-label { font-size: 10px; color: #374151; width: 100px; text-align: right; font-weight: 500; flex-shrink: 0; }
+.hbar-track { flex: 1; background: #f3f4f6; border-radius: 3px; height: 20px; overflow: hidden; }
+.hbar-fill { height: 100%; border-radius: 3px; display: flex; align-items: center; padding-left: 8px; font-size: 10px; font-weight: 600; color: white; }
+.hbar-val { font-size: 10px; color: #374151; font-weight: 600; flex-shrink: 0; width: 36px; }
+
+/* Tabs */
+.tabs-wrapper { background: white; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+.tabs-header { display: flex; align-items: center; border-bottom: 1px solid #e5e7eb; padding: 0 16px; background: #f9fafb; }
+.tab { display: flex; align-items: center; gap: 5px; padding: 9px 11px; font-size: 12px; font-weight: 500; color: #6b7280; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; transition: all 0.12s; }
+.tab:hover { color: #374151; }
+.tab.active { color: #6366f1; border-bottom-color: #6366f1; font-weight: 600; }
+.tab svg { width: 13px; height: 13px; }
+.tab-badge { font-size: 9px; background: #6366f1; color: white; padding: 1px 4px; border-radius: 8px; font-weight: 700; }
+.tab-badge.warn { background: #f59e0b; }
+.tab-content { display: none; padding: 16px; }
+.tab-content.active { display: block; }
+.tabs-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+
+/* ═══════════════════════════════════════
+   ACQUIRE VIEW — "Newspaper Front Page"
+═══════════════════════════════════════ */
+
+/* --- Headline hero --- */
+.acq-headline-block {
+  background: white;
+  border-left: 4px solid #6366f1;
+  border-radius: 0 8px 8px 0;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 4px rgba(99,102,241,0.08);
+}
+.acq-headline-kicker {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #6366f1;
+  margin-bottom: 6px;
+}
+.acq-headline-text {
+  font-size: 26px;
+  font-weight: 800;
+  color: #111827;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+  margin-bottom: 6px;
+}
+.acq-headline-sub {
+  font-size: 14px;
+  color: #4b5563;
+  line-height: 1.5;
+  font-weight: 400;
+  margin-bottom: 10px;
+}
+.acq-headline-meta {
+  font-size: 10px;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.acq-headline-meta-dot { width: 3px; height: 3px; border-radius: 50%; background: #d1d5db; }
+
+/* --- 3 story columns --- */
+.acq-story-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.acq-story-col {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px 18px;
+}
+.acq-story-title {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #6b7280;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+/* Stat stack (Column 1) */
+.acq-stat-stack { display: flex; flex-direction: column; gap: 14px; }
+.acq-stat-item { display: flex; flex-direction: column; gap: 1px; }
+.acq-stat-value {
+  font-size: 32px;
+  font-weight: 800;
+  color: #111827;
+  letter-spacing: -1px;
+  line-height: 1;
+}
+.acq-stat-value.indigo { color: #6366f1; }
+.acq-stat-value.green { color: #10b981; }
+.acq-stat-sub { font-size: 11px; color: #6b7280; margin-top: 1px; }
+.acq-stat-trend { font-size: 10px; color: #9ca3af; margin-top: 3px; }
+.acq-stat-trend.up { color: #10b981; }
+.acq-stat-trend.down { color: #ef4444; }
+.acq-stat-divider { height: 1px; background: #f9fafb; margin: 2px 0; }
+
+/* Funnel visualization (Column 2) */
+.acq-funnel { display: flex; flex-direction: column; gap: 0; }
+.acq-funnel-stage { display: flex; align-items: center; gap: 10px; }
+.acq-funnel-bar-wrap { flex: 1; }
+.acq-funnel-bar {
+  height: 28px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  transition: all 0.2s;
+}
+.acq-funnel-bar-label {
+  font-size: 10px;
+  color: #6b7280;
+  width: 68px;
+  text-align: right;
+  flex-shrink: 0;
+  font-weight: 500;
+}
+.acq-funnel-connector {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 2px 0;
+  padding-left: calc(68px + 10px);
+}
+.acq-funnel-rate {
+  font-size: 9px;
+  color: #9ca3af;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.acq-funnel-rate::before {
+  content: '↓';
+  color: #d1d5db;
+}
+
+/* Activity list (Column 3) */
+.acq-activity-list { display: flex; flex-direction: column; gap: 0; }
+.acq-activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f9fafb;
+}
+.acq-activity-item:last-child { border-bottom: none; }
+.acq-activity-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.acq-activity-icon.blue { background: #eff6ff; }
+.acq-activity-icon.orange { background: #fff7ed; }
+.acq-activity-icon.green { background: #f0fdf4; }
+.acq-activity-icon.purple { background: #f5f3ff; }
+.acq-activity-body { flex: 1; }
+.acq-activity-text { font-size: 11px; color: #374151; line-height: 1.45; font-weight: 500; }
+.acq-activity-date { font-size: 10px; color: #9ca3af; margin-top: 2px; }
+
+/* Coming up section */
+/* Acquire tab bar */
+.acq-tabs-wrap { background: white; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; margin-top: 12px; }
+.acq-tabs-header { display: flex; align-items: center; border-bottom: 1px solid #e5e7eb; padding: 0 16px; background: #f9fafb; }
+.acq-tab { display: flex; align-items: center; gap: 5px; padding: 9px 11px; font-size: 12px; font-weight: 500; color: #6b7280; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; transition: all 0.12s; }
+.acq-tab:hover { color: #374151; }
+.acq-tab.active { color: #6366f1; border-bottom-color: #6366f1; font-weight: 600; }
+.acq-tab-content { display: none; padding: 16px; }
+.acq-tab-content.active { display: block; }
+
+.acq-coming-up {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 14px 18px;
+}
+.acq-coming-up-title {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #6b7280;
+  margin-bottom: 10px;
+}
+.acq-coming-up-list { display: flex; flex-direction: column; gap: 0; }
+.acq-coming-up-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid #f9fafb;
+}
+.acq-coming-up-item:last-child { border-bottom: none; }
+.acq-coming-up-bullet {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #c7d2fe;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.acq-coming-up-bullet::after { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #6366f1; display: block; }
+.acq-coming-up-text { font-size: 12px; color: #374151; line-height: 1.5; }
+
+/* ═══════════════════════════════════════
+   MEASURE VIEW — "Funnel as Hero"
+═══════════════════════════════════════ */
+
+/* --- Interactive funnel (top hero) --- */
+.msr-funnel-section {
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 16px 20px 0;
+  flex-shrink: 0;
+}
+.msr-funnel-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  margin-bottom: 12px;
+}
+/* Chevron stage */
+.msr-stage {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 8px 12px 20px;
+  background: #f3f4f6;
+  cursor: pointer;
+  transition: all 0.15s;
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%, 14px 50%);
+  margin-right: -1px;
+  min-height: 72px;
+  user-select: none;
+}
+.msr-stage:first-child {
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%);
+  padding-left: 14px;
+}
+.msr-stage:last-child {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 14px 50%);
+}
+.msr-stage:hover { background: #e0e7ff; }
+.msr-stage.active { background: #6366f1; }
+.msr-stage-name {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #6b7280;
+  margin-bottom: 4px;
+  text-align: center;
+}
+.msr-stage.active .msr-stage-name { color: rgba(255,255,255,0.8); }
+.msr-stage-value {
+  font-size: 15px;
+  font-weight: 800;
+  color: #111827;
+  text-align: center;
+  letter-spacing: -0.3px;
+  line-height: 1.1;
+}
+.msr-stage.active .msr-stage-value { color: white; }
+.msr-stage-sub {
+  font-size: 9px;
+  color: #9ca3af;
+  text-align: center;
+  margin-top: 2px;
+}
+.msr-stage.active .msr-stage-sub { color: rgba(255,255,255,0.65); }
+
+/* Source bar chart below funnel */
+.msr-funnel-breakdown {
+  padding: 10px 0 14px;
+  border-top: 1px solid #f3f4f6;
+}
+.msr-breakdown-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9ca3af;
+  margin-bottom: 8px;
+}
+.msr-breakdown-bars { display: flex; flex-direction: column; gap: 5px; }
+.msr-breakdown-row { display: flex; align-items: center; gap: 8px; }
+.msr-breakdown-ch { font-size: 10px; color: #374151; width: 100px; text-align: right; font-weight: 500; flex-shrink: 0; }
+.msr-breakdown-track { flex: 1; background: #f3f4f6; border-radius: 3px; height: 16px; overflow: hidden; }
+.msr-breakdown-fill { height: 100%; border-radius: 3px; display: flex; align-items: center; padding-left: 7px; font-size: 9px; font-weight: 600; color: white; transition: width 0.3s ease; }
+.msr-breakdown-n { font-size: 10px; color: #374151; font-weight: 600; width: 30px; flex-shrink: 0; }
+
+/* --- Insight strip --- */
+.msr-insight-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 12px 20px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+.msr-insight-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 7px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  transition: box-shadow 0.12s;
+}
+.msr-insight-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+.msr-insight-card.red { border-left: 3px solid #ef4444; }
+.msr-insight-card.green { border-left: 3px solid #10b981; }
+.msr-insight-card.amber { border-left: 3px solid #f59e0b; }
+.msr-insight-body { flex: 1; }
+.msr-insight-text { font-size: 11px; color: #374151; line-height: 1.45; font-weight: 500; }
+.msr-insight-cta { font-size: 10px; color: #6366f1; font-weight: 600; margin-top: 4px; white-space: nowrap; }
+
+/* --- Measure tabs area --- */
+.msr-tabs-area { flex: 1; overflow-y: auto; padding: 14px 20px; }
+
+/* Tab panels */
+.msr-tab-panels { background: white; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+.msr-tabs-header { display: flex; align-items: center; border-bottom: 1px solid #e5e7eb; padding: 0 16px; background: #f9fafb; }
+.msr-tab { display: flex; align-items: center; gap: 5px; padding: 9px 11px; font-size: 12px; font-weight: 500; color: #6b7280; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; transition: all 0.12s; }
+.msr-tab:hover { color: #374151; }
+.msr-tab.active { color: #6366f1; border-bottom-color: #6366f1; font-weight: 600; }
+.msr-tab-badge { font-size: 9px; background: #f59e0b; color: white; padding: 1px 4px; border-radius: 8px; font-weight: 700; }
+.msr-tab-content { display: none; padding: 16px; }
+.msr-tab-content.active { display: block; }
+
+/* Overview tab */
+.msr-overview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.msr-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 7px; padding: 14px; }
+.msr-card-title { font-size: 11px; font-weight: 600; color: #374151; margin-bottom: 10px; }
+.msr-card-sub { font-size: 10px; color: #9ca3af; margin-top: 1px; }
+.msr-metric-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+.msr-metric-box { background: white; border: 1px solid #e5e7eb; border-radius: 7px; padding: 11px 13px; }
+.msr-metric-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #9ca3af; margin-bottom: 4px; }
+.msr-metric-value { font-size: 22px; font-weight: 800; color: #111827; letter-spacing: -0.5px; }
+.msr-metric-value.indigo { color: #6366f1; }
+.msr-metric-value.green { color: #10b981; }
+.msr-metric-value.amber { color: #d97706; }
+.msr-metric-change { font-size: 10px; color: #9ca3af; margin-top: 2px; }
+.msr-metric-change.up { color: #10b981; }
+
+/* New customers tab */
+.nc-hero-num { font-size: 48px; font-weight: 800; color: #6366f1; letter-spacing: -2px; line-height: 1; }
+.nc-hero-label { font-size: 13px; color: #6b7280; margin-top: 4px; }
+.nc-paid-organic { display: flex; align-items: center; gap: 20px; padding: 12px 0; border-bottom: 1px solid #f3f4f6; margin-bottom: 14px; }
+.nc-po-block { display: flex; flex-direction: column; gap: 2px; }
+.nc-po-num { font-size: 24px; font-weight: 800; color: #111827; letter-spacing: -0.5px; }
+.nc-po-label { font-size: 11px; color: #6b7280; }
+.nc-po-divider { width: 1px; height: 36px; background: #e5e7eb; }
+
+/* Channels tab divider */
+.ch-divider-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #9ca3af; margin: 16px 0 8px; display: flex; align-items: center; gap: 8px; }
+.ch-divider-label::after { content: ''; flex: 1; height: 1px; background: #f3f4f6; }
+.ch-section-note { font-size: 10px; color: #9ca3af; margin-bottom: 8px; }
+
+/* Leads tab metric row */
+.leads-metric-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+.leads-metric { background: white; border: 1px solid #e5e7eb; border-radius: 7px; padding: 11px 13px; }
+.leads-metric-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #9ca3af; margin-bottom: 4px; }
+.leads-metric-value { font-size: 22px; font-weight: 800; color: #111827; letter-spacing: -0.5px; }
+.leads-metric-value.indigo { color: #6366f1; }
+.leads-metric-value.green { color: #10b981; }
+.leads-metric-value.amber { color: #d97706; }
+
+/* Section within tab */
+.tab-section { margin-bottom: 16px; }
+.tab-section-title { font-size: 11px; font-weight: 600; color: #374151; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+.tab-section-link { font-size: 10px; color: #6366f1; font-weight: 600; cursor: pointer; }
+
+/* Rate vs prior period block */
+.rate-compare { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 7px; padding: 12px 14px; margin-top: 12px; }
+.rate-compare-title { font-size: 11px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+.rate-compare-body { font-size: 11px; color: #4b5563; line-height: 1.6; }
+.rate-compare-highlight { color: #ef4444; font-weight: 600; }
+.rate-compare-good { color: #10b981; font-weight: 600; }
+
+/* SEO callout in campaigns */
+.seo-callout { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 7px; padding: 12px 14px; margin-top: 14px; }
+.seo-callout-title { font-size: 11px; font-weight: 700; color: #15803d; margin-bottom: 4px; }
+.seo-callout-body { font-size: 11px; color: #166534; line-height: 1.5; }
+
+/* Unattributed note */
+.unattr-note { background: #fafafa; border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px 13px; margin-top: 12px; font-size: 10px; color: #6b7280; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     PARTNER SHELL (Fieldstone — generic partner host)
+═══════════════════════════════════════════ -->
+<div class="partner-shell">
+
+  <!-- Partner topbar -->
+  <div class="partner-topbar">
+    <div class="partner-logo">
+      <div class="partner-logo-icon">
+        <svg width="16" height="16" fill="white" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="white" stroke-width="1.5" fill="none"/></svg>
+      </div>
+      FIELDSTONE
+    </div>
+    <div class="partner-search">
+      <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      Search
+    </div>
+    <div class="partner-topbar-right">
+      <div class="partner-branch-select">
+        All Locations
+        <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </div>
+      <div class="partner-cta">
+        <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        New Job
+        <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </div>
+      <div class="partner-notif" style="position:relative">
+        <svg width="18" height="18" fill="none" stroke="#6b7280" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        <div class="partner-notif-dot"></div>
+      </div>
+      <div class="partner-avatar">JW</div>
+    </div>
+  </div>
+
+  <!-- Body: sidebar + main -->
+  <div class="partner-body">
+
+    <!-- Partner sidebar -->
+    <div class="partner-sidebar">
+      <div class="partner-sidebar-section">Jobs</div>
+      <div class="partner-nav" onclick="setNav(this)">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        Schedule
+      </div>
+      <div class="partner-nav" onclick="setNav(this)">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        Work Orders
+        <span class="partner-nav-badge">14</span>
+      </div>
+      <div class="partner-nav" onclick="setNav(this)">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+        Dispatch
+      </div>
+      <div class="partner-nav" onclick="setNav(this)">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Customers
+      </div>
+      <div class="partner-nav" onclick="setNav(this)">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        Equipment
+      </div>
+      <div class="partner-sidebar-section">Business</div>
+      <div class="partner-nav active" id="nav-acquire" onclick="showView('acquire')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"/></svg>
+        Acquire
+        <span class="partner-nav-badge">New</span>
+      </div>
+      <div class="partner-nav" id="nav-measure" onclick="showView('measure')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
+        Measure
+      </div>
+      <div class="partner-nav" onclick="setNav(this)">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Estimates &amp; Invoices
+      </div>
+      <div class="partner-nav" onclick="setNav(this)">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Payments
+      </div>
+      <div class="partner-nav" onclick="setNav(this)">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+        Settings
+      </div>
+    </div>
+
+    <!-- Partner main area -->
+    <div class="partner-main">
+
+      <!-- Breadcrumb (updates on view switch) -->
+      <div class="partner-breadcrumb" id="breadcrumb">
+        <span>Business</span>
+        <span class="sep">•</span>
+        <span class="crumb-active" id="breadcrumb-active">Acquire</span>
+      </div>
+
+      <!-- ═══════════════════════════════
+           REACH IFRAME STARTS HERE
+      ═══════════════════════════════ -->
+      <div class="reach-iframe">
+
+        <!-- ════════════════════════════════════════
+             ACQUIRE VIEW — "Newspaper Front Page"
+        ════════════════════════════════════════ -->
+        <div id="acquire-view">
+
+          <!-- Topbar: period label + date picker + download -->
+          <div class="reach-topbar">
+            <div class="reach-topbar-left">
+              <span class="reach-page-label">Weekly Marketing Brief</span>
+              <div class="date-picker" style="margin-left:6px">
+                <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                Feb 3 – Feb 28, 2026
+                <svg width="9" height="9" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+              </div>
+            </div>
+            <div class="reach-topbar-right">
+              <button class="btn-sm btn-secondary">
+                <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;margin-right:3px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                Download PDF
+              </button>
+            </div>
+          </div>
+
+          <!-- Scrollable content area -->
+          <div class="reach-content">
+
+            <!-- ── Headline hero ── -->
+            <div class="acq-headline-block">
+              <div class="acq-headline-kicker">&#128240; February 2026 · Monthly Brief</div>
+              <div class="acq-headline-text">YOUR ADS DROVE 47 NEW CUSTOMERS THIS MONTH</div>
+              <div class="acq-headline-sub">Google Search led with 28, Meta brought in 19. Cost per new customer: $142.</div>
+              <div class="acq-headline-meta">
+                <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Generated from your data
+                <span class="acq-headline-meta-dot"></span>
+                Updated daily
+                <span class="acq-headline-meta-dot"></span>
+                Feb 3 – Feb 28, 2026
+              </div>
+            </div>
+
+            <!-- ── 3 story columns ── -->
+            <div class="acq-story-grid">
+
+              <!-- Column 1: What We Delivered -->
+              <div class="acq-story-col">
+                <div class="acq-story-title">What We Delivered</div>
+                <div class="acq-stat-stack">
+                  <div class="acq-stat-item">
+                    <div class="acq-stat-value">633</div>
+                    <div class="acq-stat-sub">Leads &nbsp;·&nbsp; calls + form fills</div>
+                    <div class="acq-stat-trend up">&#8593; 18% vs last period</div>
+                  </div>
+                  <div class="acq-stat-divider"></div>
+                  <div class="acq-stat-item">
+                    <div class="acq-stat-value indigo">47</div>
+                    <div class="acq-stat-sub">New Customers &nbsp;·&nbsp; first-time buyers</div>
+                    <div class="acq-stat-trend up">&#8593; 12% vs last period</div>
+                  </div>
+                  <div class="acq-stat-divider"></div>
+                  <div class="acq-stat-item">
+                    <div class="acq-stat-value green" style="font-size:26px">$91,400</div>
+                    <div class="acq-stat-sub">Revenue Attributed &nbsp;·&nbsp; tracked conversions</div>
+                    <div class="acq-stat-trend up">&#8593; 8% vs last period</div>
+                  </div>
+                  <div class="acq-stat-divider"></div>
+                  <div class="acq-stat-item">
+                    <div class="acq-stat-value" style="font-size:28px">6.4×</div>
+                    <div class="acq-stat-sub">ROAS &nbsp;·&nbsp; return on ad spend</div>
+                    <div class="acq-stat-trend up">&#8593; from 5.9× last period</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Column 2: How It Happened (funnel) -->
+              <div class="acq-story-col">
+                <div class="acq-story-title">How It Happened</div>
+                <div class="acq-funnel">
+                  <div class="acq-funnel-stage">
+                    <div class="acq-funnel-bar-label">Impressions</div>
+                    <div class="acq-funnel-bar-wrap">
+                      <div class="acq-funnel-bar" style="background:#3730a3;width:100%">142,000</div>
+                    </div>
+                  </div>
+                  <div class="acq-funnel-connector">
+                    <div class="acq-funnel-rate">3.4% click rate</div>
+                  </div>
+                  <div class="acq-funnel-stage">
+                    <div class="acq-funnel-bar-label">Clicks</div>
+                    <div class="acq-funnel-bar-wrap">
+                      <div class="acq-funnel-bar" style="background:#4338ca;width:82%">4,847</div>
+                    </div>
+                  </div>
+                  <div class="acq-funnel-connector">
+                    <div class="acq-funnel-rate">13% lead rate</div>
+                  </div>
+                  <div class="acq-funnel-stage">
+                    <div class="acq-funnel-bar-label">Leads</div>
+                    <div class="acq-funnel-bar-wrap">
+                      <div class="acq-funnel-bar" style="background:#6366f1;width:52%">633</div>
+                    </div>
+                  </div>
+                  <div class="acq-funnel-connector">
+                    <div class="acq-funnel-rate">7.4% close rate</div>
+                  </div>
+                  <div class="acq-funnel-stage">
+                    <div class="acq-funnel-bar-label">New Customers</div>
+                    <div class="acq-funnel-bar-wrap">
+                      <div class="acq-funnel-bar" style="background:#a5b4fc;width:28%">47</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Column 3: What We Did (activity) -->
+              <div class="acq-story-col">
+                <div class="acq-story-title">What We Did</div>
+                <div class="acq-activity-list">
+                  <div class="acq-activity-item">
+                    <div class="acq-activity-icon blue">&#128200;</div>
+                    <div class="acq-activity-body">
+                      <div class="acq-activity-text">Increased Google Search budget 20% — CPL was below target</div>
+                      <div class="acq-activity-date">Feb 8</div>
+                    </div>
+                  </div>
+                  <div class="acq-activity-item">
+                    <div class="acq-activity-icon orange">&#9208;&#65039;</div>
+                    <div class="acq-activity-body">
+                      <div class="acq-activity-text">Paused underperforming Meta ad set</div>
+                      <div class="acq-activity-date">Feb 11</div>
+                    </div>
+                  </div>
+                  <div class="acq-activity-item">
+                    <div class="acq-activity-icon green">&#128640;</div>
+                    <div class="acq-activity-body">
+                      <div class="acq-activity-text">Launched spring season ad copy variants</div>
+                      <div class="acq-activity-date">Feb 14</div>
+                    </div>
+                  </div>
+                  <div class="acq-activity-item">
+                    <div class="acq-activity-icon blue">&#128269;</div>
+                    <div class="acq-activity-body">
+                      <div class="acq-activity-text">Added 14 negative keywords — reduced wasted spend</div>
+                      <div class="acq-activity-date">Feb 19</div>
+                    </div>
+                  </div>
+                  <div class="acq-activity-item">
+                    <div class="acq-activity-icon purple">&#9876;&#65039;</div>
+                    <div class="acq-activity-body">
+                      <div class="acq-activity-text">Started A/B test on landing page headlines</div>
+                      <div class="acq-activity-date">Feb 24</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div><!-- /story grid -->
+
+            <!-- ── Drill-down tabs ── -->
+            <div class="acq-tabs-wrap">
+              <div class="acq-tabs-header">
+                <div class="acq-tab active" onclick="switchAcqTab('acq-channels')">Channels</div>
+                <div class="acq-tab" onclick="switchAcqTab('acq-campaigns')">Campaigns</div>
+                <div class="acq-tab" onclick="switchAcqTab('acq-leads')">Leads</div>
+                <div class="acq-tab" onclick="switchAcqTab('acq-newcustomers')">New Customers</div>
+                <div class="acq-tab" onclick="switchAcqTab('acq-transactions')">Transactions</div>
+                <div class="acq-tab" onclick="switchAcqTab('acq-comingup')">Coming Up</div>
+              </div>
+
+              <!-- Campaigns -->
+              <div class="acq-tab-content" id="acq-campaigns">
+                <div class="msr-metric-strip" style="grid-template-columns:repeat(4,1fr);margin-bottom:14px">
+                  <div class="msr-metric-box"><div class="msr-metric-label">Total Spend</div><div class="msr-metric-value" style="font-size:20px">$14,280</div><div class="msr-metric-change">On budget</div></div>
+                  <div class="msr-metric-box"><div class="msr-metric-label">Leads from Ads</div><div class="msr-metric-value indigo" style="font-size:20px">418</div><div class="msr-metric-change up">↑ 14%</div></div>
+                  <div class="msr-metric-box"><div class="msr-metric-label">Cost per Lead</div><div class="msr-metric-value" style="font-size:20px">$34</div><div class="msr-metric-change up">↓ 22% vs prior</div></div>
+                  <div class="msr-metric-box"><div class="msr-metric-label">ROAS</div><div class="msr-metric-value green" style="font-size:20px">6.4×</div><div class="msr-metric-change up">↑ from 5.9×</div></div>
+                </div>
+                <table class="data-table">
+                  <thead><tr><th>Campaign</th><th>Platform</th><th class="text-right">Spend</th><th class="text-right">Leads</th><th class="text-right">CPL</th><th class="text-right">New Customers</th><th>Status</th></tr></thead>
+                  <tbody>
+                    <tr>
+                      <td><div style="font-weight:600;color:#111827">Emergency HVAC — Search</div><div class="text-muted">High-intent local queries</div></td>
+                      <td><span class="platform-badge google">Google</span></td>
+                      <td class="text-right font-semibold">$6,840</td>
+                      <td class="text-right"><span style="font-weight:600">248</span><div class="text-muted">📞 172 &nbsp;📋 76</div></td>
+                      <td class="text-right text-green font-semibold">$28</td>
+                      <td class="text-right font-semibold">22</td>
+                      <td><span class="campaign-status active"><span class="status-dot"></span>Active</span></td>
+                    </tr>
+                    <tr>
+                      <td><div style="font-weight:600;color:#111827">HVAC Services — Local Map</div><div class="text-muted">5mi radius, mobile-first</div></td>
+                      <td><span class="platform-badge google">Google</span></td>
+                      <td class="text-right font-semibold">$4,260</td>
+                      <td class="text-right"><span style="font-weight:600">112</span><div class="text-muted">📞 98 &nbsp;📋 14</div></td>
+                      <td class="text-right text-green font-semibold">$38</td>
+                      <td class="text-right font-semibold">8</td>
+                      <td><span class="campaign-status active"><span class="status-dot"></span>Active</span></td>
+                    </tr>
+                    <tr>
+                      <td><div style="font-weight:600;color:#111827">Home Comfort — Meta Awareness</div><div class="text-muted">Broad audience, video creative</div></td>
+                      <td><span class="platform-badge meta">Meta</span></td>
+                      <td class="text-right font-semibold">$2,180</td>
+                      <td class="text-right"><span style="font-weight:600">44</span><div class="text-muted">📋 44</div></td>
+                      <td class="text-right font-semibold">$50</td>
+                      <td class="text-right font-semibold">12</td>
+                      <td><span class="campaign-status active"><span class="status-dot"></span>Active</span></td>
+                    </tr>
+                    <tr style="opacity:0.75">
+                      <td><div style="font-weight:600;color:#111827">Spring Promo — Meta Retarget</div><div class="text-muted">Paused: low ROAS (2.1×)</div></td>
+                      <td><span class="platform-badge meta">Meta</span></td>
+                      <td class="text-right font-semibold">$1,000</td>
+                      <td class="text-right"><span style="font-weight:600">14</span><div class="text-muted">📋 14</div></td>
+                      <td class="text-right text-red font-semibold">$71</td>
+                      <td class="text-right font-semibold">5</td>
+                      <td><span class="campaign-status paused"><span class="status-dot"></span>Paused</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Leads -->
+              <div class="acq-tab-content" id="acq-leads">
+                <div class="leads-metric-row">
+                  <div class="leads-metric"><div class="leads-metric-label">Total Leads</div><div class="leads-metric-value">633</div></div>
+                  <div class="leads-metric"><div class="leads-metric-label">From Paid Ads</div><div class="leads-metric-value indigo">418</div></div>
+                  <div class="leads-metric"><div class="leads-metric-label">From Organic</div><div class="leads-metric-value green">215</div></div>
+                  <div class="leads-metric"><div class="leads-metric-label">Stale (7+ days)</div><div class="leads-metric-value amber">14</div></div>
+                </div>
+                <div class="callout warning" style="margin-bottom:14px">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                  <span><strong>14 leads</strong> haven't been followed up in 7+ days. &nbsp;<span style="color:#6366f1;font-weight:700;cursor:pointer">Follow up now →</span></span>
+                </div>
+                <table class="data-table">
+                  <thead><tr><th>Name</th><th>Source</th><th>Type</th><th>Date</th><th>Status</th></tr></thead>
+                  <tbody>
+                    <tr><td style="font-weight:600">Sarah M.</td><td><span style="font-size:10px;color:#6366f1;font-weight:600">Google Ads</span></td><td>📞 Call</td><td class="text-muted">Feb 27</td><td><span class="lead-status new-s">New</span></td></tr>
+                    <tr><td style="font-weight:600">James R.</td><td><span style="font-size:10px;color:#10b981;font-weight:600">Google Organic</span></td><td>📋 Form</td><td class="text-muted">Feb 26</td><td><span class="lead-status contacted">Contacted</span></td></tr>
+                    <tr><td style="font-weight:600">Karen L.</td><td><span style="font-size:10px;color:#818cf8;font-weight:600">Meta</span></td><td>📋 Form</td><td class="text-muted">Feb 25</td><td><span class="lead-status converted">Converted</span></td></tr>
+                    <tr><td style="font-weight:600">Tom B.</td><td><span style="font-size:10px;color:#6366f1;font-weight:600">Google Ads</span></td><td>📞 Call</td><td class="text-muted">Feb 18</td><td><span class="lead-status stale">Stale</span></td></tr>
+                    <tr><td style="font-weight:600">Diana C.</td><td><span style="font-size:10px;color:#6366f1;font-weight:600">Google Ads</span></td><td>📞 Call</td><td class="text-muted">Feb 16</td><td><span class="lead-status stale">Stale</span></td></tr>
+                    <tr><td style="font-weight:600">Priya N.</td><td><span style="font-size:10px;color:#818cf8;font-weight:600">Meta</span></td><td>📋 Form</td><td class="text-muted">Feb 15</td><td><span class="lead-status stale">Stale</span></td></tr>
+                    <tr><td style="font-weight:600">Mike H.</td><td><span style="font-size:10px;color:#10b981;font-weight:600">Google Organic</span></td><td>📋 Form</td><td class="text-muted">Feb 14</td><td><span class="lead-status converted">Converted</span></td></tr>
+                    <tr><td style="font-weight:600">Anna T.</td><td><span style="font-size:10px;color:#6b7280;font-weight:600">Direct</span></td><td>📞 Call</td><td class="text-muted">Feb 13</td><td><span class="lead-status contacted">Contacted</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Channels -->
+              <div class="acq-tab-content active" id="acq-channels">
+                <div class="ch-divider-label">Demand Generation <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;margin-left:4px">— paid channels that create new intent</span></div>
+                <table class="data-table" style="margin-bottom:6px">
+                  <thead><tr><th>Channel</th><th class="text-right">Leads</th><th class="text-right">New Customers</th><th class="text-right">Conv. Rate</th><th class="text-right">Spend</th><th class="text-right">CPL</th></tr></thead>
+                  <tbody>
+                    <tr><td><div style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#6366f1;display:inline-block"></span><span style="font-weight:600">Google Ads</span></div></td><td class="text-right">248</td><td class="text-right font-semibold">28</td><td class="text-right text-green">11.3%</td><td class="text-right">$11,100</td><td class="text-right">$45</td></tr>
+                    <tr><td><div style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#818cf8;display:inline-block"></span><span style="font-weight:600">Meta Ads</span></div></td><td class="text-right">168</td><td class="text-right font-semibold">19</td><td class="text-right">11.3%</td><td class="text-right">$3,180</td><td class="text-right">$19</td></tr>
+                  </tbody>
+                </table>
+                <div class="ch-divider-label" style="margin-top:16px">Demand Capture <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;margin-left:4px">— channels that harvest existing intent</span></div>
+                <table class="data-table">
+                  <thead><tr><th>Channel</th><th class="text-right">Leads</th><th class="text-right">New Customers</th><th class="text-right">Conv. Rate</th><th class="text-right">Spend</th><th class="text-right">CPL</th></tr></thead>
+                  <tbody>
+                    <tr><td><div style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block"></span><span style="font-weight:600">Google Organic</span></div></td><td class="text-right">145</td><td class="text-right font-semibold text-green">15</td><td class="text-right text-green">10.3%</td><td class="text-right text-muted">$0</td><td class="text-right text-green font-semibold">$0</td></tr>
+                    <tr><td><div style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#94a3b8;display:inline-block"></span><span style="font-weight:600">Direct</span></div></td><td class="text-right">48</td><td class="text-right font-semibold">5</td><td class="text-right">10.4%</td><td class="text-right text-muted">$0</td><td class="text-right">$0</td></tr>
+                    <tr><td><div style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#34d399;display:inline-block"></span><span style="font-weight:600">Referral</span></div></td><td class="text-right">24</td><td class="text-right font-semibold">4</td><td class="text-right">16.7%</td><td class="text-right text-muted">$0</td><td class="text-right">$0</td></tr>
+                  </tbody>
+                </table>
+                <div class="unattr-note"><strong>284 sessions unattributed</strong> — offline and front-desk interactions Reach cannot track.</div>
+              </div>
+
+              <!-- Transactions -->
+              <div class="acq-tab-content" id="acq-transactions">
+                <table class="data-table">
+                  <thead><tr><th>Customer</th><th>Date</th><th>Channel</th><th class="text-right">Value</th><th>Type</th></tr></thead>
+                  <tbody>
+                    <tr><td style="font-weight:600">Karen L.</td><td class="text-muted">Feb 25</td><td><span style="font-size:10px;color:#818cf8;font-weight:600">Meta Ads</span></td><td class="text-right font-semibold">$2,400</td><td><span class="lead-status new-s">New Customer</span></td></tr>
+                    <tr><td style="font-weight:600">Mike H.</td><td class="text-muted">Feb 22</td><td><span style="font-size:10px;color:#10b981;font-weight:600">Google Organic</span></td><td class="text-right font-semibold">$1,850</td><td><span class="lead-status new-s">New Customer</span></td></tr>
+                    <tr><td style="font-weight:600">Robert D.</td><td class="text-muted">Feb 21</td><td><span style="font-size:10px;color:#6366f1;font-weight:600">Google Ads</span></td><td class="text-right font-semibold">$3,100</td><td><span class="lead-status converted">Returning</span></td></tr>
+                    <tr><td style="font-weight:600">Sarah M.</td><td class="text-muted">Feb 20</td><td><span style="font-size:10px;color:#6366f1;font-weight:600">Google Ads</span></td><td class="text-right font-semibold">$1,200</td><td><span class="lead-status new-s">New Customer</span></td></tr>
+                    <tr><td style="font-weight:600">Linda W.</td><td class="text-muted">Feb 19</td><td><span style="font-size:10px;color:#6b7280;font-weight:600">Direct</span></td><td class="text-right font-semibold">$4,500</td><td><span class="lead-status converted">Returning</span></td></tr>
+                    <tr><td style="font-weight:600">James R.</td><td class="text-muted">Feb 18</td><td><span style="font-size:10px;color:#10b981;font-weight:600">Google Organic</span></td><td class="text-right font-semibold">$980</td><td><span class="lead-status new-s">New Customer</span></td></tr>
+                    <tr><td style="font-weight:600">Chen F.</td><td class="text-muted">Feb 17</td><td><span style="font-size:10px;color:#6366f1;font-weight:600">Google Ads</span></td><td class="text-right font-semibold">$2,750</td><td><span class="lead-status converted">Returning</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- New Customers -->
+              <div class="acq-tab-content" id="acq-newcustomers">
+                <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:14px">
+                  <div style="font-size:36px;font-weight:800;color:#111827;letter-spacing:-1px">47</div>
+                  <div style="font-size:13px;color:#6b7280">new customers this period</div>
+                  <div style="margin-left:auto;display:flex;gap:20px">
+                    <div style="text-align:center"><div style="font-size:22px;font-weight:700;color:#6366f1">32</div><div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em">From paid ads</div></div>
+                    <div style="width:1px;background:#e5e7eb"></div>
+                    <div style="text-align:center"><div style="font-size:22px;font-weight:700;color:#10b981">15</div><div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em">From organic</div></div>
+                  </div>
+                </div>
+                <div class="hbar" style="margin-bottom:14px">
+                  <div class="hbar-row"><div class="hbar-label">Google Ads</div><div class="hbar-track"><div class="hbar-fill" style="width:60%;background:#6366f1">28</div></div><div class="hbar-val">28</div></div>
+                  <div class="hbar-row"><div class="hbar-label">Meta Ads</div><div class="hbar-track"><div class="hbar-fill" style="width:40%;background:#818cf8">19</div></div><div class="hbar-val">19</div></div>
+                  <div class="hbar-row"><div class="hbar-label">Google Organic</div><div class="hbar-track"><div class="hbar-fill" style="width:17%;background:#10b981">8</div></div><div class="hbar-val">8</div></div>
+                  <div class="hbar-row"><div class="hbar-label">Referral</div><div class="hbar-track"><div class="hbar-fill" style="width:9%;background:#34d399">4</div></div><div class="hbar-val">4</div></div>
+                  <div class="hbar-row"><div class="hbar-label">Direct</div><div class="hbar-track"><div class="hbar-fill" style="width:4%;background:#94a3b8">2</div></div><div class="hbar-val">2</div></div>
+                </div>
+                <div class="unattr-note" style="margin-bottom:14px">Channel totals (61) exceed 47 because some customers touched multiple channels before converting. Multi-touch attribution applied.</div>
+                <table class="data-table">
+                  <thead><tr><th>Name</th><th>Channel</th><th>First Contact</th><th>Days to Convert</th><th class="text-right">Transaction Value</th></tr></thead>
+                  <tbody>
+                    <tr><td style="font-weight:600">Karen L.</td><td><span class="platform-badge meta">Meta</span></td><td class="text-muted">Feb 4</td><td>21 days</td><td class="text-right font-semibold">$2,400</td></tr>
+                    <tr><td style="font-weight:600">Robert P.</td><td><span class="platform-badge google">Google</span></td><td class="text-muted">Feb 7</td><td>8 days</td><td class="text-right font-semibold">$1,850</td></tr>
+                    <tr><td style="font-weight:600">Mike H.</td><td><span style="font-size:10px;color:#10b981;font-weight:600">Organic</span></td><td class="text-muted">Feb 10</td><td>6 days</td><td class="text-right font-semibold">$3,100</td></tr>
+                    <tr><td style="font-weight:600">Lisa W.</td><td><span class="platform-badge google">Google</span></td><td class="text-muted">Feb 13</td><td>12 days</td><td class="text-right font-semibold">$1,200</td></tr>
+                    <tr><td style="font-weight:600">Chen X.</td><td><span class="platform-badge meta">Meta</span></td><td class="text-muted">Feb 15</td><td>4 days</td><td class="text-right font-semibold">$4,800</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Coming Up -->
+              <div class="acq-tab-content" id="acq-comingup">
+                <div class="acq-coming-up" style="border:none;padding:0">
+                  <div class="acq-coming-up-title">Coming Up Next Period</div>
+                  <div class="acq-coming-up-list">
+                    <div class="acq-coming-up-item"><div class="acq-coming-up-bullet"></div><div class="acq-coming-up-text">Launch retargeting campaign for unconverted leads from February</div></div>
+                    <div class="acq-coming-up-item"><div class="acq-coming-up-bullet"></div><div class="acq-coming-up-text">Monthly performance review — we'll reach out to schedule</div></div>
+                    <div class="acq-coming-up-item"><div class="acq-coming-up-bullet"></div><div class="acq-coming-up-text">Expand keyword coverage for spring demand — HVAC seasonal terms</div></div>
+                  </div>
+                </div>
+              </div>
+
+            </div><!-- /acq-tabs-wrap -->
+
+          </div><!-- /reach-content acquire -->
+        </div><!-- /#acquire-view -->
+
+
+        <!-- ════════════════════════════════════════
+             MEASURE VIEW — "Funnel as Hero"
+        ════════════════════════════════════════ -->
+        <div id="measure-view" style="display:none;flex-direction:column;flex:1">
+
+          <!-- Topbar -->
+          <div class="reach-topbar">
+            <div class="reach-topbar-left">
+              <div class="reach-page-title">Marketing Dashboard</div>
+            </div>
+            <div class="reach-topbar-right">
+              <div class="date-picker">
+                <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                Jan 28 – Feb 28, 2026
+                <svg width="9" height="9" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+              </div>
+              <div class="date-picker">
+                Last Click
+                <svg width="9" height="9" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+              </div>
+              <button class="btn-sm btn-secondary">
+                <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;margin-right:3px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                Filter
+              </button>
+            </div>
+          </div>
+
+          <!-- ── The interactive funnel hero ── -->
+          <div class="msr-funnel-section">
+            <div class="msr-funnel-row">
+              <div class="msr-stage" id="stage-awareness" onclick="selectFunnelStage('awareness')">
+                <div class="msr-stage-name">Awareness</div>
+                <div class="msr-stage-value">142K</div>
+                <div class="msr-stage-sub">All channels</div>
+              </div>
+              <div class="msr-stage" id="stage-interest" onclick="selectFunnelStage('interest')">
+                <div class="msr-stage-name">Interest</div>
+                <div class="msr-stage-value">4,847</div>
+                <div class="msr-stage-sub">3.4% CTR</div>
+              </div>
+              <div class="msr-stage active" id="stage-leads" onclick="selectFunnelStage('leads')">
+                <div class="msr-stage-name">Leads</div>
+                <div class="msr-stage-value">633</div>
+                <div class="msr-stage-sub">13% conv.</div>
+              </div>
+              <div class="msr-stage" id="stage-customers" onclick="selectFunnelStage('customers')">
+                <div class="msr-stage-name">New Customers</div>
+                <div class="msr-stage-value">47</div>
+                <div class="msr-stage-sub">7.4% close</div>
+              </div>
+              <div class="msr-stage" id="stage-revenue" onclick="selectFunnelStage('revenue')">
+                <div class="msr-stage-name">Revenue</div>
+                <div class="msr-stage-value">$91,400</div>
+                <div class="msr-stage-sub">$1,945 avg</div>
+              </div>
+            </div>
+
+            <!-- Breakdown bar chart for selected stage -->
+            <div class="msr-funnel-breakdown">
+              <div class="msr-breakdown-label" id="breakdown-label">Leads by channel</div>
+              <div class="msr-breakdown-bars" id="breakdown-bars">
+                <!-- populated by JS -->
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Insight strip ── -->
+          <div class="msr-insight-strip" id="insight-strip">
+            <!-- populated by JS -->
+          </div>
+
+          <!-- ── Scrollable tab area ── -->
+          <div class="msr-tabs-area">
+            <div class="msr-tab-panels">
+              <div class="msr-tabs-header">
+                <div class="msr-tab active" onclick="switchMsrTab('overview')">
+                  <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                  Overview
+                </div>
+                <div class="msr-tab" onclick="switchMsrTab('channels')">
+                  <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/></svg>
+                  All Channels
+                </div>
+                <div class="msr-tab" onclick="switchMsrTab('campaigns')">
+                  <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
+                  Campaigns
+                </div>
+                <div class="msr-tab" onclick="switchMsrTab('leads')">
+                  <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                  Leads
+                  <span class="msr-tab-badge">14 stale</span>
+                </div>
+                <div class="msr-tab" onclick="switchMsrTab('newcustomers')">
+                  <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                  New Customers
+                </div>
+              </div>
+
+              <!-- TAB: Overview -->
+              <div class="msr-tab-content active" id="tab-overview">
+                <div class="msr-metric-strip">
+                  <div class="msr-metric-box">
+                    <div class="msr-metric-label">Total Leads</div>
+                    <div class="msr-metric-value">633</div>
+                    <div class="msr-metric-change up">&#8593; 18% vs prior</div>
+                  </div>
+                  <div class="msr-metric-box">
+                    <div class="msr-metric-label">From Paid Ads</div>
+                    <div class="msr-metric-value indigo">418</div>
+                    <div class="msr-metric-change">66% of total</div>
+                  </div>
+                  <div class="msr-metric-box">
+                    <div class="msr-metric-label">Organic Leads</div>
+                    <div class="msr-metric-value green">215</div>
+                    <div class="msr-metric-change">34% of total</div>
+                  </div>
+                  <div class="msr-metric-box">
+                    <div class="msr-metric-label">Lead-to-Customer</div>
+                    <div class="msr-metric-value amber">7.4%</div>
+                    <div class="msr-metric-change">Avg 12% industry</div>
+                  </div>
+                </div>
+
+                <div class="msr-overview-grid">
+                  <!-- Leads by channel -->
+                  <div class="msr-card">
+                    <div class="msr-card-title">Leads by Channel</div>
+                    <div class="hbar">
+                      <div class="hbar-row">
+                        <div class="hbar-label">Google Ads</div>
+                        <div class="hbar-track"><div class="hbar-fill" style="width:62%;background:#6366f1">248</div></div>
+                        <div class="hbar-val">248</div>
+                      </div>
+                      <div class="hbar-row">
+                        <div class="hbar-label">Google Organic</div>
+                        <div class="hbar-track"><div class="hbar-fill" style="width:36%;background:#10b981">145</div></div>
+                        <div class="hbar-val">145</div>
+                      </div>
+                      <div class="hbar-row">
+                        <div class="hbar-label">Meta Ads</div>
+                        <div class="hbar-track"><div class="hbar-fill" style="width:42%;background:#818cf8">168</div></div>
+                        <div class="hbar-val">168</div>
+                      </div>
+                      <div class="hbar-row">
+                        <div class="hbar-label">Direct</div>
+                        <div class="hbar-track"><div class="hbar-fill" style="width:12%;background:#94a3b8">48</div></div>
+                        <div class="hbar-val">48</div>
+                      </div>
+                      <div class="hbar-row">
+                        <div class="hbar-label">Referral</div>
+                        <div class="hbar-track"><div class="hbar-fill" style="width:6%;background:#cbd5e1">24</div></div>
+                        <div class="hbar-val">24</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Top 10 leads -->
+                  <div class="msr-card" style="padding:0;overflow:hidden">
+                    <div style="padding:10px 14px 8px;font-size:11px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6">Recent Leads</div>
+                    <table class="data-table">
+                      <thead>
+                        <tr>
+                          <th>Name</th>
+                          <th>Source</th>
+                          <th>Date</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr><td style="font-weight:600">Sarah M.</td><td><span style="font-size:10px;color:#6366f1">Google Ads</span></td><td class="text-muted">Feb 27</td><td><span class="lead-status new-s">New</span></td></tr>
+                        <tr><td style="font-weight:600">James R.</td><td><span style="font-size:10px;color:#10b981">Organic</span></td><td class="text-muted">Feb 26</td><td><span class="lead-status contacted">Contacted</span></td></tr>
+                        <tr><td style="font-weight:600">Karen L.</td><td><span style="font-size:10px;color:#818cf8">Meta</span></td><td class="text-muted">Feb 25</td><td><span class="lead-status converted">Converted</span></td></tr>
+                        <tr><td style="font-weight:600">Tom B.</td><td><span style="font-size:10px;color:#6366f1">Google Ads</span></td><td class="text-muted">Feb 20</td><td><span class="lead-status stale">Stale</span></td></tr>
+                        <tr><td style="font-weight:600">Diana C.</td><td><span style="font-size:10px;color:#6366f1">Google Ads</span></td><td class="text-muted">Feb 18</td><td><span class="lead-status stale">Stale</span></td></tr>
+                        <tr><td style="font-weight:600">Mike H.</td><td><span style="font-size:10px;color:#10b981">Organic</span></td><td class="text-muted">Feb 16</td><td><span class="lead-status converted">Converted</span></td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div class="rate-compare">
+                  <div class="rate-compare-title">Why am I losing customers at this stage?</div>
+                  <div class="rate-compare-body">
+                    Your lead-to-customer rate this period is <span class="rate-compare-highlight">7.4%</span> — down from <span class="rate-compare-highlight">8.9%</span> last period and below the industry average of ~12%. This is your biggest opportunity. With 633 leads coming in, even improving close rate to 10% would mean <span class="rate-compare-good">19 more customers this month</span>. The bottleneck is likely speed-to-contact: 14 leads went 7+ days without follow-up.
+                  </div>
+                </div>
+              </div>
+
+              <!-- TAB: New Customers -->
+              <div class="msr-tab-content" id="tab-newcustomers">
+                <div style="display:flex;align-items:flex-end;gap:16px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #f3f4f6">
+                  <div>
+                    <div class="nc-hero-num">47</div>
+                    <div class="nc-hero-label">New Customers · Feb 2026</div>
+                  </div>
+                  <div class="nc-paid-organic" style="border-bottom:none;margin-bottom:0;padding-bottom:0">
+                    <div class="nc-po-block">
+                      <div class="nc-po-num" style="color:#6366f1">32</div>
+                      <div class="nc-po-label">From paid ads</div>
+                    </div>
+                    <div class="nc-po-divider"></div>
+                    <div class="nc-po-block">
+                      <div class="nc-po-num" style="color:#10b981">15</div>
+                      <div class="nc-po-label">From organic</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="tab-section">
+                  <div class="tab-section-title">
+                    New Customers by Channel
+                    <span class="tab-section-link">See attribution notes</span>
+                  </div>
+                  <div class="hbar">
+                    <div class="hbar-row">
+                      <div class="hbar-label">Google Ads</div>
+                      <div class="hbar-track"><div class="hbar-fill" style="width:60%;background:#6366f1">28</div></div>
+                      <div class="hbar-val">28</div>
+                    </div>
+                    <div class="hbar-row">
+                      <div class="hbar-label">Meta Ads</div>
+                      <div class="hbar-track"><div class="hbar-fill" style="width:40%;background:#818cf8">19</div></div>
+                      <div class="hbar-val">19</div>
+                    </div>
+                    <div class="hbar-row">
+                      <div class="hbar-label">Google Organic</div>
+                      <div class="hbar-track"><div class="hbar-fill" style="width:17%;background:#10b981">8</div></div>
+                      <div class="hbar-val">8</div>
+                    </div>
+                    <div class="hbar-row">
+                      <div class="hbar-label">Referral</div>
+                      <div class="hbar-track"><div class="hbar-fill" style="width:9%;background:#34d399">4</div></div>
+                      <div class="hbar-val">4</div>
+                    </div>
+                    <div class="hbar-row">
+                      <div class="hbar-label">Direct</div>
+                      <div class="hbar-track"><div class="hbar-fill" style="width:4%;background:#94a3b8">2</div></div>
+                      <div class="hbar-val">2</div>
+                    </div>
+                  </div>
+                  <div class="unattr-note" style="margin-top:10px">Note: Channel totals (61) exceed 47 because some customers touched multiple channels before converting. Multi-touch attribution is applied.</div>
+                </div>
+
+                <div class="tab-section">
+                  <div class="tab-section-title">Customer List</div>
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Channel</th>
+                        <th>First Contact</th>
+                        <th>Days to Convert</th>
+                        <th class="text-right">Transaction Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr><td style="font-weight:600">Karen L.</td><td><span class="platform-badge meta">Meta</span></td><td class="text-muted">Feb 4</td><td>21 days</td><td class="text-right font-semibold">$2,400</td></tr>
+                      <tr><td style="font-weight:600">Robert P.</td><td><span class="platform-badge google">Google</span></td><td class="text-muted">Feb 7</td><td>8 days</td><td class="text-right font-semibold">$1,850</td></tr>
+                      <tr><td style="font-weight:600">Mike H.</td><td><span style="font-size:10px;color:#10b981;font-weight:600">Organic</span></td><td class="text-muted">Feb 10</td><td>6 days</td><td class="text-right font-semibold">$3,100</td></tr>
+                      <tr><td style="font-weight:600">Lisa W.</td><td><span class="platform-badge google">Google</span></td><td class="text-muted">Feb 13</td><td>12 days</td><td class="text-right font-semibold">$1,200</td></tr>
+                      <tr><td style="font-weight:600">Chen X.</td><td><span class="platform-badge meta">Meta</span></td><td class="text-muted">Feb 15</td><td>4 days</td><td class="text-right font-semibold">$4,800</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- TAB: Campaigns -->
+              <div class="msr-tab-content" id="tab-campaigns">
+                <div class="msr-metric-strip" style="grid-template-columns:repeat(4,1fr);margin-bottom:14px">
+                  <div class="msr-metric-box">
+                    <div class="msr-metric-label">Total Spend</div>
+                    <div class="msr-metric-value" style="font-size:20px">$14,280</div>
+                    <div class="msr-metric-change">On budget</div>
+                  </div>
+                  <div class="msr-metric-box">
+                    <div class="msr-metric-label">Leads from Ads</div>
+                    <div class="msr-metric-value indigo" style="font-size:20px">418</div>
+                    <div class="msr-metric-change up">&#8593; 14%</div>
+                  </div>
+                  <div class="msr-metric-box">
+                    <div class="msr-metric-label">Cost per Lead</div>
+                    <div class="msr-metric-value" style="font-size:20px">$34</div>
+                    <div class="msr-metric-change up">&#8595; 22% vs prior</div>
+                  </div>
+                  <div class="msr-metric-box">
+                    <div class="msr-metric-label">ROAS</div>
+                    <div class="msr-metric-value green" style="font-size:20px">6.4×</div>
+                    <div class="msr-metric-change up">&#8593; from 5.9×</div>
+                  </div>
+                </div>
+
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Campaign</th>
+                      <th>Platform</th>
+                      <th class="text-right">Spend</th>
+                      <th class="text-right">Leads</th>
+                      <th class="text-right">CPL</th>
+                      <th class="text-right">New Customers</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <div style="font-weight:600;color:#111827">Emergency HVAC — Search</div>
+                        <div class="text-muted">High-intent local queries</div>
+                      </td>
+                      <td><span class="platform-badge google">Google</span></td>
+                      <td class="text-right font-semibold">$6,840</td>
+                      <td class="text-right">
+                        <span style="font-weight:600">248</span>
+                        <div class="text-muted">&#128222; 172 &nbsp;&#128203; 76</div>
+                      </td>
+                      <td class="text-right text-green font-semibold">$28</td>
+                      <td class="text-right font-semibold">22</td>
+                      <td><span class="campaign-status active"><span class="status-dot"></span>Active</span></td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <div style="font-weight:600;color:#111827">HVAC Services — Local Map</div>
+                        <div class="text-muted">5mi radius, mobile-first</div>
+                      </td>
+                      <td><span class="platform-badge google">Google</span></td>
+                      <td class="text-right font-semibold">$4,260</td>
+                      <td class="text-right">
+                        <span style="font-weight:600">112</span>
+                        <div class="text-muted">&#128222; 98 &nbsp;&#128203; 14</div>
+                      </td>
+                      <td class="text-right text-green font-semibold">$38</td>
+                      <td class="text-right font-semibold">8</td>
+                      <td><span class="campaign-status active"><span class="status-dot"></span>Active</span></td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <div style="font-weight:600;color:#111827">Home Comfort — Meta Awareness</div>
+                        <div class="text-muted">Broad audience, video creative</div>
+                      </td>
+                      <td><span class="platform-badge meta">Meta</span></td>
+                      <td class="text-right font-semibold">$2,180</td>
+                      <td class="text-right">
+                        <span style="font-weight:600">44</span>
+                        <div class="text-muted">&#128203; 44</div>
+                      </td>
+                      <td class="text-right font-semibold">$50</td>
+                      <td class="text-right font-semibold">12</td>
+                      <td><span class="campaign-status active"><span class="status-dot"></span>Active</span></td>
+                    </tr>
+                    <tr style="opacity:0.75">
+                      <td>
+                        <div style="font-weight:600;color:#111827">Spring Promo — Meta Retarget</div>
+                        <div class="text-muted">Paused: low ROAS (2.1×)</div>
+                      </td>
+                      <td><span class="platform-badge meta">Meta</span></td>
+                      <td class="text-right font-semibold">$1,000</td>
+                      <td class="text-right">
+                        <span style="font-weight:600">14</span>
+                        <div class="text-muted">&#128203; 14</div>
+                      </td>
+                      <td class="text-right text-red font-semibold">$71</td>
+                      <td class="text-right font-semibold">5</td>
+                      <td><span class="campaign-status paused"><span class="status-dot"></span>Paused</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <div class="seo-callout">
+                  <div class="seo-callout-title">&#127807; Google Organic is driving 15 new customers at $0 spend</div>
+                  <div class="seo-callout-body">Your organic search traffic is already converting well — consider investing in SEO content to amplify this channel. Even modest blog content targeting your top keywords could double this channel's output over the next 6 months.</div>
+                </div>
+              </div>
+
+              <!-- TAB: Leads -->
+              <div class="msr-tab-content" id="tab-leads">
+                <div class="leads-metric-row">
+                  <div class="leads-metric">
+                    <div class="leads-metric-label">Total Leads</div>
+                    <div class="leads-metric-value">633</div>
+                  </div>
+                  <div class="leads-metric">
+                    <div class="leads-metric-label">From Paid Ads</div>
+                    <div class="leads-metric-value indigo">418</div>
+                  </div>
+                  <div class="leads-metric">
+                    <div class="leads-metric-label">From Organic</div>
+                    <div class="leads-metric-value green">215</div>
+                  </div>
+                  <div class="leads-metric">
+                    <div class="leads-metric-label">Stale (7+ days)</div>
+                    <div class="leads-metric-value amber">14</div>
+                  </div>
+                </div>
+
+                <div class="callout warning" style="margin-bottom:14px">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                  <span><strong>14 leads</strong> haven't been followed up in 7+ days. These are at risk of going cold. &nbsp;<span style="color:#6366f1;font-weight:700;cursor:pointer">Follow up now →</span></span>
+                </div>
+
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Source</th>
+                      <th>Type</th>
+                      <th>Date</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td style="font-weight:600">Sarah M.</td><td><span style="font-size:10px;color:#6366f1;font-weight:600">Google Ads</span></td><td>&#128222; Call</td><td class="text-muted">Feb 27</td><td><span class="lead-status new-s">New</span></td></tr>
+                    <tr><td style="font-weight:600">James R.</td><td><span style="font-size:10px;color:#10b981;font-weight:600">Google Organic</span></td><td>&#128203; Form</td><td class="text-muted">Feb 26</td><td><span class="lead-status contacted">Contacted</span></td></tr>
+                    <tr><td style="font-weight:600">Karen L.</td><td><span style="font-size:10px;color:#818cf8;font-weight:600">Meta</span></td><td>&#128203; Form</td><td class="text-muted">Feb 25</td><td><span class="lead-status converted">Converted</span></td></tr>
+                    <tr><td style="font-weight:600">Tom B.</td><td><span style="font-size:10px;color:#6366f1;font-weight:600">Google Ads</span></td><td>&#128222; Call</td><td class="text-muted">Feb 18</td><td><span class="lead-status stale">Stale</span></td></tr>
+                    <tr><td style="font-weight:600">Diana C.</td><td><span style="font-size:10px;color:#6366f1;font-weight:600">Google Ads</span></td><td>&#128222; Call</td><td class="text-muted">Feb 16</td><td><span class="lead-status stale">Stale</span></td></tr>
+                    <tr><td style="font-weight:600">Priya N.</td><td><span style="font-size:10px;color:#818cf8;font-weight:600">Meta</span></td><td>&#128203; Form</td><td class="text-muted">Feb 15</td><td><span class="lead-status stale">Stale</span></td></tr>
+                    <tr><td style="font-weight:600">Mike H.</td><td><span style="font-size:10px;color:#10b981;font-weight:600">Google Organic</span></td><td>&#128203; Form</td><td class="text-muted">Feb 14</td><td><span class="lead-status converted">Converted</span></td></tr>
+                    <tr><td style="font-weight:600">Anna T.</td><td><span style="font-size:10px;color:#6b7280;font-weight:600">Direct</span></td><td>&#128222; Call</td><td class="text-muted">Feb 13</td><td><span class="lead-status contacted">Contacted</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- TAB: All Channels -->
+              <div class="msr-tab-content" id="tab-channels">
+                <div class="ch-divider-label">Demand Generation <span class="ch-section-note" style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;margin-left:4px">— paid channels that create new intent</span></div>
+                <table class="data-table" style="margin-bottom:6px">
+                  <thead>
+                    <tr>
+                      <th>Channel</th>
+                      <th class="text-right">Leads</th>
+                      <th class="text-right">New Customers</th>
+                      <th class="text-right">Conv. Rate</th>
+                      <th class="text-right">Spend</th>
+                      <th class="text-right">CPL</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><div style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#6366f1;display:inline-block;flex-shrink:0"></span><span style="font-weight:600">Google Ads</span></div></td>
+                      <td class="text-right">248</td>
+                      <td class="text-right font-semibold">28</td>
+                      <td class="text-right text-green">11.3%</td>
+                      <td class="text-right">$11,100</td>
+                      <td class="text-right">$45</td>
+                    </tr>
+                    <tr>
+                      <td><div style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#818cf8;display:inline-block;flex-shrink:0"></span><span style="font-weight:600">Meta Ads</span></div></td>
+                      <td class="text-right">168</td>
+                      <td class="text-right font-semibold">19</td>
+                      <td class="text-right">11.3%</td>
+                      <td class="text-right">$3,180</td>
+                      <td class="text-right">$19</td>
+                    </tr>
+                    <tr>
+                      <td><div style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#a5b4fc;display:inline-block;flex-shrink:0"></span><span style="font-weight:600">Display</span></div></td>
+                      <td class="text-right">2</td>
+                      <td class="text-right font-semibold">0</td>
+                      <td class="text-right text-red">0%</td>
+                      <td class="text-right">—</td>
+                      <td class="text-right">—</td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <div class="ch-divider-label" style="margin-top:20px">Demand Capture <span class="ch-section-note" style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;margin-left:4px">— channels that harvest existing intent</span></div>
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Channel</th>
+                      <th class="text-right">Leads</th>
+                      <th class="text-right">New Customers</th>
+                      <th class="text-right">Conv. Rate</th>
+                      <th class="text-right">Spend</th>
+                      <th class="text-right">CPL</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><div style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block;flex-shrink:0"></span><span style="font-weight:600">Google Organic</span></div></td>
+                      <td class="text-right">145</td>
+                      <td class="text-right font-semibold text-green">15</td>
+                      <td class="text-right text-green">10.3%</td>
+                      <td class="text-right text-muted">$0</td>
+                      <td class="text-right text-green font-semibold">$0</td>
+                    </tr>
+                    <tr>
+                      <td><div style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#94a3b8;display:inline-block;flex-shrink:0"></span><span style="font-weight:600">Direct</span></div></td>
+                      <td class="text-right">48</td>
+                      <td class="text-right font-semibold">5</td>
+                      <td class="text-right">10.4%</td>
+                      <td class="text-right text-muted">$0</td>
+                      <td class="text-right">$0</td>
+                    </tr>
+                    <tr>
+                      <td><div style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#34d399;display:inline-block;flex-shrink:0"></span><span style="font-weight:600">Referral</span></div></td>
+                      <td class="text-right">24</td>
+                      <td class="text-right font-semibold">4</td>
+                      <td class="text-right">16.7%</td>
+                      <td class="text-right text-muted">$0</td>
+                      <td class="text-right">$0</td>
+                    </tr>
+                    <tr>
+                      <td><div style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#c7d2fe;display:inline-block;flex-shrink:0"></span><span style="font-weight:600">Email</span></div></td>
+                      <td class="text-right">6</td>
+                      <td class="text-right font-semibold">1</td>
+                      <td class="text-right">16.7%</td>
+                      <td class="text-right text-muted">$0</td>
+                      <td class="text-right">$0</td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <div class="unattr-note">
+                  <strong>284 sessions unattributed</strong> — these represent offline and front-desk interactions that Reach cannot track (phone calls not routed through the tracking number, walk-ins, etc.).
+                </div>
+              </div>
+
+            </div><!-- /msr-tab-panels -->
+          </div><!-- /msr-tabs-area -->
+
+        </div><!-- /#measure-view -->
+
+      </div><!-- /.reach-iframe -->
+    </div><!-- /.partner-main -->
+  </div><!-- /.partner-body -->
+</div><!-- /.partner-shell -->
+
+<script>
+// ─── Partner shell nav: non-Reach nav items ───
+function setNav(el) {
+  // Don't steal focus from the Reach nav items
+  if (el.id === 'nav-acquire' || el.id === 'nav-measure') return;
+  document.querySelectorAll('.partner-nav').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('breadcrumb-active').textContent = el.textContent.trim().split('\n')[0].trim();
+}
+
+// ─── View switching ───
+function showView(view) {
+  const acquireView = document.getElementById('acquire-view');
+  const measureView = document.getElementById('measure-view');
+  const navAcquire  = document.getElementById('nav-acquire');
+  const navMeasure  = document.getElementById('nav-measure');
+  const breadcrumb  = document.getElementById('breadcrumb-active');
+
+  if (view === 'acquire') {
+    acquireView.style.display = 'block';
+    measureView.style.display = 'none';
+    navAcquire.classList.add('active');
+    navMeasure.classList.remove('active');
+    breadcrumb.textContent = 'Acquire';
+  } else {
+    acquireView.style.display = 'none';
+    measureView.style.display = 'flex';
+    navAcquire.classList.remove('active');
+    navMeasure.classList.add('active');
+    breadcrumb.textContent = 'Measure';
+  }
+}
+
+// ─── Acquire tab switching ───
+function switchAcqTab(tabId) {
+  document.querySelectorAll('.acq-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.acq-tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelector(`.acq-tab[onclick="switchAcqTab('${tabId}')"]`).classList.add('active');
+  document.getElementById(tabId).classList.add('active');
+}
+
+// ─── Measure tab switching ───
+function switchMsrTab(tabId) {
+  document.querySelectorAll('.msr-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.msr-tab-content').forEach(c => c.classList.remove('active'));
+
+  // Find matching tab button
+  const tabs = document.querySelectorAll('.msr-tab');
+  tabs.forEach(t => {
+    if (t.getAttribute('onclick') === `switchMsrTab('${tabId}')`) {
+      t.classList.add('active');
+    }
+  });
+  const content = document.getElementById('tab-' + tabId);
+  if (content) content.classList.add('active');
+}
+
+// ─── Funnel stage data ───
+const funnelData = {
+  awareness: {
+    breakdownLabel: 'Impressions by channel',
+    bars: [
+      { ch: 'Google Ads', n: 82000, pct: 100, color: '#6366f1' },
+      { ch: 'Meta Ads',   n: 44000, pct: 54,  color: '#818cf8' },
+      { ch: 'Display',    n: 16000, pct: 20,  color: '#a5b4fc' },
+    ],
+    insights: [
+      { type: 'green', text: '&#127959; Google Ads delivered 82K impressions this month — your top reach channel.', cta: 'See campaigns →' },
+      { type: 'amber', text: '&#128200; Meta impression share has grown 14% — CPM is lower than Google. Consider shifting some budget.', cta: 'View Meta →' },
+      { type: 'red',   text: '&#128196; Display drove 16K impressions but only 2 leads. Very low conversion — monitor closely.', cta: 'Review display →' },
+    ]
+  },
+  interest: {
+    breakdownLabel: 'Clicks by channel',
+    bars: [
+      { ch: 'Google Ads', n: 2848, pct: 100, color: '#6366f1' },
+      { ch: 'Meta Ads',   n: 1340, pct: 47,  color: '#818cf8' },
+      { ch: 'Display',    n: 659,  pct: 23,  color: '#a5b4fc' },
+    ],
+    insights: [
+      { type: 'green', text: '&#9889; Google Ads CTR is 3.5% — above industry average of 2.8% for home services.', cta: 'See keywords →' },
+      { type: 'amber', text: '&#8987; Meta CTR is 3.0%. Landing page experience may be a bottleneck — test faster-loading pages.', cta: 'View landing pages →' },
+      { type: 'red',   text: '&#128683; Display CTR is 0.4%. Click quality is low — many of these may be accidental clicks.', cta: 'Audit display →' },
+    ]
+  },
+  leads: {
+    breakdownLabel: 'Leads by channel',
+    bars: [
+      { ch: 'Google Ads',     n: 248, pct: 100, color: '#6366f1' },
+      { ch: 'Google Organic', n: 145, pct: 58,  color: '#10b981' },
+      { ch: 'Meta Ads',       n: 168, pct: 68,  color: '#818cf8' },
+      { ch: 'Direct',         n: 48,  pct: 19,  color: '#94a3b8' },
+      { ch: 'Referral',       n: 24,  pct: 10,  color: '#34d399' },
+    ],
+    insights: [
+      { type: 'red',   text: '&#128205; Your lead-to-customer rate is 7.4% — industry avg is ~12%. Bottom-of-funnel opportunity.', cta: 'View leads →' },
+      { type: 'green', text: '&#9889; 23 leads from Google Organic this month — $0 spend. Your best efficiency channel.', cta: 'See channel →' },
+      { type: 'amber', text: '&#9200; 14 leads haven\'t been contacted in 7+ days. Follow up to recover potential customers.', cta: 'Follow up →' },
+    ]
+  },
+  customers: {
+    breakdownLabel: 'New customers by channel',
+    bars: [
+      { ch: 'Google Ads',     n: 28, pct: 100, color: '#6366f1' },
+      { ch: 'Meta Ads',       n: 19, pct: 68,  color: '#818cf8' },
+      { ch: 'Google Organic', n: 15, pct: 54,  color: '#10b981' },
+      { ch: 'Referral',       n: 4,  pct: 14,  color: '#34d399' },
+      { ch: 'Direct',         n: 2,  pct: 7,   color: '#94a3b8' },
+    ],
+    insights: [
+      { type: 'green', text: '&#127942; 47 new customers this month — best performance in 6 months.', cta: 'See customers →' },
+      { type: 'green', text: '&#127807; Google Organic is closing at 10.3% — above your paid channels. $0 spend.', cta: 'See organic →' },
+      { type: 'amber', text: '&#128200; Average days-to-convert is 11 days. Faster follow-up could shorten this.', cta: 'View timeline →' },
+    ]
+  },
+  revenue: {
+    breakdownLabel: 'Revenue by channel',
+    bars: [
+      { ch: 'Google Ads',     n: 54600, pct: 100, color: '#6366f1' },
+      { ch: 'Google Organic', n: 29100, pct: 53,  color: '#10b981' },
+      { ch: 'Meta Ads',       n: 36900, pct: 68,  color: '#818cf8' },
+      { ch: 'Referral',       n: 7760,  pct: 14,  color: '#34d399' },
+    ],
+    insights: [
+      { type: 'green', text: '&#128176; $91,400 attributed revenue — 6.4× ROAS on $14.3K ad spend. Best month in 6 months.', cta: 'See campaigns →' },
+      { type: 'green', text: '&#127807; Google Organic drove $29K revenue at $0 spend. SEO is already working for you.', cta: 'See organic →' },
+      { type: 'amber', text: '&#128203; Average transaction value is $1,945. Upsell opportunities may exist in your post-job follow-up.', cta: 'View transactions →' },
+    ]
+  },
+};
+
+// ─── Select funnel stage ───
+function selectFunnelStage(stage) {
+  // Update chevron highlights
+  document.querySelectorAll('.msr-stage').forEach(s => s.classList.remove('active'));
+  document.getElementById('stage-' + stage).classList.add('active');
+
+  const data = funnelData[stage];
+
+  // Update breakdown bar chart
+  document.getElementById('breakdown-label').textContent = data.breakdownLabel;
+  const barsEl = document.getElementById('breakdown-bars');
+  barsEl.innerHTML = data.bars.map(b => `
+    <div class="msr-breakdown-row">
+      <div class="msr-breakdown-ch">${b.ch}</div>
+      <div class="msr-breakdown-track">
+        <div class="msr-breakdown-fill" style="width:${b.pct}%;background:${b.color}">${b.n.toLocaleString()}</div>
+      </div>
+      <div class="msr-breakdown-n">${b.n >= 1000 ? (b.n/1000).toFixed(0)+'K' : b.n}</div>
+    </div>
+  `).join('');
+
+  // Update insight strip
+  const colors = { red: 'red', green: 'green', amber: 'amber' };
+  const icons  = { red: '&#128308;', green: '&#128994;', amber: '&#128993;' };
+  const strip = document.getElementById('insight-strip');
+  strip.innerHTML = data.insights.map(ins => `
+    <div class="msr-insight-card ${colors[ins.type]}">
+      <div class="msr-insight-body">
+        <div class="msr-insight-text">${ins.text}</div>
+        <div class="msr-insight-cta">${ins.cta}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ─── Initialize on load ───
+(function init() {
+  selectFunnelStage('leads');
+})();
+</script>
+</body>
+</html>
