@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reputation Setup — Review Flow Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --color-bg: #f9fafb;
+    --color-surface: #ffffff;
+    --color-border: #e5e7eb;
+    --color-border-hover: #d1d5db;
+    --color-text-primary: #111827;
+    --color-text-secondary: #6b7280;
+    --color-text-muted: #9ca3af;
+    --color-accent: #1a1a2e;
+    --color-accent-hover: #16213e;
+    --color-selected-border: #111827;
+    --color-selected-bg: #f8fafc;
+    --color-success: #16a34a;
+    --color-success-bg: #f0fdf4;
+    --color-success-border: #bbf7d0;
+    --color-warning: #d97706;
+    --color-warning-bg: #fffbeb;
+    --color-warning-border: #fde68a;
+    --color-destructive: #dc2626;
+    --color-destructive-bg: #fef2f2;
+    --color-google-blue: #4285F4;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -1px rgba(0,0,0,0.04);
+    --shadow-selected: 0 0 0 2px #111827;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--color-text-primary);
+    background: var(--color-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  /* ── Back link ── */
+  .back-link {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    padding: 6px 12px;
+    box-shadow: var(--shadow-md);
+    z-index: 1000;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .back-link:hover { color: var(--color-text-primary); border-color: var(--color-border-hover); }
+
+  /* ── Modal shell ── */
+  .modal {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.06);
+    width: 100%;
+    max-width: 960px;
+    height: 620px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .modal-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .modal-header h1 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    letter-spacing: -0.01em;
+  }
+
+  .modal-header p {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-top: 2px;
+    max-width: 560px;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text-muted);
+    padding: 4px;
+    border-radius: var(--radius-sm);
+    transition: color 0.15s, background 0.15s;
+    flex-shrink: 0;
+  }
+  .modal-close:hover { color: var(--color-text-primary); background: var(--color-bg); }
+
+  /* ── Body layout ── */
+  .modal-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 200px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--color-border);
+    padding: 16px 0;
+    overflow-y: auto;
+  }
+
+  .sidebar-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    cursor: pointer;
+    border-radius: 0;
+    transition: background 0.1s;
+    position: relative;
+  }
+  .sidebar-step:hover { background: var(--color-bg); }
+  .sidebar-step.active { background: var(--color-bg); }
+  .sidebar-step.active::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: var(--color-accent);
+    border-radius: 0 2px 2px 0;
+  }
+
+  .step-indicator {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid var(--color-border);
+    background: var(--color-surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .sidebar-step.active .step-indicator {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: white;
+  }
+  .sidebar-step.completed .step-indicator {
+    background: var(--color-success);
+    border-color: var(--color-success);
+    color: white;
+  }
+  .sidebar-step.optional .step-indicator {
+    border-style: dashed;
+  }
+
+  .step-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    line-height: 1.3;
+  }
+  .sidebar-step.active .step-label { color: var(--color-text-primary); }
+  .sidebar-step.completed .step-label { color: var(--color-text-secondary); }
+
+  .step-badge {
+    margin-left: auto;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--color-warning);
+    background: var(--color-warning-bg);
+    border: 1px solid var(--color-warning-border);
+    border-radius: 4px;
+    padding: 1px 5px;
+  }
+
+  /* ── Main content ── */
+  .main-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 28px;
+  }
+
+  .step-panel { display: none; }
+  .step-panel.active { display: block; }
+
+  .step-title {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-bottom: 6px;
+  }
+  .step-description {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-bottom: 20px;
+    line-height: 1.6;
+    max-width: 540px;
+  }
+
+  /* ── Flow option cards ── */
+  .flow-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .flow-card {
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    position: relative;
+    background: var(--color-surface);
+  }
+  .flow-card:hover {
+    border-color: var(--color-border-hover);
+    box-shadow: var(--shadow-sm);
+  }
+  .flow-card.selected {
+    border-color: var(--color-selected-border);
+    box-shadow: var(--shadow-selected);
+    background: var(--color-selected-bg);
+  }
+
+  .flow-radio {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--color-border);
+    flex-shrink: 0;
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s;
+  }
+  .flow-card.selected .flow-radio {
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+  }
+  .flow-card.selected .flow-radio::after {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: white;
+  }
+
+  .flow-card-body { flex: 1; min-width: 0; }
+
+  .flow-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 3px;
+  }
+  .flow-card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+  .badge-recommended {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-secondary);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 2px 6px;
+  }
+  .flow-card-desc {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+    margin-bottom: 5px;
+  }
+  .flow-card-bestfor {
+    font-size: 12px;
+    color: var(--color-text-muted);
+  }
+  .flow-card-bestfor strong { font-weight: 500; color: var(--color-text-secondary); }
+
+  /* ── Flow diagram ── */
+  .flow-diagram {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .flow-node {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1.5px solid var(--color-border);
+    background: var(--color-bg);
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .flow-node.google {
+    background: white;
+    border-color: #e8eaed;
+  }
+  .flow-node.internal {
+    background: #f5f3ff;
+    border-color: #e9d5ff;
+  }
+  .flow-node.person {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+  }
+  .flow-arrow {
+    font-size: 10px;
+    color: var(--color-text-muted);
+  }
+
+  /* ── Connect Accounts step ── */
+  .account-cards { display: flex; flex-direction: column; gap: 12px; }
+
+  .account-card {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    background: var(--color-surface);
+  }
+  .account-card.connected {
+    border-color: var(--color-success-border);
+    background: var(--color-success-bg);
+  }
+
+  .account-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 20px;
+  }
+  .account-icon.google-icon {
+    background: white;
+    border-color: #e8eaed;
+  }
+
+  .account-card-body { flex: 1; }
+  .account-card-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 3px;
+  }
+  .account-card-desc {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+    max-width: 400px;
+  }
+
+  .account-card-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-left: 8px;
+  }
+
+  /* Connected badge */
+  .connected-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--color-accent);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .connected-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #4ade80;
+    flex-shrink: 0;
+  }
+
+  /* Connect CTA inline */
+  .gbp-connect-prompt {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: var(--color-warning-bg);
+    border: 1px solid var(--color-warning-border);
+    border-radius: var(--radius-sm);
+    display: none;
+  }
+  .gbp-connect-prompt.visible { display: block; }
+  .gbp-connect-prompt p {
+    font-size: 13px;
+    color: #92400e;
+    margin-bottom: 10px;
+  }
+  .gbp-connect-prompt-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  /* Active badge (non-clickable) */
+  .active-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--color-success-bg);
+    color: var(--color-success);
+    border: 1px solid var(--color-success-border);
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  /* Toggle */
+  .toggle {
+    width: 40px;
+    height: 22px;
+    border-radius: 11px;
+    background: #d1d5db;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+    border: none;
+  }
+  .toggle.on { background: var(--color-accent); }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: white;
+    transition: left 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .toggle.on::after { left: 21px; }
+
+  /* ── Contextual copy ── */
+  .context-copy {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-bottom: 16px;
+    padding: 10px 12px;
+    background: var(--color-bg);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--color-border);
+    line-height: 1.6;
+    transition: all 0.2s;
+  }
+  .context-copy.google-required {
+    border-left-color: var(--color-google-blue);
+    background: #f0f7ff;
+  }
+
+  /* ── Buttons ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .btn-primary {
+    background: var(--color-accent);
+    color: white;
+    border-color: var(--color-accent);
+  }
+  .btn-primary:hover { background: var(--color-accent-hover); }
+  .btn-primary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .btn-secondary {
+    background: white;
+    color: var(--color-text-primary);
+    border-color: var(--color-border);
+  }
+  .btn-secondary:hover { background: var(--color-bg); border-color: var(--color-border-hover); }
+
+  .btn-ghost {
+    background: none;
+    color: var(--color-text-secondary);
+    border-color: transparent;
+    padding: 8px 8px;
+  }
+  .btn-ghost:hover { color: var(--color-text-primary); background: var(--color-bg); }
+
+  .btn-link {
+    background: none;
+    border: none;
+    color: var(--color-text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    text-decoration-color: transparent;
+    transition: all 0.15s;
+  }
+  .btn-link:hover { color: var(--color-text-primary); text-decoration-color: currentColor; }
+
+  .btn-destructive-icon {
+    width: 34px; height: 34px;
+    border-radius: var(--radius-sm);
+    background: var(--color-destructive);
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .btn-destructive-icon:hover { background: #b91c1c; }
+
+  /* ── Footer ── */
+  .modal-footer {
+    padding: 14px 24px;
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    background: var(--color-surface);
+  }
+
+  /* ── Skip hint ── */
+  .skip-hint {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .skip-hint span { color: var(--color-warning); font-weight: 500; }
+
+  /* ── Utility ── */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--color-border);
+    margin: 16px 0;
+  }
+
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 4px;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+    background: var(--color-bg);
+  }
+
+  /* ── Tooltip ── */
+  [data-tooltip] { position: relative; }
+  [data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%; transform: translateX(-50%);
+    background: #1f2937;
+    color: white;
+    font-size: 12px;
+    padding: 5px 8px;
+    border-radius: 5px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+    z-index: 100;
+  }
+  [data-tooltip]:hover::after { opacity: 1; }
+
+  /* ── Annotation overlay ── */
+  .annotation {
+    position: absolute;
+    right: -10px;
+    top: 50%;
+    transform: translateY(-50%) translateX(100%);
+    background: #fef9c3;
+    border: 1px solid #fde047;
+    border-radius: 6px;
+    font-size: 11px;
+    color: #713f12;
+    padding: 4px 8px;
+    width: 160px;
+    line-height: 1.4;
+    box-shadow: var(--shadow-sm);
+    pointer-events: none;
+    display: none;
+  }
+  body.show-annotations .annotation { display: block; }
+
+  /* Annotations toggle */
+  .annotation-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #1f2937;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: var(--shadow-md);
+    z-index: 1000;
+    font-family: inherit;
+    transition: background 0.15s;
+  }
+  .annotation-toggle:hover { background: #111827; }
+
+  /* ── Connected since ── */
+  .connected-since {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    margin-top: 4px;
+  }
+
+  /* ── State transition helpers ── */
+  .fade-in {
+    animation: fadeIn 0.2s ease-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Scenario nav ── */
+  .scenario-nav {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--color-border);
+    border-radius: 24px;
+    padding: 4px 6px;
+    box-shadow: var(--shadow-md);
+    z-index: 1000;
+    font-family: inherit;
+  }
+  .scenario-btn {
+    background: none;
+    border: none;
+    padding: 5px 12px;
+    border-radius: 18px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    transition: all 0.15s;
+    font-family: inherit;
+    white-space: nowrap;
+  }
+  .scenario-btn:hover { color: var(--color-text-primary); background: var(--color-bg); }
+  .scenario-btn.active { background: var(--color-accent); color: white; }
+
+  /* Google SVG logo */
+  .google-g {
+    width: 22px;
+    height: 22px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Back link -->
+<a class="back-link" href="../index.html">
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  All projects
+</a>
+
+<!-- Scenario navigation -->
+<nav class="scenario-nav" aria-label="Scenario switcher">
+  <button class="scenario-btn active" onclick="setScenario('step1')">1. Choose Flow</button>
+  <button class="scenario-btn" onclick="setScenario('step2-internal')">2a. Internal Only</button>
+  <button class="scenario-btn" onclick="setScenario('step2-google')">2b. Google Flow</button>
+  <button class="scenario-btn" onclick="setScenario('step2-connected')">2c. GBP Connected</button>
+  <button class="scenario-btn" onclick="setScenario('step2-skipped')">2d. GBP Skipped</button>
+</nav>
+
+<!-- Main modal -->
+<div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+
+  <!-- Header -->
+  <div class="modal-header">
+    <div>
+      <h1 id="modal-title">Update Reputation Settings</h1>
+      <p>Modify your reputation management configuration. Changes will be applied immediately.</p>
+    </div>
+    <button class="modal-close" aria-label="Close" onclick="alert('Close dialog')">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
+        <path d="M5 5l10 10M15 5L5 15"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Body -->
+  <div class="modal-body">
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar" aria-label="Setup steps">
+      <!-- Steps injected by JS -->
+    </nav>
+
+    <!-- Main content -->
+    <div class="main-content">
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- STEP 1: Choose Your Review Flow             -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="step-panel active" id="panel-step1" role="region" aria-label="Choose your review flow">
+        <h2 class="step-title">Choose Your Review Flow</h2>
+        <p class="step-description">
+          Set up how you'll reach out to customers after each visit or purchase.
+          This determines what your customers experience when you send a review request.
+        </p>
+
+        <div class="flow-options" role="radiogroup" aria-label="Review flow options">
+
+          <!-- Option 1: Private Feedback Only -->
+          <div class="flow-card" onclick="selectFlow('internal_only')" id="card-internal_only" role="radio" aria-checked="false" tabindex="0">
+            <div class="flow-radio" aria-hidden="true"></div>
+            <div class="flow-card-body">
+              <div class="flow-card-header">
+                <span class="flow-card-title">Private Feedback Only</span>
+              </div>
+              <p class="flow-card-desc">Customers receive a private survey after their visit. Responses are shared only with your team.</p>
+              <p class="flow-card-bestfor"><strong>Best for:</strong> Businesses focused on collecting internal insights and improving operations.</p>
+            </div>
+            <div class="flow-diagram" aria-hidden="true">
+              <div class="flow-node person" title="Customer">👤</div>
+              <span class="flow-arrow">→</span>
+              <div class="flow-node internal" title="Private survey">✉</div>
+            </div>
+          </div>
+
+          <!-- Option 2: Google Reviews Only -->
+          <div class="flow-card" onclick="selectFlow('google_only')" id="card-google_only" role="radio" aria-checked="false" tabindex="0">
+            <div class="flow-radio" aria-hidden="true"></div>
+            <div class="flow-card-body">
+              <div class="flow-card-header">
+                <span class="flow-card-title">Google Reviews Only</span>
+              </div>
+              <p class="flow-card-desc">Customers are sent directly to Google to leave a public review. No private survey step.</p>
+              <p class="flow-card-bestfor"><strong>Best for:</strong> Businesses focused on building their online reputation and star rating.</p>
+            </div>
+            <div class="flow-diagram" aria-hidden="true">
+              <div class="flow-node person">👤</div>
+              <span class="flow-arrow">→</span>
+              <div class="flow-node google">
+                <svg class="google-g" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Option 3: Private First, Then Google -->
+          <div class="flow-card" onclick="selectFlow('internal_then_google')" id="card-internal_then_google" role="radio" aria-checked="false" tabindex="0">
+            <div class="flow-radio" aria-hidden="true"></div>
+            <div class="flow-card-body">
+              <div class="flow-card-header">
+                <span class="flow-card-title">Private First, Then Google</span>
+              </div>
+              <p class="flow-card-desc">Every customer receives a private survey first, then an invitation to leave a Google review.</p>
+              <p class="flow-card-bestfor"><strong>Best for:</strong> Maximizing both internal feedback quality and public review volume.</p>
+            </div>
+            <div class="flow-diagram" aria-hidden="true">
+              <div class="flow-node person">👤</div>
+              <span class="flow-arrow">→</span>
+              <div class="flow-node internal">✉</div>
+              <span class="flow-arrow">→</span>
+              <div class="flow-node google">
+                <svg class="google-g" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Option 4: Smart Review Routing -->
+          <div class="flow-card" onclick="selectFlow('smart_routing')" id="card-smart_routing" role="radio" aria-checked="false" tabindex="0">
+            <div class="flow-radio" aria-hidden="true"></div>
+            <div class="flow-card-body">
+              <div class="flow-card-header">
+                <span class="flow-card-title">Smart Review Routing</span>
+                <span class="badge-recommended">Recommended</span>
+              </div>
+              <p class="flow-card-desc">Customers receive a private survey first. Those who had a great experience are then invited to leave a Google review.</p>
+              <p class="flow-card-bestfor"><strong>Best for:</strong> Protecting your Google rating while still collecting valuable feedback from every customer.</p>
+            </div>
+            <div class="flow-diagram" aria-hidden="true">
+              <div class="flow-node person">👤</div>
+              <span class="flow-arrow">→</span>
+              <div class="flow-node internal">✉</div>
+              <span class="flow-arrow">→</span>
+              <div class="flow-node google">
+                <svg class="google-g" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- STEP 2: Connect Accounts                   -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="step-panel" id="panel-step2" role="region" aria-label="Connect accounts">
+        <h2 class="step-title">Connect Your Review Platform</h2>
+
+        <!-- Contextual copy — changes based on selected flow -->
+        <div class="context-copy" id="context-copy-text">
+          Connect your Google Business Profile to monitor your Google reviews in your dashboard.
+        </div>
+
+        <div class="account-cards">
+
+          <!-- Internal Feedback card -->
+          <div class="account-card" id="internal-card">
+            <div class="account-icon">✉️</div>
+            <div class="account-card-body">
+              <div class="account-card-title">Private Direct Feedback</div>
+              <p class="account-card-desc" id="internal-card-desc">
+                Capture customer insights instantly after each purchase to improve experiences and identify your happiest customers.
+              </p>
+            </div>
+            <div class="account-card-right">
+              <div class="active-badge">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="4" fill="#16a34a"/></svg>
+                Active
+              </div>
+            </div>
+          </div>
+
+          <!-- Google Business Profile card -->
+          <div class="account-card" id="gbp-card">
+            <div class="account-icon google-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+            </div>
+            <div class="account-card-body">
+              <div class="account-card-title" id="gbp-card-title">Google Business Profile</div>
+              <p class="account-card-desc" id="gbp-card-desc">
+                Connect to send customers to Google for reviews and to monitor your public rating in this dashboard.
+              </p>
+              <p class="connected-since" id="gbp-connected-since" style="display:none">Connected since Mar 11, 2026</p>
+
+              <!-- Inline connect prompt (shown when Google flow selected + not connected) -->
+              <div class="gbp-connect-prompt" id="gbp-connect-prompt">
+                <p id="gbp-prompt-text">A Google Business Profile connection is required for your selected review flow.</p>
+                <div class="gbp-connect-prompt-actions">
+                  <button class="btn btn-primary" onclick="simulateConnect()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                    Connect Google Business Profile
+                  </button>
+                  <button class="btn-link" onclick="skipGBP()">Skip for now — connect from dashboard later</button>
+                </div>
+              </div>
+            </div>
+            <div class="account-card-right" id="gbp-card-right">
+              <!-- Injected based on state -->
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="modal-footer">
+    <div class="skip-hint" id="footer-hint" style="display:none">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="#d97706" stroke-width="1.5"/><path d="M7 4v3.5M7 9.5v.5" stroke="#d97706" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <span id="footer-hint-text"></span>
+    </div>
+    <div style="display:flex; gap: 8px; margin-left:auto">
+      <button class="btn btn-secondary" id="btn-previous" onclick="goPrevious()" style="display:none">Previous</button>
+      <button class="btn btn-primary" id="btn-next" onclick="goNext()" disabled>Save Changes</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Annotations toggle -->
+<button class="annotation-toggle" onclick="toggleAnnotations()" id="ann-btn">Show annotations</button>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+const state = {
+  currentStep: 0,
+  selectedFlow: null,
+  gbpConnected: false,
+  gbpSkipped: false,
+};
+
+// ── Step definitions ───────────────────────────────────────────────────────
+function getSteps() {
+  const needsGoogle = ['google_only', 'internal_then_google', 'smart_routing'].includes(state.selectedFlow);
+  const steps = [
+    { id: 'step1', label: 'Choose Review Flow', panel: 'panel-step1' },
+    { id: 'step2', label: 'Connect Accounts', panel: 'panel-step2',
+      warn: needsGoogle && state.gbpSkipped ? true : false },
+    { id: 'step3', label: 'Map Locations', panel: null,
+      hidden: !needsGoogle || (!state.gbpConnected && !state.gbpSkipped) },
+    { id: 'step4', label: 'Communication Channels', panel: null },
+    { id: 'step5', label: 'Customize Branding', panel: null },
+    { id: 'step6', label: 'Preview Communications', panel: null },
+  ].filter(s => !s.hidden);
+  return steps;
+}
+
+// ── Render sidebar ─────────────────────────────────────────────────────────
+function renderSidebar() {
+  const steps = getSteps();
+  const sidebar = document.getElementById('sidebar');
+  sidebar.innerHTML = '';
+  steps.forEach((step, i) => {
+    const isActive = i === state.currentStep;
+    const isCompleted = i < state.currentStep;
+    const div = document.createElement('div');
+    div.className = 'sidebar-step' + (isActive ? ' active' : '') + (isCompleted ? ' completed' : '');
+    div.onclick = () => jumpToStep(i);
+    div.setAttribute('role', 'button');
+    div.setAttribute('tabindex', '0');
+
+    const indicator = document.createElement('div');
+    indicator.className = 'step-indicator';
+    if (isCompleted) {
+      indicator.innerHTML = `<svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.5l2.5 2.5 4.5-5" stroke="white" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    } else {
+      indicator.textContent = i + 1;
+    }
+
+    const label = document.createElement('div');
+    label.className = 'step-label';
+    label.textContent = step.label;
+
+    div.appendChild(indicator);
+    div.appendChild(label);
+
+    if (step.warn) {
+      const badge = document.createElement('div');
+      badge.className = 'step-badge';
+      badge.textContent = '!';
+      div.appendChild(badge);
+    }
+
+    sidebar.appendChild(div);
+  });
+}
+
+// ── Render step2 content ───────────────────────────────────────────────────
+function renderStep2() {
+  const flow = state.selectedFlow;
+  const needsGoogle = ['google_only', 'internal_then_google', 'smart_routing'].includes(flow);
+  const flowNames = {
+    internal_only: 'Private Feedback Only',
+    google_only: 'Google Reviews Only',
+    internal_then_google: 'Private First, Then Google',
+    smart_routing: 'Smart Review Routing',
+  };
+
+  // Contextual copy
+  const copyEl = document.getElementById('context-copy-text');
+  if (flow === 'internal_only') {
+    copyEl.className = 'context-copy';
+    copyEl.textContent = 'Connect your Google Business Profile to monitor your Google reviews in your dashboard. This is optional for your current setup — your customers won\'t be sent to Google, but you can keep an eye on reviews you receive organically.';
+  } else {
+    copyEl.className = 'context-copy google-required';
+    copyEl.textContent = `Connect your Google Business Profile so customers can be directed to leave a review as part of your ${flowNames[flow] || ''} setup.`;
+  }
+
+  // Internal card desc — contextual
+  const internalDesc = document.getElementById('internal-card-desc');
+  const internalCard = document.getElementById('internal-card');
+  if (flow === 'google_only') {
+    internalDesc.textContent = 'Private feedback is not part of your current review flow. You can change your flow at any time to include it.';
+    internalCard.style.opacity = '0.55';
+  } else {
+    internalDesc.textContent = 'Capture customer insights instantly after each purchase to improve experiences and identify your happiest customers.';
+    internalCard.style.opacity = '1';
+  }
+
+  // GBP card state
+  const gbpCard = document.getElementById('gbp-card');
+  const gbpRight = document.getElementById('gbp-card-right');
+  const gbpPrompt = document.getElementById('gbp-connect-prompt');
+  const gbpConnectedSince = document.getElementById('gbp-connected-since');
+  const gbpTitle = document.getElementById('gbp-card-title');
+  const gbpDesc = document.getElementById('gbp-card-desc');
+  const gbpPromptText = document.getElementById('gbp-prompt-text');
+
+  if (state.gbpConnected) {
+    gbpCard.className = 'account-card connected';
+    gbpTitle.textContent = 'Arbor Lane Kennel Google Business Profile';
+    gbpDesc.textContent = 'Your profile is connected and customers will be directed here for Google reviews.';
+    gbpConnectedSince.style.display = 'block';
+    gbpPrompt.classList.remove('visible');
+    gbpRight.innerHTML = `
+      <div class="connected-badge">
+        <div class="connected-dot"></div>
+        Connected
+      </div>
+      <button class="btn-destructive-icon" onclick="disconnectGBP()" aria-label="Disconnect Google Business Profile" data-tooltip="Disconnect">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="white" stroke-width="1.75" stroke-linecap="round"><path d="M2 2l10 10M12 2L2 12"/></svg>
+      </button>`;
+  } else {
+    gbpCard.className = 'account-card';
+    gbpTitle.textContent = needsGoogle ? 'Google Business Profile' : 'Google Business Profile';
+    gbpConnectedSince.style.display = 'none';
+
+    if (needsGoogle && !state.gbpSkipped) {
+      gbpDesc.textContent = 'Connect to enable customers to leave Google reviews as part of your review flow.';
+      gbpPromptText.textContent = `A Google Business Profile connection is required for ${flowNames[flow]}.`;
+      gbpPrompt.classList.add('visible');
+      gbpRight.innerHTML = '';
+    } else if (state.gbpSkipped) {
+      gbpDesc.textContent = 'Connect your Google Business Profile to activate your Google review flow. You can do this now or later from your dashboard.';
+      gbpPrompt.classList.remove('visible');
+      gbpRight.innerHTML = `<button class="btn btn-secondary" onclick="simulateConnect()">Connect</button>`;
+    } else {
+      // internal_only, not connected
+      gbpDesc.textContent = 'Connect to see incoming Google reviews in your dashboard. Not required for your current setup.';
+      gbpPrompt.classList.remove('visible');
+      gbpRight.innerHTML = `<button class="btn btn-secondary" onclick="simulateConnect()">Connect</button>`;
+    }
+  }
+
+  // Footer hint
+  const hint = document.getElementById('footer-hint');
+  const hintText = document.getElementById('footer-hint-text');
+  if (needsGoogle && state.gbpSkipped && !state.gbpConnected) {
+    hint.style.display = 'flex';
+    hintText.textContent = 'Google connection incomplete — connect from your dashboard to activate your review flow.';
+  } else {
+    hint.style.display = 'none';
+  }
+}
+
+// ── Select a flow ──────────────────────────────────────────────────────────
+function selectFlow(flowId) {
+  state.selectedFlow = flowId;
+
+  document.querySelectorAll('.flow-card').forEach(card => {
+    const isSelected = card.id === 'card-' + flowId;
+    card.classList.toggle('selected', isSelected);
+    card.setAttribute('aria-checked', isSelected ? 'true' : 'false');
+  });
+
+  document.getElementById('btn-next').disabled = false;
+  renderSidebar();
+}
+
+// ── Navigation ─────────────────────────────────────────────────────────────
+function goNext() {
+  const steps = getSteps();
+  if (state.currentStep < steps.length - 1) {
+    jumpToStep(state.currentStep + 1);
+  }
+}
+
+function goPrevious() {
+  if (state.currentStep > 0) {
+    jumpToStep(state.currentStep - 1);
+  }
+}
+
+function jumpToStep(index) {
+  const steps = getSteps();
+  state.currentStep = index;
+
+  // Hide all panels
+  document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+
+  const step = steps[index];
+  if (step && step.panel) {
+    const panel = document.getElementById(step.panel);
+    if (panel) {
+      panel.classList.add('active');
+      panel.classList.add('fade-in');
+      setTimeout(() => panel.classList.remove('fade-in'), 300);
+    }
+  } else {
+    // For unimplemented steps, show a placeholder in step2 panel area
+    const p2 = document.getElementById('panel-step2');
+    p2.classList.add('active');
+    p2.innerHTML = `
+      <h2 class="step-title">${step ? step.label : 'Step'}</h2>
+      <p class="step-description">This step is not yet part of the mockup.</p>
+      <div style="padding:32px; text-align:center; color: var(--color-text-muted); border: 2px dashed var(--color-border); border-radius: var(--radius-md); margin-top: 16px; font-size: 13px;">
+        Step content goes here
+      </div>`;
+  }
+
+  if (step && step.panel === 'panel-step2') renderStep2();
+
+  // Button states
+  document.getElementById('btn-previous').style.display = index > 0 ? 'inline-flex' : 'none';
+  const nextBtn = document.getElementById('btn-next');
+  nextBtn.textContent = index === steps.length - 1 ? 'Save Changes' : 'Next';
+  if (step && step.id === 'step1') {
+    nextBtn.disabled = !state.selectedFlow;
+  } else {
+    nextBtn.disabled = false;
+  }
+
+  renderSidebar();
+  updateScenarioNav();
+}
+
+// ── GBP actions ───────────────────────────────────────────────────────────
+function simulateConnect() {
+  state.gbpConnected = true;
+  state.gbpSkipped = false;
+  renderStep2();
+  renderSidebar();
+}
+
+function disconnectGBP() {
+  if (confirm('Disconnect your Google Business Profile? Your review flow will be paused.')) {
+    state.gbpConnected = false;
+    state.gbpSkipped = false;
+    renderStep2();
+    renderSidebar();
+  }
+}
+
+function skipGBP() {
+  state.gbpSkipped = true;
+  state.gbpConnected = false;
+  renderStep2();
+  renderSidebar();
+}
+
+// ── Scenario switcher ──────────────────────────────────────────────────────
+const SCENARIOS = {
+  'step1': () => {
+    state.currentStep = 0;
+    state.selectedFlow = null;
+    state.gbpConnected = false;
+    state.gbpSkipped = false;
+  },
+  'step2-internal': () => {
+    state.currentStep = 1;
+    state.selectedFlow = 'internal_only';
+    state.gbpConnected = false;
+    state.gbpSkipped = false;
+  },
+  'step2-google': () => {
+    state.currentStep = 1;
+    state.selectedFlow = 'smart_routing';
+    state.gbpConnected = false;
+    state.gbpSkipped = false;
+  },
+  'step2-connected': () => {
+    state.currentStep = 1;
+    state.selectedFlow = 'smart_routing';
+    state.gbpConnected = true;
+    state.gbpSkipped = false;
+  },
+  'step2-skipped': () => {
+    state.currentStep = 1;
+    state.selectedFlow = 'smart_routing';
+    state.gbpConnected = false;
+    state.gbpSkipped = true;
+  },
+};
+
+function setScenario(key) {
+  const fn = SCENARIOS[key];
+  if (!fn) return;
+  fn();
+
+  // Reset panels
+  document.querySelectorAll('.step-panel').forEach(p => {
+    p.classList.remove('active');
+    if (p.id === 'panel-step2') {
+      // Restore original HTML
+      p.innerHTML = `
+        <h2 class="step-title">Connect Your Review Platform</h2>
+        <div class="context-copy" id="context-copy-text"></div>
+        <div class="account-cards">
+          <div class="account-card" id="internal-card">
+            <div class="account-icon">✉️</div>
+            <div class="account-card-body">
+              <div class="account-card-title">Private Direct Feedback</div>
+              <p class="account-card-desc" id="internal-card-desc"></p>
+            </div>
+            <div class="account-card-right">
+              <div class="active-badge">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="4" fill="#16a34a"/></svg>
+                Active
+              </div>
+            </div>
+          </div>
+          <div class="account-card" id="gbp-card">
+            <div class="account-icon google-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+            </div>
+            <div class="account-card-body">
+              <div class="account-card-title" id="gbp-card-title">Google Business Profile</div>
+              <p class="account-card-desc" id="gbp-card-desc"></p>
+              <p class="connected-since" id="gbp-connected-since" style="display:none">Connected since Mar 11, 2026</p>
+              <div class="gbp-connect-prompt" id="gbp-connect-prompt">
+                <p id="gbp-prompt-text"></p>
+                <div class="gbp-connect-prompt-actions">
+                  <button class="btn btn-primary" onclick="simulateConnect()">
+                    Connect Google Business Profile
+                  </button>
+                  <button class="btn-link" onclick="skipGBP()">Skip for now — connect from dashboard later</button>
+                </div>
+              </div>
+            </div>
+            <div class="account-card-right" id="gbp-card-right"></div>
+          </div>
+        </div>`;
+    }
+  });
+
+  // Restore flow card selections
+  if (key === 'step1') {
+    document.querySelectorAll('.flow-card').forEach(c => {
+      c.classList.remove('selected');
+      c.setAttribute('aria-checked', 'false');
+    });
+    document.getElementById('panel-step1').classList.add('active');
+    document.getElementById('btn-next').disabled = true;
+    document.getElementById('btn-previous').style.display = 'none';
+    document.getElementById('footer-hint').style.display = 'none';
+  } else {
+    if (state.selectedFlow) {
+      const card = document.getElementById('card-' + state.selectedFlow);
+      if (card) {
+        document.querySelectorAll('.flow-card').forEach(c => { c.classList.remove('selected'); c.setAttribute('aria-checked', 'false'); });
+        card.classList.add('selected');
+        card.setAttribute('aria-checked', 'true');
+      }
+    }
+    document.getElementById('panel-step2').classList.add('active');
+    document.getElementById('btn-previous').style.display = 'inline-flex';
+    document.getElementById('btn-next').disabled = false;
+    document.getElementById('btn-next').textContent = 'Next';
+    renderStep2();
+  }
+
+  renderSidebar();
+  updateScenarioNav();
+}
+
+function updateScenarioNav() {
+  // Determine active scenario key
+  let activeKey = 'step1';
+  if (state.currentStep === 0) activeKey = 'step1';
+  else if (state.currentStep === 1) {
+    if (state.selectedFlow === 'internal_only') activeKey = 'step2-internal';
+    else if (state.gbpConnected) activeKey = 'step2-connected';
+    else if (state.gbpSkipped) activeKey = 'step2-skipped';
+    else activeKey = 'step2-google';
+  }
+  document.querySelectorAll('.scenario-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('onclick').includes(activeKey));
+  });
+}
+
+// ── Annotations ────────────────────────────────────────────────────────────
+function toggleAnnotations() {
+  document.body.classList.toggle('show-annotations');
+  document.getElementById('ann-btn').textContent =
+    document.body.classList.contains('show-annotations') ? 'Hide annotations' : 'Show annotations';
+}
+
+// ── Keyboard support ───────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    const el = document.activeElement;
+    if (el && el.classList.contains('flow-card')) {
+      const id = el.id.replace('card-', '');
+      selectFlow(id);
+    }
+  }
+});
+
+// ── Init ───────────────────────────────────────────────────────────────────
+renderSidebar();
+</script>
+</body>
+</html>
