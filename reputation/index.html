@@ -1078,20 +1078,25 @@
 
         <div class="flow-options" role="radiogroup" aria-label="Review flow options">
 
-          <!-- Option 1: Private Feedback Only -->
-          <div class="flow-card" onclick="selectFlow('internal_only')" id="card-internal_only" role="radio" aria-checked="false" tabindex="0">
+          <!-- Option 1: Smart Review Routing -->
+          <div class="flow-card" onclick="selectFlow('smart_routing')" id="card-smart_routing" role="radio" aria-checked="false" tabindex="0">
             <div class="flow-radio" aria-hidden="true"></div>
             <div class="flow-card-body">
               <div class="flow-card-header">
-                <span class="flow-card-title">Private Feedback Only</span>
+                <span class="flow-card-title">Smart Review Routing</span>
+                <span class="badge-recommended">Recommended</span>
               </div>
-              <p class="flow-card-desc">Customers receive a private survey after their visit. Responses are shared only with your team.</p>
-              <p class="flow-card-bestfor"><strong>Best for:</strong> Businesses focused on collecting internal insights and improving operations.</p>
+              <p class="flow-card-desc">Customers receive a private survey first. Those who had a great experience are then invited to leave a Google review.</p>
+              <p class="flow-card-bestfor"><strong>Best for:</strong> Protecting your Google rating while still collecting valuable feedback from every customer.</p>
             </div>
             <div class="flow-diagram" aria-hidden="true">
-              <div class="flow-node person" title="Customer">👤</div>
+              <div class="flow-node person">👤</div>
               <span class="flow-arrow">→</span>
-              <div class="flow-node internal" title="Private survey">✉</div>
+              <div class="flow-node internal">✉</div>
+              <span class="flow-arrow">→</span>
+              <div class="flow-node google">
+                <svg class="google-g" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+              </div>
             </div>
           </div>
 
@@ -1114,46 +1119,20 @@
             </div>
           </div>
 
-          <!-- Option 3: Private First, Then Google -->
-          <div class="flow-card" onclick="selectFlow('internal_then_google')" id="card-internal_then_google" role="radio" aria-checked="false" tabindex="0">
+          <!-- Option 3: Private Feedback Only -->
+          <div class="flow-card" onclick="selectFlow('internal_only')" id="card-internal_only" role="radio" aria-checked="false" tabindex="0">
             <div class="flow-radio" aria-hidden="true"></div>
             <div class="flow-card-body">
               <div class="flow-card-header">
-                <span class="flow-card-title">Private First, Then Google</span>
+                <span class="flow-card-title">Private Feedback Only</span>
               </div>
-              <p class="flow-card-desc">Every customer receives a private survey first, then an invitation to leave a Google review.</p>
-              <p class="flow-card-bestfor"><strong>Best for:</strong> Maximizing both internal feedback quality and public review volume.</p>
+              <p class="flow-card-desc">Customers receive a private survey after their visit. Responses are shared only with your team.</p>
+              <p class="flow-card-bestfor"><strong>Best for:</strong> Businesses focused on collecting internal insights and improving operations.</p>
             </div>
             <div class="flow-diagram" aria-hidden="true">
-              <div class="flow-node person">👤</div>
+              <div class="flow-node person" title="Customer">👤</div>
               <span class="flow-arrow">→</span>
-              <div class="flow-node internal">✉</div>
-              <span class="flow-arrow">→</span>
-              <div class="flow-node google">
-                <svg class="google-g" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-              </div>
-            </div>
-          </div>
-
-          <!-- Option 4: Smart Review Routing -->
-          <div class="flow-card" onclick="selectFlow('smart_routing')" id="card-smart_routing" role="radio" aria-checked="false" tabindex="0">
-            <div class="flow-radio" aria-hidden="true"></div>
-            <div class="flow-card-body">
-              <div class="flow-card-header">
-                <span class="flow-card-title">Smart Review Routing</span>
-                <span class="badge-recommended">Recommended</span>
-              </div>
-              <p class="flow-card-desc">Customers receive a private survey first. Those who had a great experience are then invited to leave a Google review.</p>
-              <p class="flow-card-bestfor"><strong>Best for:</strong> Protecting your Google rating while still collecting valuable feedback from every customer.</p>
-            </div>
-            <div class="flow-diagram" aria-hidden="true">
-              <div class="flow-node person">👤</div>
-              <span class="flow-arrow">→</span>
-              <div class="flow-node internal">✉</div>
-              <span class="flow-arrow">→</span>
-              <div class="flow-node google">
-                <svg class="google-g" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-              </div>
+              <div class="flow-node internal" title="Private survey">✉</div>
             </div>
           </div>
 
