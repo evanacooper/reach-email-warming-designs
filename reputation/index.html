@@ -31,6 +31,11 @@
     --color-destructive: #dc2626;
     --color-destructive-bg: #fef2f2;
     --color-google-blue: #4285F4;
+    --color-internal: #7c3aed;
+    --color-internal-bg: #f5f3ff;
+    --color-internal-border: #e9d5ff;
+    --color-google-bg: #eff6ff;
+    --color-google-border: #bfdbfe;
     --radius-sm: 6px;
     --radius-md: 10px;
     --radius-lg: 14px;
@@ -49,31 +54,8 @@
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    padding: 24px;
+    padding: 60px 24px 24px;
   }
-
-  /* ── Back link ── */
-  .back-link {
-    position: fixed;
-    top: 16px;
-    left: 16px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--color-text-secondary);
-    text-decoration: none;
-    background: rgba(255,255,255,0.95);
-    backdrop-filter: blur(8px);
-    border: 1px solid var(--color-border);
-    border-radius: 20px;
-    padding: 6px 12px;
-    box-shadow: var(--shadow-md);
-    z-index: 1000;
-    transition: color 0.15s, border-color 0.15s;
-  }
-  .back-link:hover { color: var(--color-text-primary); border-color: var(--color-border-hover); }
 
   /* ── Modal shell ── */
   .modal {
@@ -86,6 +68,12 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+  }
+
+  /* Wide variant for the preview step */
+  .modal.wide {
+    max-width: 1080px;
+    height: 700px;
   }
 
   .modal-header {
@@ -525,6 +513,7 @@
     transition: all 0.15s;
     text-decoration: none;
     white-space: nowrap;
+    font-family: inherit;
   }
   .btn-primary {
     background: var(--color-accent);
@@ -711,6 +700,9 @@
     box-shadow: var(--shadow-md);
     z-index: 1000;
     font-family: inherit;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 90vw;
   }
   .scenario-btn {
     background: none;
@@ -727,21 +719,311 @@
   }
   .scenario-btn:hover { color: var(--color-text-primary); background: var(--color-bg); }
   .scenario-btn.active { background: var(--color-accent); color: white; }
+  .scenario-sep {
+    width: 1px;
+    background: var(--color-border);
+    margin: 4px 2px;
+    border: none;
+    align-self: stretch;
+  }
 
   /* Google SVG logo */
   .google-g {
     width: 22px;
     height: 22px;
   }
+
+  /* ── Preview Communications grid ── */
+  .comms-grid {
+    display: grid;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+
+  .grid-col-header {
+    background: var(--color-bg);
+    border-bottom: 1px solid var(--color-border);
+    padding: 9px 14px;
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 600;
+    color: var(--color-text-secondary);
+    letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  .grid-col-header.flow-col { border-right: 1px solid var(--color-border); }
+  .grid-col-header.ch-col { border-right: 1px solid var(--color-border); }
+  .grid-col-header.ch-col:last-child { border-right: none; }
+
+  .flow-row-label {
+    border-right: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    padding: 16px 14px;
+    display: flex; flex-direction: column; gap: 6px;
+    background: var(--color-bg);
+    justify-content: center;
+  }
+  .flow-label-last { border-bottom: none; }
+
+  .flow-name { font-size: 13px; font-weight: 600; color: var(--color-text-primary); line-height: 1.3; }
+  .flow-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.04em; padding: 2px 7px;
+    border-radius: 4px; border: 1px solid; width: fit-content;
+  }
+  .flow-pill.internal { color: var(--color-internal); background: var(--color-internal-bg); border-color: var(--color-internal-border); }
+  .flow-pill.google { color: var(--color-google-blue); background: var(--color-google-bg); border-color: var(--color-google-border); }
+
+  .grid-cell {
+    border-right: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    padding: 16px 14px;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 0;
+    background: var(--color-surface);
+  }
+  .grid-cell:last-child { border-right: none; }
+  .grid-cell.row-last { border-bottom: none; }
+
+  .grid-cell.na { background: var(--color-bg); align-items: center; justify-content: center; }
+  .na-label { font-size: 12px; color: var(--color-text-muted); font-style: italic; }
+
+  .thumb-unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .thumb-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    text-align: center;
+    max-width: 120px;
+    line-height: 1.3;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .email-thumb {
+    width: 180px;
+    height: 236px;
+    border-radius: 6px;
+    border: 1.5px solid var(--color-border);
+    overflow: hidden;
+    background: white;
+    position: relative;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+    flex-shrink: 0;
+  }
+  .email-thumb:hover {
+    border-color: var(--color-border-hover);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+  }
+  .thumb-unit.active .email-thumb {
+    border-color: var(--color-selected-border);
+    box-shadow: var(--shadow-selected);
+  }
+
+  .email-thumb-inner {
+    transform-origin: top left;
+    transform: scale(0.405);
+    width: 444px;
+    height: 583px;
+    pointer-events: none;
+  }
+
+  .sms-thumb {
+    width: 180px;
+    height: 236px;
+    border-radius: 6px;
+    border: 1.5px solid var(--color-border);
+    overflow: hidden;
+    background: #f0f4f8;
+    padding: 10px 8px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+    flex-shrink: 0;
+  }
+  .sms-thumb:hover {
+    border-color: var(--color-border-hover);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+  }
+  .thumb-unit.active .sms-thumb {
+    border-color: var(--color-selected-border);
+    box-shadow: var(--shadow-selected);
+  }
+
+  .sms-thumb-bubble {
+    background: white;
+    border-radius: 8px 8px 8px 2px;
+    padding: 6px 7px;
+    font-size: 8px;
+    line-height: 1.4;
+    color: var(--color-text-primary);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+  .sms-thumb-bar {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--color-border);
+    margin-top: 2px;
+  }
+  .sms-thumb-bar.w80 { width: 80%; }
+  .sms-thumb-bar.w60 { width: 60%; }
+  .sms-label-row {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 8px; font-weight: 600;
+    color: var(--color-text-muted);
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+
+  .thumb-edit-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(17,24,39,0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.15s;
+    border-radius: 4px;
+  }
+  .email-thumb:hover .thumb-edit-overlay,
+  .sms-thumb:hover .thumb-edit-overlay {
+    opacity: 1;
+  }
+  .thumb-edit-btn {
+    background: white;
+    color: var(--color-text-primary);
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    display: flex; align-items: center; gap: 4px;
+  }
+
+  .thumb-arrow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 8px;
+    flex-shrink: 0;
+    margin-top: 118px;
+    gap: 3px;
+  }
+  .arrow-line {
+    width: 18px;
+    height: 1.5px;
+    background: var(--color-border);
+  }
+  .arrow-head {
+    width: 0; height: 0;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    border-left: 5px solid var(--color-border);
+    margin-left: -1px;
+    margin-top: -7px;
+  }
+  .arrow-reminder-label {
+    font-size: 9px;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+    margin-top: 6px;
+  }
+
+  /* ── Channel toggle ── */
+  .channel-toggle {
+    display: flex;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: var(--color-bg);
+    flex-shrink: 0;
+  }
+  .ch-toggle-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 14px;
+    font-size: 13px; font-weight: 500;
+    cursor: pointer; border: none;
+    background: none; color: var(--color-text-secondary);
+    transition: all 0.15s; font-family: inherit;
+  }
+  .ch-toggle-btn + .ch-toggle-btn { border-left: 1px solid var(--color-border); }
+  .ch-toggle-btn:hover { color: var(--color-text-primary); background: var(--color-surface); }
+  .ch-toggle-btn.active { background: var(--color-surface); color: var(--color-text-primary); font-weight: 600; box-shadow: var(--shadow-sm); }
+
+  /* ── Preview slide-up ── */
+  .preview-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+    z-index: 500; display: none; align-items: flex-end;
+    justify-content: center;
+  }
+  .preview-overlay.open { display: flex; }
+
+  .preview-panel {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    width: 100%; max-width: 640px; max-height: 90vh;
+    overflow: hidden; display: flex; flex-direction: column;
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.15);
+    animation: slideUp 0.2s ease-out;
+  }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  .preview-header {
+    padding: 16px 20px; border-bottom: 1px solid var(--color-border);
+    display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+  }
+  .preview-header-left { display: flex; flex-direction: column; gap: 2px; }
+  .preview-title { font-size: 15px; font-weight: 600; }
+  .preview-subtitle { font-size: 12px; color: var(--color-text-muted); }
+  .preview-header-actions { display: flex; align-items: center; gap: 8px; }
+  .preview-body { flex: 1; overflow-y: auto; padding: 20px; }
+
+  .email-preview-full {
+    border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden;
+  }
+  .email-preview-meta {
+    background: var(--color-bg); padding: 12px 14px;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .meta-row { display: flex; gap: 8px; font-size: 12px; margin-bottom: 3px; }
+  .meta-row:last-child { margin-bottom: 0; }
+  .meta-label { color: var(--color-text-muted); width: 42px; flex-shrink: 0; }
+  .meta-value { color: var(--color-text-secondary); }
+  .email-preview-body { background: white; }
+  .email-preview-body-inner { padding: 24px 20px; text-align: center; }
+  .ep-logo { width: 52px; height: 52px; background: var(--color-bg); border-radius: 8px; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; border: 1px solid var(--color-border); }
+  .ep-biz-name { font-size: 15px; font-weight: 700; margin-bottom: 16px; }
+  .ep-card { background: var(--color-bg); border-radius: var(--radius-md); padding: 18px 16px; margin-bottom: 14px; }
+  .ep-card h2 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .ep-stars { font-size: 20px; letter-spacing: 2px; margin-bottom: 10px; }
+  .ep-body-text { font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; margin-bottom: 14px; }
+  .ep-cta { display: inline-block; padding: 10px 22px; border-radius: 6px; font-size: 13px; font-weight: 600; color: white; text-decoration: none; }
+  .ep-footer { font-size: 11px; color: var(--color-text-muted); padding: 12px 20px; border-top: 1px solid var(--color-border); text-align: center; line-height: 1.7; }
+
+  .sms-preview-full { padding: 8px 0 20px; }
+  .sms-bubble { background: #f0f4f8; border-radius: 12px 12px 12px 3px; padding: 12px 14px; max-width: 300px; font-size: 13px; line-height: 1.6; }
 </style>
 </head>
 <body>
-
-<!-- Back link -->
-<a class="back-link" href="../index.html">
-  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-  All projects
-</a>
 
 <!-- Scenario navigation -->
 <nav class="scenario-nav" aria-label="Scenario switcher">
@@ -750,10 +1032,15 @@
   <button class="scenario-btn" onclick="setScenario('step2-google')">2b. Google Flow</button>
   <button class="scenario-btn" onclick="setScenario('step2-connected')">2c. GBP Connected</button>
   <button class="scenario-btn" onclick="setScenario('step2-skipped')">2d. GBP Skipped</button>
+  <div class="scenario-sep" role="separator"></div>
+  <button class="scenario-btn" onclick="setScenario('preview-smart')">6a. Preview: Smart</button>
+  <button class="scenario-btn" onclick="setScenario('preview-internal')">6b. Preview: Internal</button>
+  <button class="scenario-btn" onclick="setScenario('preview-google')">6c. Preview: Google</button>
+  <button class="scenario-btn" onclick="setScenario('preview-both')">6d. Preview: Both</button>
 </nav>
 
 <!-- Main modal -->
-<div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+<div class="modal" id="main-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
 
   <!-- Header -->
   <div class="modal-header">
@@ -935,6 +1222,27 @@
         </div>
       </div>
 
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- STEP 6: Preview Communications             -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="step-panel" id="panel-step6" role="region" aria-label="Preview communications">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <h2 class="step-title">Preview Communications</h2>
+          <div class="channel-toggle" id="channel-toggle">
+            <button class="ch-toggle-btn active" onclick="setChannel('email')" id="toggle-email">
+              <svg width="13" height="11" viewBox="0 0 13 11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="0.75" y="0.75" width="11.5" height="9.5" rx="1.5"/><path d="M0.75 3L6.5 6.5 12.25 3"/></svg>
+              Email
+            </button>
+            <button class="ch-toggle-btn" onclick="setChannel('sms')" id="toggle-sms">
+              <svg width="10" height="12" viewBox="0 0 10 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="0.75" y="0.75" width="8.5" height="10.5" rx="2"/><path d="M3.5 9.5h3"/></svg>
+              SMS
+            </button>
+          </div>
+        </div>
+        <p class="step-description" id="step-desc">Review the messages your customers will receive. Click any message to see a full preview or make edits.</p>
+        <div class="comms-grid" id="comms-grid"></div>
+      </div>
+
     </div>
   </div>
 
@@ -952,19 +1260,47 @@
 
 </div>
 
+<!-- Preview slide-up panel (for Step 6) -->
+<div class="preview-overlay" id="preview-overlay" onclick="maybeClose(event)">
+  <div class="preview-panel">
+    <div class="preview-header">
+      <div class="preview-header-left">
+        <div class="preview-title" id="preview-title"></div>
+        <div class="preview-subtitle" id="preview-subtitle"></div>
+      </div>
+      <div class="preview-header-actions">
+        <button class="btn btn-secondary" onclick="closePreview()">Close</button>
+        <button class="btn btn-primary" onclick="closePreview()">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M1 6.5h11M7.5 1.5l5 5-5 5"/></svg>
+          Edit
+        </button>
+      </div>
+    </div>
+    <div class="preview-body" id="preview-body"></div>
+  </div>
+</div>
+
 <!-- Annotations toggle -->
 <button class="annotation-toggle" onclick="toggleAnnotations()" id="ann-btn">Show annotations</button>
 
 <script>
-// ── State ──────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════════════
 const state = {
   currentStep: 0,
   selectedFlow: null,
   gbpConnected: false,
   gbpSkipped: false,
+  // Preview step state
+  previewScenario: 'smart',
+  previewChannel: 'email',
+  previewActiveUnit: null,
 };
 
-// ── Step definitions ───────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// STEP DEFINITIONS
+// ═══════════════════════════════════════════════════════════════════════════
 function getSteps() {
   const needsGoogle = ['google_only', 'internal_then_google', 'smart_routing'].includes(state.selectedFlow);
   const steps = [
@@ -975,12 +1311,14 @@ function getSteps() {
       hidden: !needsGoogle || (!state.gbpConnected && !state.gbpSkipped) },
     { id: 'step4', label: 'Communication Channels', panel: null },
     { id: 'step5', label: 'Customize Branding', panel: null },
-    { id: 'step6', label: 'Preview Communications', panel: null },
+    { id: 'step6', label: 'Preview Communications', panel: 'panel-step6' },
   ].filter(s => !s.hidden);
   return steps;
 }
 
-// ── Render sidebar ─────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// SIDEBAR
+// ═══════════════════════════════════════════════════════════════════════════
 function renderSidebar() {
   const steps = getSteps();
   const sidebar = document.getElementById('sidebar');
@@ -1020,7 +1358,9 @@ function renderSidebar() {
   });
 }
 
-// ── Render step2 content ───────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// STEP 2: CONNECT ACCOUNTS
+// ═══════════════════════════════════════════════════════════════════════════
 function renderStep2() {
   const flow = state.selectedFlow;
   const needsGoogle = ['google_only', 'internal_then_google', 'smart_routing'].includes(flow);
@@ -1031,7 +1371,6 @@ function renderStep2() {
     smart_routing: 'Smart Review Routing',
   };
 
-  // Contextual copy
   const copyEl = document.getElementById('context-copy-text');
   if (flow === 'internal_only') {
     copyEl.className = 'context-copy';
@@ -1041,7 +1380,6 @@ function renderStep2() {
     copyEl.textContent = `Connect your Google Business Profile so customers can be directed to leave a review as part of your ${flowNames[flow] || ''} setup.`;
   }
 
-  // Internal card desc — contextual
   const internalDesc = document.getElementById('internal-card-desc');
   const internalCard = document.getElementById('internal-card');
   if (flow === 'google_only') {
@@ -1052,7 +1390,6 @@ function renderStep2() {
     internalCard.style.opacity = '1';
   }
 
-  // GBP card state
   const gbpCard = document.getElementById('gbp-card');
   const gbpRight = document.getElementById('gbp-card-right');
   const gbpPrompt = document.getElementById('gbp-connect-prompt');
@@ -1077,7 +1414,6 @@ function renderStep2() {
       </button>`;
   } else {
     gbpCard.className = 'account-card';
-    gbpTitle.textContent = needsGoogle ? 'Google Business Profile' : 'Google Business Profile';
     gbpConnectedSince.style.display = 'none';
 
     if (needsGoogle && !state.gbpSkipped) {
@@ -1090,14 +1426,12 @@ function renderStep2() {
       gbpPrompt.classList.remove('visible');
       gbpRight.innerHTML = `<button class="btn btn-secondary" onclick="simulateConnect()">Connect</button>`;
     } else {
-      // internal_only, not connected
       gbpDesc.textContent = 'Connect to see incoming Google reviews in your dashboard. Not required for your current setup.';
       gbpPrompt.classList.remove('visible');
       gbpRight.innerHTML = `<button class="btn btn-secondary" onclick="simulateConnect()">Connect</button>`;
     }
   }
 
-  // Footer hint
   const hint = document.getElementById('footer-hint');
   const hintText = document.getElementById('footer-hint-text');
   if (needsGoogle && state.gbpSkipped && !state.gbpConnected) {
@@ -1108,7 +1442,255 @@ function renderStep2() {
   }
 }
 
-// ── Select a flow ──────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// STEP 6: PREVIEW COMMUNICATIONS
+// ═══════════════════════════════════════════════════════════════════════════
+const MSGS = {
+  internal: {
+    email: [
+      { seq: 'initial', seqLabel: 'Initial Request',
+        subject: 'How was your experience at Tomer\'s Rental?',
+        cta: 'Share Your Feedback', ctaColor: '#7c3aed',
+        body: 'We hope you had a great time! Your feedback helps us improve and helps other customers make informed decisions.',
+        type: 'email' },
+      { seq: 'reminder', seqLabel: 'Reminder',
+        subject: 'We\'d still love to hear from you, Jane',
+        cta: 'Leave Feedback', ctaColor: '#7c3aed',
+        body: 'Just a friendly reminder — we\'d love to hear about your recent visit. Your feedback means a lot to us.',
+        type: 'email' },
+    ],
+    sms: [
+      { seq: 'initial', seqLabel: 'Initial Request',
+        smsText: 'Hi Jane! Thanks for visiting Tomer\'s Rental. How was your experience? Share your feedback here: [link]',
+        type: 'sms' },
+      { seq: 'reminder', seqLabel: 'Reminder',
+        smsText: 'Hi Jane, we haven\'t heard from you yet — we\'d love your feedback on your recent visit: [link]',
+        type: 'sms' },
+    ],
+  },
+  google: {
+    email: [
+      { seq: 'initial', seqLabel: 'Initial Request',
+        subject: 'Would you leave us a Google review?',
+        cta: 'Leave a Google Review', ctaColor: '#4285F4',
+        body: 'We hope you had a great experience! If you have a moment, a Google review would mean a lot — it helps our business grow.',
+        type: 'email' },
+      { seq: 'reminder', seqLabel: 'Reminder',
+        subject: 'Still time to share your review, Jane',
+        cta: 'Leave a Review', ctaColor: '#4285F4',
+        body: 'We know you\'re busy, but a quick Google review would mean the world to us. It only takes a minute!',
+        type: 'email' },
+    ],
+    sms: [
+      { seq: 'initial', seqLabel: 'Initial Request',
+        smsText: 'Hi Jane! Thanks for choosing Tomer\'s Rental. We\'d love a quick Google review — it only takes a minute: [link] 🙏',
+        type: 'sms' },
+    ],
+  },
+};
+
+const FLOWS_META = {
+  internal: { name: 'Private Feedback', pill: { label: 'Internal', cls: 'internal' } },
+  google:   { name: 'Google Review',    pill: { label: 'Google',   cls: 'google'   } },
+};
+
+const PREVIEW_SCENARIOS = {
+  smart:    { desc: 'Smart Review Routing is active. Customers receive a private feedback request first. Those who had a great experience are then invited to leave a Google review.', flows: ['internal','google'] },
+  internal: { desc: 'Private Feedback Only is active. Customers receive a private survey. No Google review request will be sent.', flows: ['internal'] },
+  google:   { desc: 'Google Reviews Only is active. Customers are sent directly to Google to leave a review.', flows: ['google'] },
+  both:     { desc: 'Private First, Then Google is active. Every customer gets a private feedback request, then a Google review invitation.', flows: ['internal','google'] },
+};
+
+function renderGrid() {
+  const sc = PREVIEW_SCENARIOS[state.previewScenario];
+  const ch = state.previewChannel;
+  document.getElementById('step-desc').textContent = sc.desc;
+
+  const grid = document.getElementById('comms-grid');
+  grid.style.gridTemplateColumns = `150px 1fr`;
+
+  let html = '';
+
+  const chIcon = ch === 'email'
+    ? `<svg width="13" height="11" viewBox="0 0 13 11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="0.75" y="0.75" width="11.5" height="9.5" rx="1.5"/><path d="M0.75 3L6.5 6.5 12.25 3"/></svg>`
+    : `<svg width="10" height="12" viewBox="0 0 10 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="0.75" y="0.75" width="8.5" height="10.5" rx="2"/><path d="M3.5 9.5h3"/></svg>`;
+
+  html += `<div class="grid-col-header flow-col">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="10" height="10" rx="1.5"/><path d="M3.5 4h5M3.5 6.5h5M3.5 9h3"/></svg>
+    Flow
+  </div>`;
+  html += `<div class="grid-col-header ch-col">${chIcon} ${ch === 'email' ? 'Email messages' : 'SMS messages'}</div>`;
+
+  sc.flows.forEach((flowId, rowIdx) => {
+    const isLastRow = rowIdx === sc.flows.length - 1;
+    const meta = FLOWS_META[flowId];
+    const msgs = MSGS[flowId]?.[ch];
+    const cellClass = `grid-cell${isLastRow ? ' row-last' : ''}`;
+
+    html += `<div class="flow-row-label${isLastRow ? ' flow-label-last' : ''}">
+      <span class="flow-name">${meta.name}</span>
+      <span class="flow-pill ${meta.pill.cls}">${meta.pill.label}</span>
+    </div>`;
+
+    if (!msgs || msgs.length === 0) {
+      html += `<div class="${cellClass} na"><span class="na-label">Not configured</span></div>`;
+      return;
+    }
+
+    html += `<div class="${cellClass}">`;
+
+    msgs.forEach((msg, mi) => {
+      const unitId = `${flowId}-${ch}-${mi}`;
+
+      if (mi > 0) {
+        html += `<div class="thumb-arrow">
+          <div style="display:flex;align-items:center">
+            <div class="arrow-line"></div>
+            <div class="arrow-head"></div>
+          </div>
+          <div class="arrow-reminder-label">reminder</div>
+        </div>`;
+      }
+
+      const subjectText = msg.subject
+        ? (msg.subject.length > 32 ? msg.subject.slice(0, 32) + '…' : msg.subject)
+        : (msg.smsText.length > 32 ? msg.smsText.slice(0, 32) + '…' : msg.smsText);
+
+      html += `<div class="thumb-unit" id="unit-${unitId}" onclick="openPreview('${flowId}','${ch}',${mi})">`;
+
+      if (ch === 'email') {
+        html += `<div class="email-thumb">
+          <div class="email-thumb-inner">${emailThumbHtml(msg, meta)}</div>
+          <div class="thumb-edit-overlay">
+            <button class="thumb-edit-btn" onclick="event.stopPropagation();openPreview('${flowId}','${ch}',${mi})">
+              <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 1.5l2 2-6 6H1.5v-2l6-6z"/></svg>
+              Edit
+            </button>
+          </div>
+        </div>`;
+      } else {
+        html += `<div class="sms-thumb">
+          <div class="sms-label-row">
+            <svg width="9" height="10" viewBox="0 0 9 10" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"><rect x="0.5" y="0.5" width="8" height="9" rx="1.5"/><path d="M2.5 8h4"/></svg>
+            SMS
+          </div>
+          <div class="sms-thumb-bubble">${msg.smsText.slice(0, 65)}${msg.smsText.length > 65 ? '…' : ''}</div>
+          <div class="sms-thumb-bar w80"></div>
+          <div class="sms-thumb-bar w60"></div>
+          <div class="thumb-edit-overlay" style="border-radius:4px">
+            <button class="thumb-edit-btn" onclick="event.stopPropagation();openPreview('${flowId}','${ch}',${mi})">
+              <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 1.5l2 2-6 6H1.5v-2l6-6z"/></svg>
+              Edit
+            </button>
+          </div>
+        </div>`;
+      }
+
+      html += `<div class="thumb-label">${subjectText}</div></div>`;
+    });
+
+    html += `</div>`;
+  });
+
+  grid.innerHTML = html;
+}
+
+function emailThumbHtml(msg, meta) {
+  return `<div style="background:white;font-family:Inter,sans-serif;padding:20px 16px;text-align:center;color:#111827">
+    <div style="width:52px;height:52px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:26px">🔧</div>
+    <div style="font-size:16px;font-weight:700;margin-bottom:16px">Tomer's Rental</div>
+    <div style="background:#f9fafb;border-radius:10px;padding:18px 14px;margin-bottom:14px">
+      <div style="font-size:18px;font-weight:700;margin-bottom:8px">How was your experience?</div>
+      <div style="font-size:24px;letter-spacing:3px;margin-bottom:10px">⭐⭐⭐⭐⭐</div>
+      <div style="font-size:14px;color:#6b7280;line-height:1.5;margin-bottom:14px">${msg.body}</div>
+      <div style="display:inline-block;padding:11px 24px;border-radius:7px;font-size:14px;font-weight:600;color:white;background:${msg.ctaColor}">${msg.cta}</div>
+    </div>
+    <div style="font-size:13px;color:#9ca3af;line-height:1.6;margin-bottom:8px">Thank you for choosing Tomer's Rental!<br>This email was sent because you recently visited.</div>
+    <div style="font-size:12px;color:#d1d5db">© 2025 Tomer's Rental. All rights reserved</div>
+    <div style="margin-top:12px;padding-top:10px;border-top:1px solid #e5e7eb;font-size:11px;color:#d1d5db">1881 Oak Ave, Evanston, IL, 60201</div>
+  </div>`;
+}
+
+function setChannel(ch) {
+  state.previewChannel = ch;
+  document.getElementById('toggle-email').classList.toggle('active', ch === 'email');
+  document.getElementById('toggle-sms').classList.toggle('active', ch === 'sms');
+  closePreview();
+  renderGrid();
+}
+
+function openPreview(flowId, ch, mi) {
+  if (state.previewActiveUnit) {
+    const prev = document.getElementById(`unit-${state.previewActiveUnit}`);
+    if (prev) prev.classList.remove('active');
+  }
+  const unitId = `${flowId}-${ch}-${mi}`;
+  state.previewActiveUnit = unitId;
+  const unit = document.getElementById(`unit-${unitId}`);
+  if (unit) unit.classList.add('active');
+
+  const msg = MSGS[flowId][ch][mi];
+  const meta = FLOWS_META[flowId];
+
+  document.getElementById('preview-title').textContent =
+    `${msg.seqLabel} — ${ch === 'email' ? 'Email' : 'SMS'}`;
+  document.getElementById('preview-subtitle').textContent =
+    `${meta.name} · Tomer's Rental`;
+
+  const body = document.getElementById('preview-body');
+
+  if (ch === 'email') {
+    body.innerHTML = `
+      <div class="email-preview-full">
+        <div class="email-preview-meta">
+          <div class="meta-row"><span class="meta-label">From</span><span class="meta-value">Tomer's Rental &lt;hello@tomersrental.com&gt;</span></div>
+          <div class="meta-row"><span class="meta-label">To</span><span class="meta-value">Jane Smith &lt;jane@example.com&gt;</span></div>
+          <div class="meta-row"><span class="meta-label">Re</span><span class="meta-value">${msg.subject}</span></div>
+        </div>
+        <div class="email-preview-body">
+          <div class="email-preview-body-inner">
+            <div class="ep-logo">🔧</div>
+            <div class="ep-biz-name">Tomer's Rental</div>
+            <div class="ep-card">
+              <h2>How was your experience?</h2>
+              <div class="ep-stars">⭐⭐⭐⭐⭐</div>
+              <p class="ep-body-text">${msg.body}</p>
+              <a href="#" class="ep-cta" style="background:${msg.ctaColor}" onclick="return false">${msg.cta}</a>
+            </div>
+            <p style="font-size:12px;color:#9ca3af;line-height:1.7;margin-bottom:8px">Thank you for choosing Tomer's Rental!<br>This email was sent because you recently visited our business.</p>
+            <p style="font-size:11px;color:#d1d5db">© 2025 Tomer's Rental. All rights reserved</p>
+          </div>
+          <div class="ep-footer">Business Address 1881 Oak Ave, Evanston, IL, 60201, US</div>
+        </div>
+      </div>`;
+  } else {
+    body.innerHTML = `
+      <div class="sms-preview-full">
+        <p style="font-size:12px;color:var(--color-text-muted);margin-bottom:16px">SMS message preview</p>
+        <div class="sms-bubble">${msg.smsText}</div>
+        <p style="font-size:11px;color:var(--color-text-muted);margin-top:20px;line-height:1.6">Standard SMS rates may apply. Sent via your configured SMS sender.</p>
+      </div>`;
+  }
+
+  document.getElementById('preview-overlay').classList.add('open');
+}
+
+function closePreview() {
+  document.getElementById('preview-overlay').classList.remove('open');
+  if (state.previewActiveUnit) {
+    const u = document.getElementById(`unit-${state.previewActiveUnit}`);
+    if (u) u.classList.remove('active');
+    state.previewActiveUnit = null;
+  }
+}
+
+function maybeClose(e) {
+  if (e.target === document.getElementById('preview-overlay')) closePreview();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FLOW SELECTION
+// ═══════════════════════════════════════════════════════════════════════════
 function selectFlow(flowId) {
   state.selectedFlow = flowId;
 
@@ -1122,7 +1704,9 @@ function selectFlow(flowId) {
   renderSidebar();
 }
 
-// ── Navigation ─────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════════════════════
 function goNext() {
   const steps = getSteps();
   if (state.currentStep < steps.length - 1) {
@@ -1140,7 +1724,6 @@ function jumpToStep(index) {
   const steps = getSteps();
   state.currentStep = index;
 
-  // Hide all panels
   document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
 
   const step = steps[index];
@@ -1152,7 +1735,7 @@ function jumpToStep(index) {
       setTimeout(() => panel.classList.remove('fade-in'), 300);
     }
   } else {
-    // For unimplemented steps, show a placeholder in step2 panel area
+    // Placeholder for unimplemented steps
     const p2 = document.getElementById('panel-step2');
     p2.classList.add('active');
     p2.innerHTML = `
@@ -1164,8 +1747,18 @@ function jumpToStep(index) {
   }
 
   if (step && step.panel === 'panel-step2') renderStep2();
+  if (step && step.panel === 'panel-step6') {
+    renderGrid();
+  }
 
-  // Button states
+  // Resize modal for preview step
+  const modal = document.getElementById('main-modal');
+  if (step && step.panel === 'panel-step6') {
+    modal.classList.add('wide');
+  } else {
+    modal.classList.remove('wide');
+  }
+
   document.getElementById('btn-previous').style.display = index > 0 ? 'inline-flex' : 'none';
   const nextBtn = document.getElementById('btn-next');
   nextBtn.textContent = index === steps.length - 1 ? 'Save Changes' : 'Next';
@@ -1179,7 +1772,9 @@ function jumpToStep(index) {
   updateScenarioNav();
 }
 
-// ── GBP actions ───────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// GBP ACTIONS
+// ═══════════════════════════════════════════════════════════════════════════
 function simulateConnect() {
   state.gbpConnected = true;
   state.gbpSkipped = false;
@@ -1203,7 +1798,9 @@ function skipGBP() {
   renderSidebar();
 }
 
-// ── Scenario switcher ──────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// SCENARIO SWITCHER
+// ═══════════════════════════════════════════════════════════════════════════
 const SCENARIOS = {
   'step1': () => {
     state.currentStep = 0;
@@ -1235,6 +1832,38 @@ const SCENARIOS = {
     state.gbpConnected = false;
     state.gbpSkipped = true;
   },
+  'preview-smart': () => {
+    state.currentStep = 5; // last step (index may vary by flow, handled below)
+    state.selectedFlow = 'smart_routing';
+    state.gbpConnected = true;
+    state.gbpSkipped = false;
+    state.previewScenario = 'smart';
+    state.previewChannel = 'email';
+  },
+  'preview-internal': () => {
+    state.currentStep = 4;
+    state.selectedFlow = 'internal_only';
+    state.gbpConnected = false;
+    state.gbpSkipped = false;
+    state.previewScenario = 'internal';
+    state.previewChannel = 'email';
+  },
+  'preview-google': () => {
+    state.currentStep = 5;
+    state.selectedFlow = 'google_only';
+    state.gbpConnected = true;
+    state.gbpSkipped = false;
+    state.previewScenario = 'google';
+    state.previewChannel = 'email';
+  },
+  'preview-both': () => {
+    state.currentStep = 5;
+    state.selectedFlow = 'internal_then_google';
+    state.gbpConnected = true;
+    state.gbpSkipped = false;
+    state.previewScenario = 'both';
+    state.previewChannel = 'email';
+  },
 };
 
 function setScenario(key) {
@@ -1242,11 +1871,10 @@ function setScenario(key) {
   if (!fn) return;
   fn();
 
-  // Reset panels
+  // Restore panels
   document.querySelectorAll('.step-panel').forEach(p => {
     p.classList.remove('active');
     if (p.id === 'panel-step2') {
-      // Restore original HTML
       p.innerHTML = `
         <h2 class="step-title">Connect Your Review Platform</h2>
         <div class="context-copy" id="context-copy-text"></div>
@@ -1288,30 +1916,52 @@ function setScenario(key) {
     }
   });
 
-  // Restore flow card selections
-  if (key === 'step1') {
-    document.querySelectorAll('.flow-card').forEach(c => {
-      c.classList.remove('selected');
-      c.setAttribute('aria-checked', 'false');
-    });
-    document.getElementById('panel-step1').classList.add('active');
-    document.getElementById('btn-next').disabled = true;
-    document.getElementById('btn-previous').style.display = 'none';
+  const isPreview = key.startsWith('preview-');
+  const modal = document.getElementById('main-modal');
+
+  if (isPreview) {
+    modal.classList.add('wide');
+    // Fix step index: preview step is last in getSteps()
+    const steps = getSteps();
+    const previewIdx = steps.findIndex(s => s.id === 'step6');
+    if (previewIdx !== -1) state.currentStep = previewIdx;
+
+    document.getElementById('panel-step6').classList.add('active');
+    document.getElementById('toggle-email').classList.toggle('active', state.previewChannel === 'email');
+    document.getElementById('toggle-sms').classList.toggle('active', state.previewChannel === 'sms');
     document.getElementById('footer-hint').style.display = 'none';
-  } else {
-    if (state.selectedFlow) {
-      const card = document.getElementById('card-' + state.selectedFlow);
-      if (card) {
-        document.querySelectorAll('.flow-card').forEach(c => { c.classList.remove('selected'); c.setAttribute('aria-checked', 'false'); });
-        card.classList.add('selected');
-        card.setAttribute('aria-checked', 'true');
-      }
-    }
-    document.getElementById('panel-step2').classList.add('active');
     document.getElementById('btn-previous').style.display = 'inline-flex';
+    document.getElementById('btn-next').textContent = 'Save Changes';
     document.getElementById('btn-next').disabled = false;
-    document.getElementById('btn-next').textContent = 'Next';
-    renderStep2();
+    renderGrid();
+  } else {
+    modal.classList.remove('wide');
+    closePreview();
+
+    if (key === 'step1') {
+      document.querySelectorAll('.flow-card').forEach(c => {
+        c.classList.remove('selected');
+        c.setAttribute('aria-checked', 'false');
+      });
+      document.getElementById('panel-step1').classList.add('active');
+      document.getElementById('btn-next').disabled = true;
+      document.getElementById('btn-previous').style.display = 'none';
+      document.getElementById('footer-hint').style.display = 'none';
+    } else {
+      if (state.selectedFlow) {
+        const card = document.getElementById('card-' + state.selectedFlow);
+        if (card) {
+          document.querySelectorAll('.flow-card').forEach(c => { c.classList.remove('selected'); c.setAttribute('aria-checked', 'false'); });
+          card.classList.add('selected');
+          card.setAttribute('aria-checked', 'true');
+        }
+      }
+      document.getElementById('panel-step2').classList.add('active');
+      document.getElementById('btn-previous').style.display = 'inline-flex';
+      document.getElementById('btn-next').disabled = false;
+      document.getElementById('btn-next').textContent = 'Next';
+      renderStep2();
+    }
   }
 
   renderSidebar();
@@ -1319,29 +1969,42 @@ function setScenario(key) {
 }
 
 function updateScenarioNav() {
-  // Determine active scenario key
+  const step = getSteps()[state.currentStep];
   let activeKey = 'step1';
-  if (state.currentStep === 0) activeKey = 'step1';
-  else if (state.currentStep === 1) {
+
+  if (step && step.panel === 'panel-step6') {
+    const scenarioMap = { smart: 'preview-smart', internal: 'preview-internal', google: 'preview-google', both: 'preview-both' };
+    activeKey = scenarioMap[state.previewScenario] || 'preview-smart';
+  } else if (state.currentStep === 0) {
+    activeKey = 'step1';
+  } else if (state.currentStep === 1) {
     if (state.selectedFlow === 'internal_only') activeKey = 'step2-internal';
     else if (state.gbpConnected) activeKey = 'step2-connected';
     else if (state.gbpSkipped) activeKey = 'step2-skipped';
     else activeKey = 'step2-google';
   }
+
   document.querySelectorAll('.scenario-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.getAttribute('onclick').includes(activeKey));
+    const onclick = btn.getAttribute('onclick') || '';
+    const match = onclick.match(/'([^']+)'/);
+    btn.classList.toggle('active', match && match[1] === activeKey);
   });
 }
 
-// ── Annotations ────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// ANNOTATIONS
+// ═══════════════════════════════════════════════════════════════════════════
 function toggleAnnotations() {
   document.body.classList.toggle('show-annotations');
   document.getElementById('ann-btn').textContent =
     document.body.classList.contains('show-annotations') ? 'Hide annotations' : 'Show annotations';
 }
 
-// ── Keyboard support ───────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// KEYBOARD
+// ═══════════════════════════════════════════════════════════════════════════
 document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closePreview();
   if (e.key === 'Enter' || e.key === ' ') {
     const el = document.activeElement;
     if (el && el.classList.contains('flow-card')) {
@@ -1351,7 +2014,9 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// ── Init ───────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════════════
 renderSidebar();
 </script>
 </body>
