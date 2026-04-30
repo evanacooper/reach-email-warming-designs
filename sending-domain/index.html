@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reach — BYO Sending Domain Designs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --primary: hsl(210 30% 25%);
+  --bg: hsl(220 13% 97%);
+  --fg: hsl(225 15% 16%);
+  --muted-fg: hsl(220 10% 45%);
+  --border: hsl(220 13% 90%);
+  --card: hsl(0 0% 100%);
+  --radius: 0.625rem;
+  --teal: hsl(178 60% 35%);
+  --teal-bg: hsl(178 60% 96%);
+  --teal-border: hsl(178 50% 80%);
+}
+
+html, body {
+  min-height: 100%;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--fg);
+  background: var(--bg);
+}
+
+.page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 56px 24px 80px;
+}
+
+.header { margin-bottom: 48px; }
+
+.eyebrow {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--muted-fg);
+  margin-bottom: 10px;
+}
+
+.title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  color: var(--fg);
+  line-height: 1.15;
+  margin-bottom: 12px;
+}
+
+.subtitle {
+  font-size: 15px;
+  color: var(--muted-fg);
+  line-height: 1.6;
+  max-width: 560px;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 100px;
+  background: var(--teal-bg);
+  border: 1px solid var(--teal-border);
+  color: var(--teal);
+  margin-top: 16px;
+}
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--muted-fg);
+  margin-bottom: 14px;
+}
+
+.cards { display: flex; flex-direction: column; gap: 12px; margin-bottom: 48px; }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  text-decoration: none;
+  display: flex;
+  transition: box-shadow .15s, border-color .15s;
+}
+.card:hover {
+  border-color: hsl(210 30% 25% / .3);
+  box-shadow: 0 2px 12px rgba(0,0,0,.06);
+}
+
+.card-num {
+  width: 52px;
+  flex-shrink: 0;
+  background: hsl(210 30% 25% / .05);
+  border-right: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: hsl(210 30% 25% / .25);
+}
+
+.card-body {
+  padding: 16px 18px;
+  flex: 1;
+}
+
+.card-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--fg);
+  letter-spacing: -.01em;
+  margin-bottom: 4px;
+}
+
+.card-desc {
+  font-size: 13px;
+  color: var(--muted-fg);
+  line-height: 1.5;
+}
+
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.tag {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  color: var(--muted-fg);
+  background: hsl(210 10% 97%);
+}
+
+.card-arrow {
+  display: flex;
+  align-items: center;
+  padding: 0 18px;
+  color: hsl(210 30% 25% / .3);
+  transition: color .15s;
+}
+.card:hover .card-arrow { color: var(--primary); }
+
+.context {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  font-size: 13px;
+  color: var(--muted-fg);
+  line-height: 1.6;
+}
+.context strong { color: var(--fg); font-weight: 600; }
+.context + .context { margin-top: 12px; }
+
+.footer {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  font-size: 12.5px;
+  color: var(--muted-fg);
+}
+.back-link {
+  position: fixed; top: 12px; left: 12px; z-index: 9999;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500;
+  color: #64748b; background: white; border: 1px solid #e2e8f0;
+  padding: 5px 11px; border-radius: 6px; text-decoration: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.back-link:hover { color: #1e293b; background: #f8fafc; }
+</style>
+</head>
+<body>
+<a class="back-link" href="../index.html">
+  <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M8 2L3 6.5l5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  All projects
+</a>
+<div class="page">
+
+  <a href="../index.html" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:var(--muted-fg);text-decoration:none;margin-bottom:28px;">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    All projects
+  </a>
+
+  <div class="header">
+    <div class="eyebrow">Reach · Engage</div>
+    <h1 class="title">BYO Sending Domain — Design Review</h1>
+    <p class="subtitle">Klaviyo-inspired flow that lets tenants connect their own sending domain via Entri, with a managed-domain fallback. Spans onboarding and settings.</p>
+    <div class="status-chip"><span class="status-dot"></span>Design in review</div>
+  </div>
+
+  <div class="section-label">Designs</div>
+  <div class="cards">
+
+    <a class="card" href="finalized.html">
+      <div class="card-num">1</div>
+      <div class="card-body">
+        <div class="card-title">Full flow — onboarding & settings</div>
+        <div class="card-desc">Choice screen, sub-flow (root → subdomain → Entri/manual → DMARC → verifying), settings list view with multi-domain support, empty state, and disconnected-domain banner. Includes a flow reference table at the top mapping each screen to its purpose and Entri integration points.</div>
+        <div class="card-tags">
+          <span class="tag">10 screens</span>
+          <span class="tag">Choice screen</span>
+          <span class="tag">Multi-domain</span>
+          <span class="tag">Entri integration</span>
+          <span class="tag">ENG-2161</span>
+        </div>
+      </div>
+      <div class="card-arrow">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </a>
+
+  </div>
+
+  <div class="section-label">Background</div>
+  <div class="context">
+    <strong>Problem:</strong> Tenants currently send from a platform-controlled sending domain. Emails show "via" the platform domain in Gmail/Outlook headers, signaling to inbox providers that the sender isn't the business itself — driving spam/promotions placement and conflicting with Google/Yahoo bulk sender requirements (>5k/day to Gmail). It's also a brand-trust blocker that several partners have cited as the reason their tenants won't adopt Engage.<br><br>
+    <strong>Approach:</strong> Let tenants connect a branded sending subdomain (e.g. <code>send.acmeinsurance.com</code>) that becomes the DKIM-signing domain for outbound mail. DNS automation via <strong>Entri</strong> (50+ provider coverage, manual fallback). ESP-agnostic backend so it works for Postmark and SES tenants. Multi-domain support so tenants can split marketing and transactional onto different subdomains.<br><br>
+    <strong>Reference:</strong> Klaviyo's branded sending domain flow. Linear ticket <code>ENG-2161</code> with sub-tasks ENG-2670 through ENG-2749.
+  </div>
+
+  <div class="context">
+    <strong>How to read the design:</strong> Section 00 is a flow reference table — start there. It maps every screen to its purpose, what the user does, what data we collect, and how each step feeds Entri or our backend. Sections 01–08 are the visual mocks for each screen, with commentary blocks explaining design choices and tradeoffs.
+  </div>
+
+  <div class="footer">
+    Reach · Internal design review · Not for external distribution
+  </div>
+
+</div>
+</body>
+</html>

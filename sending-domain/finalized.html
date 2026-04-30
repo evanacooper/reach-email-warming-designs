@@ -1,0 +1,2113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Sending domain — Engage onboarding & settings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    /* SDK admin tokens (HSL, prefixed --reach-* in production codebase; using neutral names here for the mock) */
+    --bg: #fafafa;
+    --bg-elevated: #ffffff;
+    --bg-muted: #f5f5f5;
+    --bg-subtle: #f9fafb;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --border-focus: #6366f1;
+    --text: #0a0a0a;
+    --text-secondary: #4b5563;
+    --text-muted: #6b7280;
+    --text-faint: #9ca3af;
+    --primary: #4f46e5; /* indigo-style accent — stand-in for the platform primary */
+    --primary-hover: #4338ca;
+    --primary-text: #ffffff;
+    --primary-tint: #eef2ff;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --success-border: #bbf7d0;
+    --success-pill-bg: #dcfce7;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --warning-border: #fde68a;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --danger-border: #fecaca;
+    --info: #2563eb;
+    --info-bg: #eff6ff;
+    --info-border: #bfdbfe;
+    --radius: 8px;
+    --radius-lg: 12px;
+    --radius-sm: 6px;
+    --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-elevated: 0 4px 14px rgba(15, 23, 42, 0.08);
+    --shadow-modal: 0 24px 48px rgba(15, 23, 42, 0.18);
+    --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-mono: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-sans);
+    color: var(--text);
+    background: #ececec;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* ========================================================== */
+  /* DOC SHELL                                                   */
+  /* ========================================================== */
+  .doc {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+  }
+  .doc-header {
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .doc-header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .doc-header p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 13px;
+  }
+  .doc-toc {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+  .doc-toc a {
+    font-size: 12px;
+    padding: 4px 10px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    text-decoration: none;
+    color: var(--text-secondary);
+  }
+  .doc-toc a:hover { color: var(--text); border-color: var(--border-strong); }
+
+  .section {
+    margin-top: 56px;
+    scroll-margin-top: 24px;
+  }
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .section-header h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .section-header .num {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-faint);
+    font-weight: 500;
+  }
+  .section-header .note {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-left: auto;
+    font-style: italic;
+  }
+
+  /* ========================================================== */
+  /* WIZARD SHELL — mimics EngageOnboarding                      */
+  /* ========================================================== */
+  .wizard {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    min-height: 720px;
+    box-shadow: var(--shadow-card);
+  }
+  .wizard-sidebar {
+    background: var(--bg-subtle);
+    border-right: 1px solid var(--border);
+    padding: 28px 16px;
+    display: flex;
+    flex-direction: column;
+  }
+  .wizard-sidebar-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+    padding: 0 12px 12px;
+  }
+  .wizard-sidebar ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .wizard-sidebar li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .wizard-sidebar li[data-state="active"] {
+    background: var(--bg-elevated);
+    color: var(--text);
+    box-shadow: var(--shadow-card);
+  }
+  .wizard-sidebar li[data-state="complete"] { color: var(--text); }
+  .wizard-sidebar li[data-state="upcoming"] { color: var(--text-faint); }
+  .wizard-sidebar .step-marker {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    border: 1.5px solid var(--border-strong);
+    background: var(--bg-elevated);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-faint);
+  }
+  .wizard-sidebar li[data-state="active"] .step-marker {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: var(--primary-text);
+  }
+  .wizard-sidebar li[data-state="complete"] .step-marker {
+    border-color: var(--success);
+    background: var(--success);
+    color: white;
+  }
+  .wizard-sidebar li[data-state="complete"] .step-marker::before { content: "✓"; }
+  .wizard-sidebar li[data-state="active"] .step-marker::before { content: ""; }
+  .wizard-sidebar .upcoming-marker { content: ""; }
+
+  .wizard-main {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .wizard-content {
+    flex: 1;
+    padding: 56px 64px 32px;
+    overflow-y: auto;
+  }
+  .wizard-footer {
+    border-top: 1px solid var(--border);
+    padding: 20px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-elevated);
+  }
+  .wizard-step-header {
+    margin-bottom: 32px;
+  }
+  .wizard-step-header h1 {
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin: 0 0 8px;
+    line-height: 1.2;
+  }
+  .wizard-step-header p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 15px;
+    max-width: 580px;
+  }
+
+  /* Inline sub-stepper inside the right pane */
+  .substep-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 24px;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+  .substep-bar .dots { display: flex; gap: 6px; }
+  .substep-bar .dot {
+    width: 18px;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--border);
+  }
+  .substep-bar .dot[data-state="active"] { background: var(--primary); width: 28px; }
+  .substep-bar .dot[data-state="complete"] { background: var(--text); }
+
+  /* ========================================================== */
+  /* BUTTONS                                                     */
+  /* ========================================================== */
+  .btn {
+    appearance: none;
+    border: 0;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 500;
+    padding: 9px 16px;
+    border-radius: var(--radius-sm);
+    transition: background 120ms ease, border-color 120ms ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-primary {
+    background: var(--text);
+    color: var(--primary-text);
+  }
+  .btn-primary:hover { background: #1f2937; }
+  .btn-secondary {
+    background: var(--bg-elevated);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--border-strong); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-secondary);
+    padding: 8px 12px;
+  }
+  .btn-ghost:hover { color: var(--text); }
+  .btn-link {
+    background: none;
+    border: 0;
+    color: var(--primary);
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0;
+  }
+  .btn-link:hover { text-decoration: underline; }
+  .btn-large { padding: 12px 20px; font-size: 14px; }
+  .btn-block { width: 100%; justify-content: center; }
+
+  /* ========================================================== */
+  /* CHOICE SCREEN (cards side-by-side, BYO primary)             */
+  /* ========================================================== */
+  .choice-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .choice-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: relative;
+  }
+  .choice-card[data-tone="primary"] {
+    border-color: var(--text);
+    box-shadow: 0 0 0 1px var(--text);
+  }
+  .choice-card-tag {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: var(--text);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 999px;
+  }
+  .choice-card h3 {
+    font-size: 17px;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .choice-card .lede {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 13.5px;
+  }
+  .choice-card ul {
+    list-style: none;
+    margin: 4px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .choice-card li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    color: var(--text);
+    font-size: 13px;
+  }
+  .choice-card li svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: var(--success);
+  }
+  .choice-card .meta {
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+  .choice-card-cta { margin-top: auto; }
+
+  /* Inbox preview inside the BYO card */
+  .inbox-compare {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .inbox-compare-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+  }
+  .inbox-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--bg-elevated);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+  .inbox-row[data-tone="muted"] {
+    background: #f3f4f6;
+    border-style: dashed;
+    opacity: 0.85;
+  }
+  .inbox-avatar {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #14b8a6, #0d9488);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 12px;
+  }
+  .inbox-row[data-tone="muted"] .inbox-avatar {
+    background: #d1d5db;
+    color: var(--text-faint);
+  }
+  .inbox-meta { flex: 1; min-width: 0; }
+  .inbox-from {
+    font-size: 12.5px;
+    color: var(--text);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .inbox-row[data-tone="muted"] .inbox-from { color: var(--text-muted); font-weight: 500; }
+  .inbox-via {
+    font-weight: 400;
+    color: var(--text-faint);
+    font-size: 11.5px;
+  }
+  .inbox-via strong {
+    color: var(--warning);
+    font-weight: 600;
+  }
+  .inbox-subject {
+    color: var(--text-muted);
+    font-size: 12px;
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .inbox-arrow {
+    align-self: center;
+    color: var(--text-faint);
+    font-size: 16px;
+    text-align: center;
+  }
+
+  .it-handoff {
+    margin-top: 4px;
+    padding: 14px 16px;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  .it-handoff svg { color: var(--text-muted); flex-shrink: 0; }
+  .it-handoff strong { color: var(--text); font-weight: 600; }
+
+  /* ========================================================== */
+  /* GENERIC FORM ELEMENTS                                       */
+  /* ========================================================== */
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .form-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .form-group .helper {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: -2px;
+  }
+  .form-input {
+    width: 100%;
+    appearance: none;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    padding: 9px 12px;
+    font: inherit;
+    font-size: 14px;
+    background: var(--bg-elevated);
+    color: var(--text);
+  }
+  .form-input:focus {
+    outline: none;
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+  }
+
+  .preview-chip {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .preview-chip-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+  }
+  .preview-chip-value {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .info-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: var(--info-bg);
+    border: 1px solid var(--info-border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    color: #1e3a8a;
+    font-size: 13px;
+  }
+  .info-banner svg { flex-shrink: 0; color: var(--info); margin-top: 1px; }
+  .info-banner a { color: var(--info); font-weight: 500; }
+
+  .provider-hint {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+  }
+  .provider-hint .pill {
+    background: var(--success-bg);
+    color: var(--success);
+    border: 1px solid var(--success-border);
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  /* ========================================================== */
+  /* DMARC TOGGLE CARD                                           */
+  /* ========================================================== */
+  .dmarc-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 14px;
+    align-items: start;
+  }
+  .dmarc-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+  }
+  .dmarc-content h4 {
+    margin: 0 0 4px;
+    font-size: 14.5px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dmarc-content p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  .recommended-pill {
+    background: var(--bg-subtle);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .toggle {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    background: var(--text);
+    border-radius: 999px;
+    flex-shrink: 0;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+  .toggle::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 18px;
+    width: 16px;
+    height: 16px;
+    background: white;
+    border-radius: 999px;
+    transition: left 120ms ease;
+  }
+  .toggle[data-on="false"] { background: var(--border-strong); }
+  .toggle[data-on="false"]::after { left: 2px; }
+
+  /* ========================================================== */
+  /* ENTRI vs MANUAL SCREEN                                      */
+  /* ========================================================== */
+  .entri-screen {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 40px;
+    align-items: center;
+    margin-top: 20px;
+  }
+  .entri-screen ul {
+    list-style: none;
+    margin: 16px 0 24px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .entri-screen li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+  }
+  .entri-screen li svg { color: var(--text); flex-shrink: 0; }
+  .entri-actions { display: flex; gap: 10px; }
+  .entri-fineprint {
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .entri-fineprint a { color: var(--info); }
+  .entri-art {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    height: 240px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .entri-art-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    width: 110px;
+    height: 110px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-card);
+  }
+  .entri-art-card.primary { transform: rotate(-5deg) translateX(20px); z-index: 2; }
+  .entri-art-card.secondary {
+    transform: rotate(5deg) translateX(-20px);
+    border-style: dashed;
+    background: transparent;
+  }
+  .entri-art-dots {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    width: 80px;
+    height: 80px;
+    background-image: radial-gradient(var(--border-strong) 1.5px, transparent 1.5px);
+    background-size: 12px 12px;
+    opacity: 0.5;
+  }
+
+  /* ========================================================== */
+  /* VERIFYING / PENDING                                         */
+  /* ========================================================== */
+  .verifying-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .verifying-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .verifying-header .domain-name {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .verifying-header .status-pill {
+    margin-left: auto;
+  }
+  .verifying-list {
+    padding: 8px 0;
+  }
+  .verifying-row {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    gap: 14px;
+    align-items: center;
+    padding: 14px 24px;
+  }
+  .verifying-row + .verifying-row { border-top: 1px solid var(--bg-subtle); }
+  .verifying-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .verifying-icon[data-state="ok"] { background: var(--success-pill-bg); color: var(--success); }
+  .verifying-icon[data-state="pending"] {
+    background: var(--bg-subtle);
+    color: var(--text-faint);
+    border: 1.5px dashed var(--border-strong);
+  }
+  .verifying-icon[data-state="working"] {
+    background: var(--info-bg);
+    color: var(--info);
+  }
+  .verifying-row .label { font-weight: 500; font-size: 13.5px; }
+  .verifying-row .desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .verifying-row .timestamp { font-size: 11.5px; color: var(--text-faint); font-family: var(--font-mono); }
+
+  .verifying-foot {
+    padding: 14px 24px;
+    background: var(--bg-subtle);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+  }
+  .spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--border-strong);
+    border-top-color: var(--info);
+    border-radius: 999px;
+    animation: spin 800ms linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ========================================================== */
+  /* SETTINGS LIST VIEW                                          */
+  /* ========================================================== */
+  .settings-shell {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    min-height: 560px;
+    box-shadow: var(--shadow-card);
+  }
+  .settings-shell .wizard-sidebar { padding-top: 20px; }
+
+  .settings-page {
+    padding: 32px 40px;
+  }
+  .settings-page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+  .settings-page-header h2 {
+    margin: 0 0 4px;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .settings-page-header p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 14px;
+    max-width: 520px;
+  }
+
+  /* Domain table */
+  .domain-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--bg-elevated);
+  }
+  .domain-table th {
+    text-align: left;
+    padding: 11px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    background: var(--bg-subtle);
+    border-bottom: 1px solid var(--border);
+  }
+  .domain-table td {
+    padding: 16px;
+    border-top: 1px solid var(--bg-subtle);
+    vertical-align: middle;
+    font-size: 13.5px;
+  }
+  .domain-table tr:first-child td { border-top: 0; }
+  .domain-table .domain-name {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .domain-table .domain-name .name {
+    font-family: var(--font-mono);
+    font-size: 13.5px;
+    font-weight: 500;
+  }
+  .domain-table .domain-name .purpose {
+    font-size: 11.5px;
+    color: var(--text-muted);
+  }
+  .domain-table .default-badge {
+    margin-left: 8px;
+    background: var(--bg-subtle);
+    color: var(--text-secondary);
+    padding: 1px 7px;
+    border-radius: 999px;
+    font-size: 10.5px;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    font-family: var(--font-sans);
+  }
+  .domain-table .actions {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+  }
+  .icon-btn {
+    appearance: none;
+    border: 1px solid var(--border);
+    background: var(--bg-elevated);
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: var(--radius-sm);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .icon-btn:hover { color: var(--text); border-color: var(--border-strong); }
+
+  /* Status pills */
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid transparent;
+  }
+  .status-pill::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: currentColor;
+  }
+  .status-verified {
+    background: var(--success-pill-bg);
+    color: #166534;
+    border-color: var(--success-border);
+  }
+  .status-pending {
+    background: var(--info-bg);
+    color: #1e40af;
+    border-color: var(--info-border);
+  }
+  .status-pending::before { animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+  .status-disconnected {
+    background: var(--danger-bg);
+    color: #991b1b;
+    border-color: var(--danger-border);
+  }
+  .status-failed {
+    background: var(--warning-bg);
+    color: #92400e;
+    border-color: var(--warning-border);
+  }
+  .status-managed {
+    background: var(--bg-subtle);
+    color: var(--text-secondary);
+    border-color: var(--border);
+  }
+
+  /* Empty state for settings */
+  .empty-state {
+    background: var(--bg-elevated);
+    border: 1.5px dashed var(--border-strong);
+    border-radius: var(--radius-lg);
+    padding: 40px 32px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .empty-state .icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    background: var(--bg-subtle);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+  }
+  .empty-state h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .empty-state p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 13.5px;
+    max-width: 420px;
+  }
+
+  /* Disconnected banner */
+  .disconnect-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: var(--danger-bg);
+    border: 1px solid var(--danger-border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    color: #7f1d1d;
+  }
+  .disconnect-banner svg { color: var(--danger); flex-shrink: 0; margin-top: 2px; }
+  .disconnect-banner h4 {
+    margin: 0 0 2px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #7f1d1d;
+  }
+  .disconnect-banner p {
+    margin: 0 0 8px;
+    font-size: 12.5px;
+    color: #991b1b;
+  }
+  .disconnect-banner code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: rgba(127, 29, 29, 0.08);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+  .disconnect-banner .actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  /* ========================================================== */
+  /* MISC                                                        */
+  /* ========================================================== */
+  .commentary {
+    margin-top: 12px;
+    background: rgba(255, 247, 232, 0.6);
+    border-left: 3px solid #f59e0b;
+    padding: 10px 14px;
+    font-size: 12.5px;
+    color: #78350f;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  }
+  .commentary strong { color: #422006; }
+
+  /* ========================================================== */
+  /* FLOW REFERENCE TABLE                                        */
+  /* ========================================================== */
+  .flow-table-wrap {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+  }
+  .flow-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    table-layout: fixed;
+  }
+  .flow-table thead th {
+    text-align: left;
+    padding: 12px 14px;
+    background: var(--bg-subtle);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    vertical-align: bottom;
+  }
+  .flow-table thead th.col-step { width: 56px; }
+  .flow-table thead th.col-screen { width: 200px; }
+  .flow-table thead th.col-why { width: 22%; }
+  .flow-table thead th.col-user { width: 18%; }
+  .flow-table thead th.col-collect { width: 18%; }
+  .flow-table thead th.col-entri { /* fills the rest */ }
+  .flow-table tbody td {
+    padding: 14px 14px;
+    border-top: 1px solid var(--bg-subtle);
+    vertical-align: top;
+    line-height: 1.55;
+    color: var(--text);
+  }
+  .flow-table tbody tr:first-child td { border-top: 0; }
+  .flow-table tbody tr.entri-row td {
+    background: var(--bg-subtle);
+  }
+  .flow-table tbody tr.entri-row td .step-num,
+  .flow-table tbody tr.entri-row td .screen-name { color: var(--text-muted); }
+  .flow-table tbody tr.entri-row td .screen-tag {
+    background: #fef3c7;
+    color: #92400e;
+    border-color: #fde68a;
+  }
+  .flow-table .step-num {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-faint);
+    font-weight: 500;
+  }
+  .flow-table .screen-name {
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .flow-table .screen-tag {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 10.5px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: var(--bg-subtle);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    padding: 1px 7px;
+    border-radius: 999px;
+  }
+  .flow-table code {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    background: var(--bg-subtle);
+    padding: 1px 5px;
+    border-radius: 4px;
+    color: var(--text);
+    word-break: break-word;
+  }
+  .flow-table tbody tr.entri-row td code {
+    background: rgba(15, 23, 42, 0.06);
+  }
+  .flow-table strong { font-weight: 600; }
+
+  .flow-rules {
+    margin-top: 20px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+  }
+  .flow-rules h3 {
+    margin: 0 0 10px;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+  .flow-rules ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .flow-rules li {
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--text);
+    padding-left: 18px;
+    position: relative;
+  }
+  .flow-rules li::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  .flow-rules li strong { font-weight: 600; }
+
+  .checkmark-icon { width: 14px; height: 14px; }
+  .icon-sm { width: 16px; height: 16px; }
+  .icon-md { width: 20px; height: 20px; }
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <header class="doc-header">
+    <h1>Sending domain — Engage onboarding & settings</h1>
+    <p>Design exploration for ENG-2161 / ENG-2672 — Klaviyo-inspired BYO sending domain flow with managed-domain fallback. Lives inside the existing Engage wizard shell.</p>
+    <nav class="doc-toc">
+      <a href="#flow">Flow reference</a>
+      <a href="#choice">Choice screen</a>
+      <a href="#root">Root domain</a>
+      <a href="#subdomain">Subdomain + provider check</a>
+      <a href="#entri">Connect with Entri / manual</a>
+      <a href="#dmarc">DMARC opt-in</a>
+      <a href="#verifying">Verifying state</a>
+      <a href="#settings-list">Settings list view</a>
+      <a href="#settings-empty">Settings empty state</a>
+      <a href="#disconnected">Disconnected banner</a>
+    </nav>
+  </header>
+
+  <!-- ============================================== -->
+  <!-- FLOW REFERENCE TABLE                            -->
+  <!-- ============================================== -->
+  <section class="section" id="flow" style="margin-top: 0;">
+    <div class="section-header">
+      <span class="num">00</span>
+      <h2>Flow reference · what each screen is for and how it feeds Entri</h2>
+      <span class="note">Read this first — implementation reference for the engineer building it</span>
+    </div>
+
+    <div class="flow-table-wrap">
+      <table class="flow-table">
+        <thead>
+          <tr>
+            <th class="col-step">#</th>
+            <th class="col-screen">Screen</th>
+            <th class="col-why">Why it exists</th>
+            <th class="col-user">What the user does</th>
+            <th class="col-collect">What we collect / show</th>
+            <th class="col-entri">How it feeds Entri (or our backend)</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <tr>
+            <td><span class="step-num">01</span></td>
+            <td>
+              <div class="screen-name">Choice — BYO vs managed</div>
+            </td>
+            <td>The fork in the road. Most tenants don't know there's a choice; this screen makes the trade-off visible (deliverability + brand) and lets the ones who can't connect a domain skip without dropping out of onboarding entirely.</td>
+            <td>Picks one of two cards: "Use my own domain" (BYO) or "Use a managed domain".</td>
+            <td>Nothing yet — just a routing decision. We log the choice for analytics (drop-off where).</td>
+            <td><strong>No Entri call yet.</strong> If they pick managed → skip the next 4 screens entirely, mark Engage with a <code>useManagedDomain</code> flag, advance to Email step. If BYO → go to screen 02.</td>
+          </tr>
+
+          <tr>
+            <td><span class="step-num">02</span></td>
+            <td>
+              <div class="screen-name">Root domain</div>
+            </td>
+            <td>We need the apex domain (<code>acmeinsurance.com</code>) before we can build any DNS records. Pre-filled from the business website to remove typing and reduce typos that would silently break verification.</td>
+            <td>Confirms or edits the prefilled root domain.</td>
+            <td>Root domain string.</td>
+            <td><strong>No Entri call yet.</strong> Stored on our side. We do basic format validation (is it a real-looking FQDN?) but no DNS lookup.</td>
+          </tr>
+
+          <tr>
+            <td><span class="step-num">03</span></td>
+            <td>
+              <div class="screen-name">Subdomain + provider check</div>
+            </td>
+            <td>Sets the subdomain prefix (<code>send</code>) so the full sending domain becomes <code>send.acmeinsurance.com</code>. Critical: Postmark/SES need the full subdomain to mint DNS records, and we want to surface "automatic vs manual setup" expectations <em>before</em> we kick off the modal.</td>
+            <td>Enters subdomain prefix (default: <code>send</code>). Sees a live preview chip showing the full domain.</td>
+            <td>Subdomain string + the result of <code>entri.checkDomain(fullDomain)</code>.</td>
+            <td><strong>First Entri call: <code>entri.checkDomain(fullDomain, config)</code>.</strong> Returns <code>{ provider: "Cloudflare", setupType: "Automatic", NSSupport: {...} }</code>. We use this to set expectations ("we'll set up records for you" vs "you'll copy records manually") — it's not gating, just informational.</td>
+          </tr>
+
+          <tr>
+            <td><span class="step-num">04</span></td>
+            <td>
+              <div class="screen-name">Connect with Entri / Set up manually</div>
+            </td>
+            <td>The "are you ready to give us write access to your DNS?" moment. Klaviyo includes this as an explicit step — gives the tenant a beat to opt out, see the legal terms, and choose manual fallback if they don't trust auto-setup or their provider isn't supported.</td>
+            <td>Picks "Connect with Entri" (most users) or "Set up manually" (power users / unsupported providers / IT pushback).</td>
+            <td>Choice of automatic vs manual path.</td>
+            <td><strong>Backend kicks off here.</strong> We call our <code>POST /api/sending-domain</code> endpoint, which: (1) calls Postmark <code>POST /domains</code> to register the sending domain and gets back the DKIM TXT + Return-Path CNAME records, (2) translates them into Entri's <code>dnsRecords[]</code> shape, (3) mints a 60-min Entri JWT via <code>POST https://api.goentri.com/token</code>, (4) returns the JWT + records to the browser. The browser already has everything it needs to launch the Entri modal — but doesn't launch yet.</td>
+          </tr>
+
+          <tr>
+            <td><span class="step-num">05</span></td>
+            <td>
+              <div class="screen-name">DMARC opt-in</div>
+            </td>
+            <td>DMARC isn't strictly required by Postmark, but Gmail/Yahoo bulk-sender rules effectively require it for any tenant sending &gt;5k/day. Splitting it as its own screen with a default-on toggle gives tenants visibility (so they don't get a surprise DNS record they didn't approve) and a way to opt out if they already manage DMARC themselves.</td>
+            <td>Confirms DMARC is on (default) or toggles off.</td>
+            <td>Boolean: include DMARC record?</td>
+            <td><strong>We append a DMARC record to the <code>dnsRecords[]</code> array</strong> before launching Entri. Format: <code>_dmarc.send TXT "v=DMARC1; p=none; rua=mailto:dmarc@..."</code>. If toggled off, we skip it. The submit button on this screen is what launches the Entri modal.</td>
+          </tr>
+
+          <tr class="entri-row">
+            <td><span class="step-num">05.5</span></td>
+            <td>
+              <div class="screen-name">Entri modal</div>
+              <span class="screen-tag">Not our UI</span>
+            </td>
+            <td>The actual DNS-write moment. Entri owns this UI; we just hand it the JWT and records, and listen for callbacks. Inside the modal: tenant logs into their DNS provider via OAuth (or copies records manually), and Entri writes the records on their behalf.</td>
+            <td>Logs into DNS provider (Cloudflare, GoDaddy, etc.) inside the Entri modal. Or copies records manually. Or hands off to IT via Entri's "forward login" feature.</td>
+            <td>DNS records get written.</td>
+            <td><strong>Not our screen — Entri's iframe modal.</strong> We launch with <code>entri.showEntri({ applicationId, token, userId: "tenant_&lt;id&gt;", prefilledDomain, dnsRecords })</code>. We listen for <code>onSuccess</code> (records written client-side) and <code>onEntriClose</code> (modal closed, returns <code>{ success, setupType, provider, lastStatus }</code>). We persist <code>setupType</code> and <code>provider</code> for ops debugging.</td>
+          </tr>
+
+          <tr>
+            <td><span class="step-num">06</span></td>
+            <td>
+              <div class="screen-name">Verifying</div>
+            </td>
+            <td>Entri saying "records are written" ≠ Postmark saying "I can DKIM-sign for this domain." There's a propagation delay (1–5 min typical). This screen shows per-record progress against Postmark's verify endpoints — the source of truth — and crucially says "you can leave this page" so users don't bounce while watching a spinner.</td>
+            <td>Sees per-record status (DKIM, Return-Path, DMARC). Can re-check now, or click "continue setup" and verify in background.</td>
+            <td>Postmark verification status per record.</td>
+            <td><strong>No more Entri calls.</strong> Backend polls Postmark <code>PUT /domains/{id}/verifyDkim</code> and <code>PUT /domains/{id}/verifyReturnPath</code> on a backoff schedule (every 30s for 5 min, then every 2 min for 30 min, etc.). Frontend polls our status endpoint or subscribes via websocket. Also receives Entri <code>domain.added</code> webhooks server-side as a fast signal to trigger an immediate Postmark verify. Once both Postmark verifications return <code>true</code>, we flip the domain to Verified and the tenant can send.</td>
+          </tr>
+
+          <tr>
+            <td><span class="step-num">07</span></td>
+            <td>
+              <div class="screen-name">Settings — list view</div>
+            </td>
+            <td>The post-onboarding home for sending domains. Tenants need to (a) see what's connected, (b) add a second domain (transactional + marketing pattern), (c) re-verify or remove existing ones, (d) pick a default. Always shown alongside the managed-domain row as a fallback that's never deletable.</td>
+            <td>Views status per domain. Adds a new domain (re-enters the flow at screen 01). Re-verifies, sets default, removes.</td>
+            <td>Existing domains, status, last-verified timestamp, default flag.</td>
+            <td><strong>Re-enters the same flow</strong> when "Add domain" is clicked. Re-verify hits Postmark verify endpoints again. Remove calls Postmark <code>DELETE /domains/{id}</code> <em>and</em> deletes our row.</td>
+          </tr>
+
+          <tr>
+            <td><span class="step-num">07b</span></td>
+            <td>
+              <div class="screen-name">Settings — empty state</div>
+            </td>
+            <td>A tenant who skipped BYO during onboarding. The framing matters: "you have no domains" is technically true but doesn't communicate the real state ("you're sending from a managed domain, here's what you're missing").</td>
+            <td>Reads the framing, decides to upgrade.</td>
+            <td>Nothing — just a CTA.</td>
+            <td>Re-enters the flow at screen 01 (or skips straight to 02 since the choice is implicit).</td>
+          </tr>
+
+          <tr>
+            <td><span class="step-num">08</span></td>
+            <td>
+              <div class="screen-name">Disconnected — banner + table state</div>
+            </td>
+            <td>A previously verified domain stopped resolving — IT changed providers, someone deleted the record, etc. Critical to surface immediately because deliverability quietly tanks otherwise. Per-domain because in multi-domain setups one can fail while others stay healthy.</td>
+            <td>Sees the banner, clicks "Reconnect" (re-launches Entri with the same records) or "Forward fix to IT".</td>
+            <td>The specific record that's missing (DKIM / Return-Path / DMARC) and what the value should be.</td>
+            <td><strong>Either Entri's <code>domain.record_missing</code> webhook</strong> (if we subscribe to Entri Monitor — paid, recommended) <strong>or our own reconciler job</strong> that periodically re-hits Postmark verify endpoints. Reconnect re-launches <code>entri.showEntri()</code> with the original record set; no need to re-mint or re-create the Postmark domain.</td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+    <div class="flow-rules">
+      <h3>Flow rules worth calling out</h3>
+      <ul>
+        <li><strong>Steps 02–05 collapse into one onboarding wizard step</strong> in the existing left sidebar (<code>Brand → Sending domain → Email → Business → SMS → Merge fields</code>). The 4-of-4 sub-stepper at the top of the right pane handles internal progression.</li>
+        <li><strong>The Entri modal (05.5) is the only non-platform UI in the flow.</strong> Everything else is ours to design and own.</li>
+        <li><strong>Postmark is the source of truth for "verified."</strong> Entri can say "records are published" and that's a useful fast signal, but we don't flip a domain to Verified until Postmark independently confirms via its verify endpoints. This is why screen 06 exists as its own state.</li>
+        <li><strong>Managed domain is always present in the background</strong>, even for BYO tenants. If their connected domain disconnects (screen 08), we automatically fall back to the managed one so sends keep going while they fix DNS. The managed row in screen 07 is informational and not removable.</li>
+        <li><strong>The user's data accumulates across screens but only one external call happens during the flow</strong> — <code>checkDomain</code> on screen 03 (informational) and the backend domain-creation + JWT mint that happens between screen 04 and the Entri modal launch on screen 05.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============================================== -->
+  <!-- CHOICE SCREEN                                   -->
+  <!-- ============================================== -->
+  <section class="section" id="choice">
+    <div class="section-header">
+      <span class="num">01</span>
+      <h2>Choice screen · Two cards, BYO weighted heavier</h2>
+      <span class="note">In Engage onboarding wizard, "Sending domain" step</span>
+    </div>
+
+    <div class="wizard">
+      <aside class="wizard-sidebar">
+        <div class="wizard-sidebar-title">Engage setup</div>
+        <ol>
+          <li data-state="complete"><span class="step-marker"></span> Brand</li>
+          <li data-state="active"><span class="step-marker">2</span> Sending domain</li>
+          <li data-state="upcoming"><span class="step-marker">3</span> Email</li>
+          <li data-state="upcoming"><span class="step-marker">4</span> Business</li>
+          <li data-state="upcoming"><span class="step-marker">5</span> SMS</li>
+          <li data-state="upcoming"><span class="step-marker">6</span> Merge fields</li>
+        </ol>
+      </aside>
+
+      <main class="wizard-main">
+        <div class="wizard-content">
+          <div class="wizard-step-header">
+            <h1>Where will Acme Insurance send from?</h1>
+            <p>How your emails will be sent — and what your customers see in their inbox. You can change this later.</p>
+          </div>
+
+          <div class="choice-grid">
+            <!-- BYO card (primary) -->
+            <article class="choice-card" data-tone="primary">
+              <span class="choice-card-tag">Recommended</span>
+              <div>
+                <h3>Use your own domain</h3>
+                <p class="lede">Send from <strong>send.acmeinsurance.com</strong>. Better deliverability and your brand on every email.</p>
+              </div>
+
+              <div class="inbox-compare">
+                <div class="inbox-compare-label">Here's the difference</div>
+
+                <div class="inbox-row" data-tone="muted">
+                  <div class="inbox-avatar">A</div>
+                  <div class="inbox-meta">
+                    <div class="inbox-from">Acme Insurance <span class="inbox-via">via <strong>mail.example-platform.com</strong></span></div>
+                    <div class="inbox-subject">Your March policy update is ready</div>
+                  </div>
+                </div>
+
+                <div class="inbox-arrow">↓</div>
+
+                <div class="inbox-row">
+                  <div class="inbox-avatar">A</div>
+                  <div class="inbox-meta">
+                    <div class="inbox-from">Acme Insurance</div>
+                    <div class="inbox-subject">Your March policy update is ready</div>
+                  </div>
+                </div>
+              </div>
+
+              <ul>
+                <li>
+                  <svg class="checkmark-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg>
+                  Higher inbox placement on Gmail and Outlook
+                </li>
+                <li>
+                  <svg class="checkmark-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg>
+                  Recipients see your business, not "via" the platform domain
+                </li>
+                <li>
+                  <svg class="checkmark-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg>
+                  ~5 minutes — we set up DNS automatically
+                </li>
+              </ul>
+
+              <div class="choice-card-cta">
+                <button class="btn btn-primary btn-large btn-block">Use my own domain →</button>
+              </div>
+            </article>
+
+            <!-- Managed card (secondary) -->
+            <article class="choice-card">
+              <div>
+                <h3>Use a managed domain</h3>
+                <p class="lede">Send from <span style="font-family: var(--font-mono); font-size: 12.5px;">acme-insurance.mail.example-platform.com</span>. No DNS setup. You can switch to your own domain later.</p>
+              </div>
+
+              <ul>
+                <li>
+                  <svg class="checkmark-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg>
+                  Quickest to start sending today
+                </li>
+                <li>
+                  <svg class="checkmark-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg>
+                  No DNS access needed
+                </li>
+              </ul>
+
+              <p class="meta">Recommended for testing or if you don't have access to your DNS provider.</p>
+
+              <div class="choice-card-cta">
+                <button class="btn btn-secondary btn-large btn-block">Use a managed domain</button>
+              </div>
+            </article>
+          </div>
+
+          <div class="it-handoff">
+            <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+            <div>
+              <strong>Don't have DNS access?</strong> You can forward setup instructions to your IT contact during the next step — no code changes on their end.
+            </div>
+          </div>
+        </div>
+
+        <footer class="wizard-footer">
+          <button class="btn btn-ghost">← Back</button>
+          <span style="font-size: 12px; color: var(--text-muted);">Step 2 of 6</span>
+        </footer>
+      </main>
+    </div>
+
+    <div class="commentary">
+      <strong>Why this works:</strong> Klaviyo-faithful. Inbox preview lives inside the BYO card so the value is felt immediately. The "Recommended" tag plus the heavier border do the encouragement work — the managed option is right there for tenants who genuinely need it (no DNS access, just testing) without burying it. The "Forward to IT" callout below acknowledges the most common drop-off cause and routes around it.
+    </div>
+  </section>
+
+  <!-- ============================================== -->
+  <!-- ROOT DOMAIN                                     -->
+  <!-- ============================================== -->
+  <section class="section" id="root">
+    <div class="section-header">
+      <span class="num">02</span>
+      <h2>Root domain entry · prefilled from tenant website</h2>
+      <span class="note">Sub-step 1 of 4 inside "Sending domain" step</span>
+    </div>
+
+    <div class="wizard">
+      <aside class="wizard-sidebar">
+        <div class="wizard-sidebar-title">Engage setup</div>
+        <ol>
+          <li data-state="complete"><span class="step-marker"></span> Brand</li>
+          <li data-state="active"><span class="step-marker">2</span> Sending domain</li>
+          <li data-state="upcoming"><span class="step-marker">3</span> Email</li>
+          <li data-state="upcoming"><span class="step-marker">4</span> Business</li>
+          <li data-state="upcoming"><span class="step-marker">5</span> SMS</li>
+          <li data-state="upcoming"><span class="step-marker">6</span> Merge fields</li>
+        </ol>
+      </aside>
+
+      <main class="wizard-main">
+        <div class="wizard-content">
+          <div class="substep-bar">
+            <span>Connect a domain</span>
+            <div class="dots">
+              <div class="dot" data-state="active"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+            <span style="margin-left: auto;">1 of 4</span>
+          </div>
+
+          <div class="wizard-step-header">
+            <h1>What's your root domain?</h1>
+            <p>This is the domain your customers know you by — usually the same as your website and your email address.</p>
+          </div>
+
+          <div style="max-width: 480px;">
+            <div class="form-group">
+              <label for="root-domain">Root domain</label>
+              <span class="helper">For example: acmeinsurance.com</span>
+              <input id="root-domain" class="form-input" type="text" value="acmeinsurance.com" />
+            </div>
+
+            <div class="info-banner">
+              <svg class="icon-sm" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M10 6.5v4M10 13.5h.01"/></svg>
+              <div>We pulled this from your business website on the Brand step. <a href="#">Looks wrong?</a></div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="wizard-footer">
+          <button class="btn btn-ghost">← Back</button>
+          <button class="btn btn-primary">Continue</button>
+        </footer>
+      </main>
+    </div>
+  </section>
+
+  <!-- ============================================== -->
+  <!-- SUBDOMAIN + PROVIDER CHECK                      -->
+  <!-- ============================================== -->
+  <section class="section" id="subdomain">
+    <div class="section-header">
+      <span class="num">03</span>
+      <h2>Subdomain entry · live preview chip + checkDomain hint</h2>
+      <span class="note">Sub-step 2 of 4 — calls entri.checkDomain on blur</span>
+    </div>
+
+    <div class="wizard">
+      <aside class="wizard-sidebar">
+        <div class="wizard-sidebar-title">Engage setup</div>
+        <ol>
+          <li data-state="complete"><span class="step-marker"></span> Brand</li>
+          <li data-state="active"><span class="step-marker">2</span> Sending domain</li>
+          <li data-state="upcoming"><span class="step-marker">3</span> Email</li>
+          <li data-state="upcoming"><span class="step-marker">4</span> Business</li>
+          <li data-state="upcoming"><span class="step-marker">5</span> SMS</li>
+          <li data-state="upcoming"><span class="step-marker">6</span> Merge fields</li>
+        </ol>
+      </aside>
+
+      <main class="wizard-main">
+        <div class="wizard-content">
+          <div class="substep-bar">
+            <span>Connect a domain</span>
+            <div class="dots">
+              <div class="dot" data-state="complete"></div>
+              <div class="dot" data-state="active"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+            <span style="margin-left: auto;">2 of 4</span>
+          </div>
+
+          <div class="wizard-step-header">
+            <h1>Pick a sending subdomain</h1>
+            <p>This is where your emails will be sent from. Use a subdomain you're not already using for your website or work email.</p>
+          </div>
+
+          <div style="max-width: 540px;">
+            <div class="preview-chip">
+              <svg class="icon-sm" style="color: var(--text-muted);" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="2.5"/><path d="M2 10s2.5-5 8-5 8 5 8 5-2.5 5-8 5-8-5-8-5z"/></svg>
+              <div>
+                <div class="preview-chip-label">Preview</div>
+                <div class="preview-chip-value">send.acmeinsurance.com</div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="subdomain">Sending subdomain</label>
+              <span class="helper">Common choices: <code>send</code>, <code>email</code>, <code>notifications</code></span>
+              <div style="display: flex; align-items: center;">
+                <input id="subdomain" class="form-input" type="text" value="send" style="border-top-right-radius: 0; border-bottom-right-radius: 0; border-right: 0; max-width: 180px;" />
+                <span style="display: inline-flex; align-items: center; padding: 9px 12px; background: var(--bg-subtle); border: 1px solid var(--border-strong); border-top-left-radius: 0; border-bottom-left-radius: 0; font-family: var(--font-mono); font-size: 14px; color: var(--text-muted);">.acmeinsurance.com</span>
+              </div>
+            </div>
+
+            <div class="provider-hint">
+              <span class="pill">✓ Cloudflare detected</span>
+              We'll set up DNS for you automatically — no copying records.
+            </div>
+          </div>
+        </div>
+
+        <footer class="wizard-footer">
+          <button class="btn btn-ghost">← Back</button>
+          <button class="btn btn-primary">Continue</button>
+        </footer>
+      </main>
+    </div>
+
+    <div class="commentary">
+      <strong>checkDomain states:</strong> we detected Cloudflare → automatic. Other states would swap the green pill: <em>"GoDaddy detected — we'll guide you through it"</em>, or for unknown providers we hide the pill entirely so we don't promise something we can't deliver.
+    </div>
+  </section>
+
+  <!-- ============================================== -->
+  <!-- ENTRI vs MANUAL                                 -->
+  <!-- ============================================== -->
+  <section class="section" id="entri">
+    <div class="section-header">
+      <span class="num">04</span>
+      <h2>Connect with Entri or set up manually</h2>
+      <span class="note">Sub-step 3 of 4 — the Klaviyo screen, with our voice</span>
+    </div>
+
+    <div class="wizard">
+      <aside class="wizard-sidebar">
+        <div class="wizard-sidebar-title">Engage setup</div>
+        <ol>
+          <li data-state="complete"><span class="step-marker"></span> Brand</li>
+          <li data-state="active"><span class="step-marker">2</span> Sending domain</li>
+          <li data-state="upcoming"><span class="step-marker">3</span> Email</li>
+          <li data-state="upcoming"><span class="step-marker">4</span> Business</li>
+          <li data-state="upcoming"><span class="step-marker">5</span> SMS</li>
+          <li data-state="upcoming"><span class="step-marker">6</span> Merge fields</li>
+        </ol>
+      </aside>
+
+      <main class="wizard-main">
+        <div class="wizard-content">
+          <div class="substep-bar">
+            <span>Connect a domain</span>
+            <div class="dots">
+              <div class="dot" data-state="complete"></div>
+              <div class="dot" data-state="complete"></div>
+              <div class="dot" data-state="active"></div>
+              <div class="dot"></div>
+            </div>
+            <span style="margin-left: auto;">3 of 4</span>
+          </div>
+
+          <div class="entri-screen">
+            <div>
+              <h1 style="font-size: 26px; font-weight: 600; margin: 0 0 8px; letter-spacing: -0.02em;">Connect with Entri</h1>
+              <p style="margin: 0; color: var(--text-secondary); font-size: 15px;">Entri logs into your DNS provider for you and adds the right records — no copy-paste, no mistakes.</p>
+
+              <ul>
+                <li>
+                  <svg class="icon-sm" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M6.5 10l2.5 2.5 5-5"/></svg>
+                  Fast, secure setup
+                </li>
+                <li>
+                  <svg class="icon-sm" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M6.5 10l2.5 2.5 5-5"/></svg>
+                  Detects your DNS provider automatically
+                </li>
+                <li>
+                  <svg class="icon-sm" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M6.5 10l2.5 2.5 5-5"/></svg>
+                  Forward to your IT contact if you don't have access
+                </li>
+              </ul>
+
+              <div class="entri-actions">
+                <button class="btn btn-primary btn-large">Connect with Entri</button>
+                <button class="btn btn-secondary btn-large">Set up manually</button>
+              </div>
+
+              <p class="entri-fineprint">By selecting "Connect with Entri" you agree to Entri's <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</p>
+            </div>
+
+            <div class="entri-art" aria-hidden="true">
+              <div class="entri-art-dots"></div>
+              <div class="entri-art-card secondary">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                  <path d="M10 10h20v20H10z" stroke="#9ca3af" stroke-width="2" stroke-dasharray="2 3"/>
+                </svg>
+              </div>
+              <div class="entri-art-card primary">
+                <!-- Platform mark -->
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                  <circle cx="20" cy="20" r="14" fill="var(--text)"/>
+                  <path d="M14 20l4 4 8-8" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="wizard-footer">
+          <button class="btn btn-ghost">← Back</button>
+          <span style="font-size: 12px; color: var(--text-muted);">Step 2 of 6</span>
+        </footer>
+      </main>
+    </div>
+  </section>
+
+  <!-- ============================================== -->
+  <!-- DMARC OPT-IN                                    -->
+  <!-- ============================================== -->
+  <section class="section" id="dmarc">
+    <div class="section-header">
+      <span class="num">05</span>
+      <h2>DMARC opt-in · single toggle</h2>
+      <span class="note">Sub-step 4 of 4 — Klaviyo's DMARC screen, our voice</span>
+    </div>
+
+    <div class="wizard">
+      <aside class="wizard-sidebar">
+        <div class="wizard-sidebar-title">Engage setup</div>
+        <ol>
+          <li data-state="complete"><span class="step-marker"></span> Brand</li>
+          <li data-state="active"><span class="step-marker">2</span> Sending domain</li>
+          <li data-state="upcoming"><span class="step-marker">3</span> Email</li>
+          <li data-state="upcoming"><span class="step-marker">4</span> Business</li>
+          <li data-state="upcoming"><span class="step-marker">5</span> SMS</li>
+          <li data-state="upcoming"><span class="step-marker">6</span> Merge fields</li>
+        </ol>
+      </aside>
+
+      <main class="wizard-main">
+        <div class="wizard-content">
+          <div class="substep-bar">
+            <span>Connect a domain</span>
+            <div class="dots">
+              <div class="dot" data-state="complete"></div>
+              <div class="dot" data-state="complete"></div>
+              <div class="dot" data-state="complete"></div>
+              <div class="dot" data-state="active"></div>
+            </div>
+            <span style="margin-left: auto;">4 of 4</span>
+          </div>
+
+          <div class="wizard-step-header">
+            <h1>Add a DMARC record</h1>
+            <p>DMARC tells inbox providers like Gmail what to do with mail that fails authentication. Required for senders at scale.</p>
+          </div>
+
+          <div style="max-width: 600px;">
+            <div class="dmarc-card">
+              <div class="dmarc-icon">
+                <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
+              </div>
+              <div class="dmarc-content">
+                <h4>Add DMARC record <span class="recommended-pill">Recommended</span></h4>
+                <p>Protects your sending reputation and meets Gmail and Yahoo's bulk sender requirements. <a href="#" style="color: var(--info);">Learn more about DMARC →</a></p>
+              </div>
+              <div class="toggle" data-on="true"></div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="wizard-footer">
+          <button class="btn btn-ghost">← Back</button>
+          <button class="btn btn-primary">Connect domain</button>
+        </footer>
+      </main>
+    </div>
+  </section>
+
+  <!-- ============================================== -->
+  <!-- VERIFYING / PENDING                             -->
+  <!-- ============================================== -->
+  <section class="section" id="verifying">
+    <div class="section-header">
+      <span class="num">06</span>
+      <h2>Verifying state · per-record progress</h2>
+      <span class="note">After Entri modal closes — Postmark verifies in the background</span>
+    </div>
+
+    <div class="wizard">
+      <aside class="wizard-sidebar">
+        <div class="wizard-sidebar-title">Engage setup</div>
+        <ol>
+          <li data-state="complete"><span class="step-marker"></span> Brand</li>
+          <li data-state="active"><span class="step-marker">2</span> Sending domain</li>
+          <li data-state="upcoming"><span class="step-marker">3</span> Email</li>
+          <li data-state="upcoming"><span class="step-marker">4</span> Business</li>
+          <li data-state="upcoming"><span class="step-marker">5</span> SMS</li>
+          <li data-state="upcoming"><span class="step-marker">6</span> Merge fields</li>
+        </ol>
+      </aside>
+
+      <main class="wizard-main">
+        <div class="wizard-content">
+          <div class="wizard-step-header">
+            <h1>Verifying your domain</h1>
+            <p>DNS records are published. We're confirming with Postmark that everything's set up correctly. This usually takes 1–5 minutes.</p>
+          </div>
+
+          <div style="max-width: 640px;">
+            <div class="verifying-card">
+              <div class="verifying-header">
+                <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><path d="M12 2v6m0 8v6M2 12h6m8 0h6M5 5l4 4m6 6l4 4M5 19l4-4m6-6l4-4"/></svg>
+                <span class="domain-name">send.acmeinsurance.com</span>
+                <span class="status-pill status-pending">Verifying</span>
+              </div>
+
+              <div class="verifying-list">
+                <div class="verifying-row">
+                  <div class="verifying-icon" data-state="ok">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.5l2.5 2.5L10 3.5"/></svg>
+                  </div>
+                  <div>
+                    <div class="label">DKIM signing key</div>
+                    <div class="desc">TXT record for <code style="font-family: var(--font-mono); font-size: 11.5px;">20260430pm._domainkey.send</code></div>
+                  </div>
+                  <span class="timestamp">verified 2s ago</span>
+                </div>
+
+                <div class="verifying-row">
+                  <div class="verifying-icon" data-state="working">
+                    <div class="spinner" style="border-top-color: var(--info);"></div>
+                  </div>
+                  <div>
+                    <div class="label">Return-Path</div>
+                    <div class="desc">CNAME for <code style="font-family: var(--font-mono); font-size: 11.5px;">pm-bounces.send → pm.mtasv.net</code></div>
+                  </div>
+                  <span class="timestamp">checking…</span>
+                </div>
+
+                <div class="verifying-row">
+                  <div class="verifying-icon" data-state="pending"></div>
+                  <div>
+                    <div class="label">DMARC policy</div>
+                    <div class="desc">TXT record for <code style="font-family: var(--font-mono); font-size: 11.5px;">_dmarc.send</code></div>
+                  </div>
+                  <span class="timestamp">pending</span>
+                </div>
+              </div>
+
+              <div class="verifying-foot">
+                <div class="spinner"></div>
+                <span>You can leave this page — we'll email you when verification is complete.</span>
+                <button class="btn-link" style="margin-left: auto;">Re-check now</button>
+              </div>
+            </div>
+
+            <p style="margin-top: 16px; font-size: 13px; color: var(--text-muted);">Verification usually completes in under 5 minutes. If it's been more than 30 minutes, <a href="#" style="color: var(--info);">contact your DNS admin</a> or <a href="#" style="color: var(--info);">reach out to support</a>.</p>
+          </div>
+        </div>
+
+        <footer class="wizard-footer">
+          <button class="btn btn-ghost">← Back</button>
+          <button class="btn btn-secondary">Continue setup — verify in background</button>
+        </footer>
+      </main>
+    </div>
+
+    <div class="commentary">
+      <strong>Tone notes:</strong> the foot note "You can leave this page" matters a lot — DNS propagation can take minutes. If we trap users on a spinner they'll bounce. Letting them continue while we verify in the background is the right move; we surface the result via the existing notifications system. Per ENG-2161 research, Postmark verify is the source of truth, not Entri propagation.
+    </div>
+  </section>
+
+  <!-- ============================================== -->
+  <!-- SETTINGS LIST VIEW                              -->
+  <!-- ============================================== -->
+  <section class="section" id="settings-list">
+    <div class="section-header">
+      <span class="num">07a</span>
+      <h2>Settings · Sending Domains list view</h2>
+      <span class="note">Returning tenant — multi-domain management</span>
+    </div>
+
+    <div class="settings-shell">
+      <aside class="wizard-sidebar">
+        <div class="wizard-sidebar-title">Engage settings</div>
+        <ol>
+          <li data-state="complete"><span class="step-marker"></span> Brand</li>
+          <li data-state="complete"><span class="step-marker"></span> Business</li>
+          <li data-state="complete"><span class="step-marker"></span> Email</li>
+          <li data-state="active"><span class="step-marker"></span> Sending domains</li>
+          <li data-state="complete"><span class="step-marker"></span> SMS</li>
+          <li data-state="complete"><span class="step-marker"></span> Merge fields</li>
+        </ol>
+      </aside>
+
+      <main class="settings-page">
+        <div class="settings-page-header">
+          <div>
+            <h2>Sending domains</h2>
+            <p>Domains used to send Engage email. Connecting your own improves deliverability and removes the "via" platform tag.</p>
+          </div>
+          <button class="btn btn-primary">+ Add domain</button>
+        </div>
+
+        <table class="domain-table">
+          <thead>
+            <tr>
+              <th>Domain</th>
+              <th>Status</th>
+              <th>Last verified</th>
+              <th style="text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <div class="domain-name">
+                  <span class="name">send.acmeinsurance.com <span class="default-badge">Default</span></span>
+                  <span class="purpose">Marketing</span>
+                </div>
+              </td>
+              <td><span class="status-pill status-verified">Verified</span></td>
+              <td style="color: var(--text-muted); font-family: var(--font-mono); font-size: 12px;">2 min ago</td>
+              <td>
+                <div class="actions">
+                  <button class="icon-btn" aria-label="Re-verify">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8a6 6 0 1110 4.5"/><path d="M12 13.5l-1-1 1-1"/></svg>
+                  </button>
+                  <button class="icon-btn" aria-label="More">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><circle cx="3" cy="8" r="1.2"/><circle cx="8" cy="8" r="1.2"/><circle cx="13" cy="8" r="1.2"/></svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <tr>
+              <td>
+                <div class="domain-name">
+                  <span class="name">notifications.acmeinsurance.com</span>
+                  <span class="purpose">Transactional</span>
+                </div>
+              </td>
+              <td><span class="status-pill status-pending">Verifying · 2 of 3 records</span></td>
+              <td style="color: var(--text-muted); font-family: var(--font-mono); font-size: 12px;">checking…</td>
+              <td>
+                <div class="actions">
+                  <button class="icon-btn"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8a6 6 0 1110 4.5"/><path d="M12 13.5l-1-1 1-1"/></svg></button>
+                  <button class="icon-btn"><svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><circle cx="3" cy="8" r="1.2"/><circle cx="8" cy="8" r="1.2"/><circle cx="13" cy="8" r="1.2"/></svg></button>
+                </div>
+              </td>
+            </tr>
+
+            <tr>
+              <td>
+                <div class="domain-name">
+                  <span class="name" style="color: var(--text-muted);">acme-insurance.mail.example-platform.com</span>
+                  <span class="purpose">Managed domain · used as fallback</span>
+                </div>
+              </td>
+              <td><span class="status-pill status-managed">Managed</span></td>
+              <td style="color: var(--text-faint); font-family: var(--font-mono); font-size: 12px;">—</td>
+              <td>
+                <div class="actions">
+                  <span style="font-size: 12px; color: var(--text-faint);">No actions</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p style="margin-top: 20px; font-size: 12.5px; color: var(--text-muted);">The default domain is used for all Engage broadcasts unless you override it on a specific automation or campaign.</p>
+      </main>
+    </div>
+
+    <div class="commentary">
+      <strong>Multi-domain pattern:</strong> ENG-2672 explicitly asks for multi-domain support (e.g. send + notifications). Default badge on the row that's used by default. The managed-domain row is shown last with a soft "managed" pill — it always exists as a fallback so we never have a tenant who can't send. Purpose label (Marketing / Transactional) is informational; backend channel routing can use it later.
+    </div>
+  </section>
+
+  <!-- ============================================== -->
+  <!-- SETTINGS EMPTY STATE                            -->
+  <!-- ============================================== -->
+  <section class="section" id="settings-empty">
+    <div class="section-header">
+      <span class="num">07b</span>
+      <h2>Settings · empty state</h2>
+      <span class="note">Tenant who skipped BYO during onboarding</span>
+    </div>
+
+    <div class="settings-shell">
+      <aside class="wizard-sidebar">
+        <div class="wizard-sidebar-title">Engage settings</div>
+        <ol>
+          <li data-state="complete"><span class="step-marker"></span> Brand</li>
+          <li data-state="complete"><span class="step-marker"></span> Business</li>
+          <li data-state="complete"><span class="step-marker"></span> Email</li>
+          <li data-state="active"><span class="step-marker"></span> Sending domains</li>
+          <li data-state="complete"><span class="step-marker"></span> SMS</li>
+          <li data-state="complete"><span class="step-marker"></span> Merge fields</li>
+        </ol>
+      </aside>
+
+      <main class="settings-page">
+        <div class="settings-page-header">
+          <div>
+            <h2>Sending domains</h2>
+            <p>Domains used to send Engage email. Connecting your own improves deliverability and removes the "via" platform tag.</p>
+          </div>
+        </div>
+
+        <div class="empty-state">
+          <div class="icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l9-5 9 5-9 5-9-5z"/><path d="M3 8v8l9 5 9-5V8"/></svg>
+          </div>
+          <h3>You're sending from a managed domain</h3>
+          <p>Right now your emails go from <code style="font-family: var(--font-mono); font-size: 12.5px; background: var(--bg-subtle); padding: 1px 6px; border-radius: 4px;">acme-insurance.mail.example-platform.com</code>. Connect your own domain to improve deliverability and brand trust.</p>
+          <button class="btn btn-primary btn-large" style="margin-top: 8px;">Connect your own domain →</button>
+          <button class="btn-link" style="font-size: 12.5px; color: var(--text-muted);">Why does this matter?</button>
+        </div>
+      </main>
+    </div>
+
+    <div class="commentary">
+      <strong>Empty state strategy:</strong> rather than showing "no domains" (which is true but not what the tenant feels), reframe as "you're using a managed domain" — a complete state we want them to upgrade away from. The "Why does this matter?" link could open a small explainer with the same inbox preview from the onboarding choice screen.
+    </div>
+  </section>
+
+  <!-- ============================================== -->
+  <!-- DISCONNECTED                                    -->
+  <!-- ============================================== -->
+  <section class="section" id="disconnected">
+    <div class="section-header">
+      <span class="num">08</span>
+      <h2>Disconnected state · banner + recovery</h2>
+      <span class="note">ENG-2673 — DNS records went missing after verification</span>
+    </div>
+
+    <div class="settings-shell">
+      <aside class="wizard-sidebar">
+        <div class="wizard-sidebar-title">Engage settings</div>
+        <ol>
+          <li data-state="complete"><span class="step-marker"></span> Brand</li>
+          <li data-state="complete"><span class="step-marker"></span> Business</li>
+          <li data-state="complete"><span class="step-marker"></span> Email</li>
+          <li data-state="active"><span class="step-marker"></span> Sending domains</li>
+          <li data-state="complete"><span class="step-marker"></span> SMS</li>
+          <li data-state="complete"><span class="step-marker"></span> Merge fields</li>
+        </ol>
+      </aside>
+
+      <main class="settings-page">
+        <div class="settings-page-header">
+          <div>
+            <h2>Sending domains</h2>
+            <p>Domains used to send Engage email.</p>
+          </div>
+          <button class="btn btn-primary">+ Add domain</button>
+        </div>
+
+        <div class="disconnect-banner">
+          <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 22h20L12 2z"/><path d="M12 9v5M12 18h.01"/></svg>
+          <div style="flex: 1;">
+            <h4>send.acmeinsurance.com is no longer verified</h4>
+            <p>The DKIM record is missing from your DNS. Your campaigns are temporarily falling back to <code>acme-insurance.mail.example-platform.com</code> — deliverability may drop.</p>
+            <div class="actions">
+              <button class="btn btn-primary" style="background: var(--danger); padding: 7px 12px; font-size: 13px;">Reconnect domain</button>
+              <button class="btn btn-secondary" style="padding: 7px 12px; font-size: 13px;">Forward fix to IT</button>
+              <button class="btn-link" style="color: var(--danger);">What changed?</button>
+            </div>
+          </div>
+        </div>
+
+        <table class="domain-table">
+          <thead>
+            <tr>
+              <th>Domain</th>
+              <th>Status</th>
+              <th>Last verified</th>
+              <th style="text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="background: var(--danger-bg);">
+              <td>
+                <div class="domain-name">
+                  <span class="name">send.acmeinsurance.com <span class="default-badge">Default</span></span>
+                  <span class="purpose">Marketing · DKIM record missing</span>
+                </div>
+              </td>
+              <td><span class="status-pill status-disconnected">Disconnected</span></td>
+              <td style="color: var(--text-muted); font-family: var(--font-mono); font-size: 12px;">3 days ago</td>
+              <td>
+                <div class="actions">
+                  <button class="icon-btn"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8a6 6 0 1110 4.5"/><path d="M12 13.5l-1-1 1-1"/></svg></button>
+                  <button class="icon-btn"><svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><circle cx="3" cy="8" r="1.2"/><circle cx="8" cy="8" r="1.2"/><circle cx="13" cy="8" r="1.2"/></svg></button>
+                </div>
+              </td>
+            </tr>
+
+            <tr>
+              <td>
+                <div class="domain-name">
+                  <span class="name">notifications.acmeinsurance.com</span>
+                  <span class="purpose">Transactional</span>
+                </div>
+              </td>
+              <td><span class="status-pill status-verified">Verified</span></td>
+              <td style="color: var(--text-muted); font-family: var(--font-mono); font-size: 12px;">2h ago</td>
+              <td>
+                <div class="actions">
+                  <button class="icon-btn"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8a6 6 0 1110 4.5"/><path d="M12 13.5l-1-1 1-1"/></svg></button>
+                  <button class="icon-btn"><svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><circle cx="3" cy="8" r="1.2"/><circle cx="8" cy="8" r="1.2"/><circle cx="13" cy="8" r="1.2"/></svg></button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </main>
+    </div>
+
+    <div class="commentary">
+      <strong>Per-domain disconnect:</strong> ENG-2673 calls out that one domain can disconnect while others stay healthy. The banner is per-domain, the table row tints red, and we automatically fall back to the managed domain so sends keep going (with a deliverability warning). The "Forward fix to IT" CTA reuses the same shareable-link pattern from the onboarding flow — important because the person seeing this banner often isn't the person who controls DNS.
+    </div>
+  </section>
+
+</div>
+</body>
+</html>
