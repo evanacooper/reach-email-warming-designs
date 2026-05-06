@@ -218,17 +218,49 @@ html, body {
   <div class="section-label">Designs</div>
   <div class="cards">
 
-    <a class="card" href="finalized.html">
+    <a class="card" href="onboarding-prototype.html">
       <div class="card-num">1</div>
       <div class="card-body">
-        <div class="card-title">Onboarding redesign + BYO sending domain flow</div>
-        <div class="card-desc">Sections R0–R6 cover the new onboarding shell (top horizontal stepper, contextual sidebar), the mandatory Business Info gate, the redesigned Email Channel step (managed-always + soft BYO encouragement), and the BYO sub-journey + resume state. Sections 00–08 below cover the detailed BYO sending-domain flow (Entri integration, multi-domain settings, disconnected state) that lives as a sub-journey of the Email Channel step.</div>
+        <div class="card-title">▶ Clickable prototype · Onboarding flow</div>
+        <div class="card-desc">Click through the entire Engage onboarding end-to-end: Brand → Business Info (gated) → Email Channel (with optional BYO sub-journey + animated verifying state + fake Entri modal) → SMS → Merge Fields → Automations → Completion summary. Inputs propagate live across screens. Use this to feel the flow.</div>
+        <div class="card-tags">
+          <span class="tag">Clickable</span>
+          <span class="tag">Live state</span>
+          <span class="tag">End-to-end</span>
+          <span class="tag">~6 steps</span>
+        </div>
+      </div>
+      <div class="card-arrow">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </a>
+
+    <a class="card" href="settings-prototype.html">
+      <div class="card-num">2</div>
+      <div class="card-body">
+        <div class="card-title">▶ Clickable prototype · Settings flow</div>
+        <div class="card-desc">Click through the post-onboarding Engage Settings experience. Email Channel tab shows the multi-domain table with re-verify, set-default, and remove actions. Click "+ Add domain" to enter the BYO sub-journey. Demo state switcher in the bottom-right toggles between verified, verifying, disconnected, and managed-only states.</div>
+        <div class="card-tags">
+          <span class="tag">Clickable</span>
+          <span class="tag">5 demo states</span>
+          <span class="tag">Multi-domain</span>
+          <span class="tag">Disconnected recovery</span>
+        </div>
+      </div>
+      <div class="card-arrow">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </a>
+
+    <a class="card" href="finalized.html">
+      <div class="card-num">3</div>
+      <div class="card-body">
+        <div class="card-title">Design reference doc — all screens, flow table, commentary</div>
+        <div class="card-desc">Sections R0–R6 cover the onboarding redesign (new shell, Business Info gate, Email Channel redesign, BYO sub-journey, resume state). Sections 00–08 cover the detailed BYO sending-domain flow (flow reference table mapping each screen to Entri integration points, multi-domain settings, disconnected state). For implementers — start here for context.</div>
         <div class="card-tags">
           <span class="tag">15+ screens</span>
-          <span class="tag">New shell</span>
-          <span class="tag">Business Info gate</span>
-          <span class="tag">Email Channel redesign</span>
-          <span class="tag">Multi-domain</span>
+          <span class="tag">Flow table</span>
+          <span class="tag">Implementation notes</span>
           <span class="tag">Entri integration</span>
           <span class="tag">ENG-2161</span>
         </div>

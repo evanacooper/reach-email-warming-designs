@@ -1,0 +1,1924 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Engage Settings — Clickable Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #fafafa;
+    --bg-elevated: #ffffff;
+    --bg-muted: #f5f5f5;
+    --bg-subtle: #f9fafb;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --border-focus: #6366f1;
+    --text: #0a0a0a;
+    --text-secondary: #4b5563;
+    --text-muted: #6b7280;
+    --text-faint: #9ca3af;
+    --primary: #4f46e5;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --success-border: #bbf7d0;
+    --success-pill-bg: #dcfce7;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --warning-border: #fde68a;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --danger-border: #fecaca;
+    --info: #2563eb;
+    --info-bg: #eff6ff;
+    --info-border: #bfdbfe;
+    --radius: 8px;
+    --radius-lg: 12px;
+    --radius-sm: 6px;
+    --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-modal: 0 24px 48px rgba(15, 23, 42, 0.18);
+    --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-mono: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-sans);
+    color: var(--text);
+    background: #ececec;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    min-height: 100vh;
+  }
+
+  .back-link {
+    position: fixed; top: 12px; left: 12px; z-index: 9999;
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 500;
+    color: #64748b; background: white; border: 1px solid #e2e8f0;
+    padding: 5px 11px; border-radius: 6px; text-decoration: none;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .back-link:hover { color: #1e293b; background: #f8fafc; }
+
+  .stage {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 56px 24px;
+  }
+
+  /* ============================================== */
+  /* SHELL — settings flavor (no top stepper)       */
+  /* ============================================== */
+  .shell {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    min-height: 720px;
+    box-shadow: var(--shadow-card);
+  }
+  .shell-topbar {
+    border-bottom: 1px solid var(--border);
+    padding: 22px 36px 22px;
+    background: var(--bg-elevated);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .shell-title h1 {
+    font-size: 17px;
+    font-weight: 600;
+    margin: 0 0 2px;
+    letter-spacing: -0.01em;
+  }
+  .shell-title p {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin: 0;
+  }
+  .close-btn {
+    color: var(--text-muted);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    padding: 4px;
+  }
+  .close-btn:hover { color: var(--text); }
+
+  .shell-body {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    min-height: 0;
+  }
+  .shell-body[data-mode="byo"] {
+    grid-template-columns: 240px 1fr;
+  }
+
+  .shell-sidebar {
+    border-right: 1px solid var(--border);
+    background: var(--bg-subtle);
+    padding: 24px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .shell-sidebar-eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+    padding: 0 12px 10px;
+  }
+  .shell-sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    text-align: left;
+    width: 100%;
+    font-family: inherit;
+  }
+  .shell-sidebar-item:hover { background: rgba(15, 23, 42, 0.04); }
+  .shell-sidebar-item[data-state="active"] {
+    background: var(--bg-elevated);
+    color: var(--text);
+    font-weight: 600;
+    box-shadow: var(--shadow-card);
+  }
+
+  .shell-sidebar-parent {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    text-align: left;
+    width: 100%;
+    font-family: inherit;
+  }
+  .shell-sidebar-parent:hover { background: rgba(15, 23, 42, 0.04); }
+  .shell-sidebar-parent svg { color: var(--text-muted); }
+  .shell-sidebar-substeps {
+    list-style: none;
+    margin: 4px 0 0;
+    padding: 0 0 0 22px;
+    border-left: 1px dashed var(--border-strong);
+    margin-left: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .shell-sidebar-substeps li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 12px;
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+  .shell-sidebar-substeps li[data-state="active"] {
+    background: var(--bg-elevated);
+    color: var(--text);
+    font-weight: 500;
+    box-shadow: var(--shadow-card);
+  }
+  .shell-sidebar-substeps li[data-state="complete"] { color: var(--text); }
+  .shell-sidebar-substep-marker {
+    width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    background: var(--bg-elevated);
+    border: 1.5px solid var(--border-strong);
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--text-faint);
+  }
+  .shell-sidebar-substeps li[data-state="active"] .shell-sidebar-substep-marker {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: white;
+  }
+  .shell-sidebar-substeps li[data-state="complete"] .shell-sidebar-substep-marker {
+    border-color: var(--success);
+    background: var(--success);
+    color: white;
+    font-size: 0;
+  }
+  .shell-sidebar-substeps li[data-state="complete"] .shell-sidebar-substep-marker::before {
+    content: "✓";
+    font-size: 9px;
+    font-weight: 700;
+  }
+
+  .shell-main {
+    overflow-y: auto;
+    padding: 36px 48px 32px;
+    max-width: 100%;
+    min-height: 540px;
+  }
+
+  .page-header {
+    margin-bottom: 28px;
+  }
+  .page-header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0 0 6px;
+  }
+  .page-header p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 14px;
+    max-width: 640px;
+  }
+
+  /* ============================================== */
+  /* COMMON                                         */
+  /* ============================================== */
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 20px;
+  }
+  .form-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .form-group .helper {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: -2px;
+  }
+  .form-input {
+    width: 100%;
+    appearance: none;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    padding: 9px 12px;
+    font: inherit;
+    font-size: 14px;
+    background: var(--bg-elevated);
+    color: var(--text);
+  }
+  .form-input:focus {
+    outline: none;
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+  }
+
+  .btn {
+    appearance: none;
+    border: 0;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 500;
+    padding: 9px 18px;
+    border-radius: var(--radius-sm);
+    transition: background 120ms ease, border-color 120ms ease, opacity 120ms;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+  }
+  .btn-primary { background: var(--text); color: white; }
+  .btn-primary:hover:not(:disabled) { background: #1f2937; }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-secondary {
+    background: var(--bg-elevated);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+  }
+  .btn-secondary:hover { border-color: var(--text); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-secondary);
+    padding: 8px 12px;
+  }
+  .btn-ghost:hover { color: var(--text); }
+  .btn-link {
+    background: none; border: 0; color: var(--info);
+    font-weight: 500; cursor: pointer; padding: 0;
+    font-size: inherit;
+  }
+  .btn-link:hover { text-decoration: underline; }
+  .btn-danger {
+    background: var(--bg-elevated);
+    color: var(--danger);
+    border: 1px solid var(--danger-border);
+  }
+  .btn-danger:hover { background: var(--danger-bg); }
+
+  /* Sender prefix split */
+  .sender-prefix-row {
+    display: flex;
+    align-items: stretch;
+  }
+  .sender-prefix-row input {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right: 0;
+    max-width: 200px;
+  }
+  .sender-prefix-row .at-sign {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 10px;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-strong);
+    border-left: 0;
+    border-right: 0;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+  .sender-prefix-row .domain-suffix {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 12px;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-strong);
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-muted);
+    flex: 1;
+  }
+
+  /* Inbox preview */
+  .inbox-preview {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-top: 10px;
+  }
+  .inbox-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--bg-elevated);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+  .inbox-avatar {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #14b8a6, #0d9488);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 12px;
+  }
+  .inbox-meta { flex: 1; min-width: 0; }
+  .inbox-from {
+    font-size: 12.5px;
+    color: var(--text);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .inbox-via {
+    font-weight: 400;
+    color: var(--text-faint);
+    font-size: 11.5px;
+  }
+  .inbox-subject {
+    color: var(--text-muted);
+    font-size: 12px;
+    margin-top: 2px;
+  }
+
+  /* Section divider */
+  .section-block {
+    margin-bottom: 32px;
+  }
+  .section-block + .section-block {
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+  }
+  .section-block-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin: 0 0 14px;
+  }
+  .section-block-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 14px;
+  }
+  .section-block-header h3 {
+    margin: 0;
+    font-size: 14.5px;
+    font-weight: 600;
+  }
+
+  /* Sticky save bar */
+  .save-bar {
+    position: sticky;
+    bottom: 0;
+    margin: 28px -48px -32px;
+    padding: 14px 48px;
+    background: var(--bg-elevated);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .save-bar .dirty-text {
+    font-size: 12.5px;
+    color: var(--text-muted);
+  }
+
+  /* Status pills */
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid transparent;
+  }
+  .status-pill::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: currentColor;
+  }
+  .status-pending {
+    background: var(--info-bg);
+    color: #1e40af;
+    border-color: var(--info-border);
+  }
+  .status-pending::before { animation: pulse 1.4s ease-in-out infinite; }
+  .status-verified {
+    background: var(--success-pill-bg);
+    color: #166534;
+    border-color: var(--success-border);
+  }
+  .status-disconnected {
+    background: var(--danger-bg);
+    color: #991b1b;
+    border-color: var(--danger-border);
+  }
+  .status-managed {
+    background: var(--bg-subtle);
+    color: var(--text-secondary);
+    border-color: var(--border);
+  }
+  @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+
+  /* Domain table */
+  .domain-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--bg-elevated);
+  }
+  .domain-table th {
+    text-align: left;
+    padding: 11px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    background: var(--bg-subtle);
+    border-bottom: 1px solid var(--border);
+  }
+  .domain-table td {
+    padding: 16px;
+    border-top: 1px solid var(--bg-subtle);
+    vertical-align: middle;
+    font-size: 13.5px;
+  }
+  .domain-table tr:first-child td { border-top: 0; }
+  .domain-table .domain-name-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .domain-table .domain-name-cell .name {
+    font-family: var(--font-mono);
+    font-size: 13.5px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .domain-table .domain-name-cell .purpose {
+    font-size: 11.5px;
+    color: var(--text-muted);
+  }
+  .default-badge {
+    background: var(--bg-subtle);
+    color: var(--text-secondary);
+    padding: 1px 7px;
+    border-radius: 999px;
+    font-size: 10.5px;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    font-family: var(--font-sans);
+  }
+  .domain-table .actions {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+  }
+  .icon-btn {
+    appearance: none;
+    border: 1px solid var(--border);
+    background: var(--bg-elevated);
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: var(--radius-sm);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .icon-btn:hover { color: var(--text); border-color: var(--border-strong); }
+
+  /* Disconnect banner */
+  .disconnect-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: var(--danger-bg);
+    border: 1px solid var(--danger-border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    color: #7f1d1d;
+  }
+  .disconnect-banner svg { color: var(--danger); flex-shrink: 0; margin-top: 2px; }
+  .disconnect-banner h4 {
+    margin: 0 0 4px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #7f1d1d;
+  }
+  .disconnect-banner p {
+    margin: 0 0 8px;
+    font-size: 12.5px;
+    color: #991b1b;
+  }
+  .disconnect-banner code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: rgba(127, 29, 29, 0.08);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+  .disconnect-banner .actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  /* BYO sub-flow shared with onboarding */
+  .step-header h2 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin: 0 0 8px;
+  }
+  .step-header p {
+    margin: 0 0 28px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    max-width: 580px;
+  }
+
+  .preview-chip {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .preview-chip-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+  }
+  .preview-chip-value {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--text);
+    font-weight: 500;
+  }
+  .info-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: var(--info-bg);
+    border: 1px solid var(--info-border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    color: #1e3a8a;
+    font-size: 13px;
+  }
+  .info-banner svg { flex-shrink: 0; color: var(--info); margin-top: 1px; }
+
+  .subdomain-row {
+    display: flex;
+    align-items: stretch;
+  }
+  .subdomain-row input {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right: 0;
+    max-width: 180px;
+  }
+  .subdomain-row .domain-suffix {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 12px;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-strong);
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+
+  .dmarc-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 14px;
+    align-items: start;
+  }
+  .dmarc-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+  }
+  .dmarc-content h4 {
+    margin: 0 0 4px;
+    font-size: 14.5px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dmarc-content p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  .recommended-pill {
+    background: var(--bg-subtle);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .toggle {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    background: var(--text);
+    border-radius: 999px;
+    flex-shrink: 0;
+    cursor: pointer;
+    margin-top: 4px;
+    border: 0;
+    padding: 0;
+  }
+  .toggle::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 18px;
+    width: 16px;
+    height: 16px;
+    background: white;
+    border-radius: 999px;
+    transition: left 120ms ease;
+  }
+  .toggle[data-on="false"] { background: var(--border-strong); }
+  .toggle[data-on="false"]::after { left: 2px; }
+
+  .connect-screen {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 40px;
+    align-items: center;
+    margin-top: 20px;
+  }
+  .connect-screen ul {
+    list-style: none;
+    margin: 16px 0 24px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .connect-screen li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+  }
+  .connect-screen li svg { color: var(--text); flex-shrink: 0; }
+  .connect-actions { display: flex; gap: 10px; }
+  .connect-fineprint {
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .connect-art {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .connect-art-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    width: 100px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-card);
+  }
+  .connect-art-card.primary { transform: rotate(-5deg) translateX(20px); z-index: 2; }
+  .connect-art-card.secondary {
+    transform: rotate(5deg) translateX(-20px);
+    border-style: dashed;
+    background: transparent;
+  }
+
+  .verifying-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .verifying-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .domain-name {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 500;
+  }
+  .verifying-list { padding: 8px 0; }
+  .verifying-row {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    gap: 14px;
+    align-items: center;
+    padding: 14px 24px;
+  }
+  .verifying-row + .verifying-row { border-top: 1px solid var(--bg-subtle); }
+  .verifying-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .verifying-icon[data-state="ok"] { background: var(--success-pill-bg); color: var(--success); }
+  .verifying-icon[data-state="pending"] {
+    background: var(--bg-subtle);
+    color: var(--text-faint);
+    border: 1.5px dashed var(--border-strong);
+  }
+  .verifying-icon[data-state="working"] {
+    background: var(--info-bg);
+    color: var(--info);
+  }
+  .verifying-row .label { font-weight: 500; font-size: 13.5px; }
+  .verifying-row .desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .verifying-row .timestamp { font-size: 11.5px; color: var(--text-faint); font-family: var(--font-mono); }
+  .verifying-foot {
+    padding: 14px 24px;
+    background: var(--bg-subtle);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+  }
+  .spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--border-strong);
+    border-top-color: var(--info);
+    border-radius: 999px;
+    animation: spin 800ms linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Confirmation modal (remove domain, change default, etc.) */
+  .confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    backdrop-filter: blur(2px);
+    animation: fadeIn 180ms ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .confirm-modal {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 28px 32px;
+    max-width: 440px;
+    width: 90%;
+    box-shadow: var(--shadow-modal);
+    animation: pop 220ms ease;
+  }
+  @keyframes pop { from { transform: scale(0.95); } to { transform: scale(1); } }
+  .confirm-modal h2 {
+    font-size: 17px;
+    font-weight: 600;
+    margin: 0 0 8px;
+  }
+  .confirm-modal p {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    margin: 0 0 20px;
+    line-height: 1.55;
+  }
+  .confirm-modal .actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+  .confirm-modal code {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    background: var(--bg-subtle);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  /* Entri fake modal */
+  .entri-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    backdrop-filter: blur(2px);
+    animation: fadeIn 180ms ease;
+  }
+  .entri-modal {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 32px 36px;
+    max-width: 480px;
+    width: 90%;
+    box-shadow: var(--shadow-modal);
+    text-align: center;
+    animation: pop 220ms ease;
+  }
+  .entri-modal-mark {
+    width: 56px;
+    height: 56px;
+    border-radius: 999px;
+    background: var(--text);
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 18px;
+    font-size: 22px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+  }
+  .entri-modal h2 {
+    font-size: 19px;
+    font-weight: 600;
+    margin: 0 0 10px;
+  }
+  .entri-modal p {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    margin: 0 0 22px;
+    line-height: 1.55;
+  }
+  .entri-modal .demo-note {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    margin-top: 18px;
+    font-style: italic;
+  }
+  .entri-modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  /* Demo state switcher */
+  .demo-switcher {
+    position: fixed;
+    bottom: 12px;
+    right: 12px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 14px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    z-index: 9999;
+    font-size: 12px;
+  }
+  .demo-switcher-label {
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .demo-switcher-options {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .demo-switcher-options button {
+    appearance: none;
+    border: 1px solid var(--border);
+    background: white;
+    color: var(--text-secondary);
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11.5px;
+    font-family: inherit;
+  }
+  .demo-switcher-options button.active {
+    background: var(--text);
+    color: white;
+    border-color: var(--text);
+  }
+
+  /* Resume chip */
+  .resume-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 8px 14px;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: var(--radius);
+    font-size: 13px;
+    color: #78350f;
+    width: 100%;
+  }
+  .resume-chip svg { color: #b45309; flex-shrink: 0; }
+  .resume-chip strong { color: #422006; font-weight: 600; }
+  .resume-cta {
+    margin-left: auto;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #78350f;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+  }
+  .resume-cta:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<a class="back-link" href="index.html">
+  <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M8 2L3 6.5l5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  Back to project
+</a>
+
+<div class="stage" id="stage"></div>
+
+<div class="demo-switcher">
+  <div class="demo-switcher-label">Demo state</div>
+  <div class="demo-switcher-options" id="demoSwitcher"></div>
+</div>
+
+<script>
+/* =========================================================
+   STATE
+   ========================================================= */
+const state = {
+  // Active settings tab
+  tab: 'email-channel',
+
+  // BYO sub-journey (only relevant when in Email Channel)
+  byo: {
+    // 'in-progress' | null
+    subStep: null,
+    rootDomain: 'muskingumcofair.com',
+    subdomain: 'send',
+    dmarcOn: true,
+    paused: false,
+    pausedAt: null,
+    verifyProgress: 0,
+    isVerifying: false,
+  },
+
+  // Email channel managed config
+  email: {
+    prefix: 'marketing',
+    displayName: 'Muskingum County Fair',
+    replyTo: 'info@muskingumcofair.com',
+    managedDomain: 'muskingum-county-fair.fairs-mail.com',
+  },
+
+  // Domains list (entry state: 1 verified BYO + always-present managed row)
+  domains: [
+    {
+      id: 'send',
+      fullDomain: 'send.muskingumcofair.com',
+      purpose: 'Marketing',
+      status: 'verified',
+      lastVerified: '2 min ago',
+      isDefault: true,
+      isManaged: false,
+    },
+    {
+      id: 'managed',
+      fullDomain: 'muskingum-county-fair.fairs-mail.com',
+      purpose: 'Managed domain · always available',
+      status: 'managed',
+      lastVerified: null,
+      isDefault: false,
+      isManaged: true,
+    },
+  ],
+
+  // Demo scenario
+  demoScenario: 'verified-1',
+
+  // Modals
+  showEntriModal: false,
+  confirmModal: null, // { title, body, confirmLabel, onConfirm }
+
+  // Toast
+  toast: null,
+
+  dirty: false, // for save bar visibility
+};
+
+const SETTINGS_TABS = [
+  { key: 'brand', label: 'Brand Settings' },
+  { key: 'business', label: 'Business Information' },
+  { key: 'email-channel', label: 'Email Channel' },
+  { key: 'sms', label: 'SMS Channel' },
+  { key: 'merge-fields', label: 'Merge Fields' },
+];
+
+const BYO_SUBSTEPS = [
+  { key: 'root', label: 'Root domain' },
+  { key: 'subdomain', label: 'Subdomain' },
+  { key: 'dmarc', label: 'DMARC' },
+  { key: 'connect', label: 'Connect' },
+];
+
+const DEMO_SCENARIOS = [
+  { key: 'verified-1', label: '1 verified' },
+  { key: 'verified-2', label: '2 verified' },
+  { key: 'pending', label: 'Verifying' },
+  { key: 'disconnected', label: 'Disconnected' },
+  { key: 'managed-only', label: 'Managed only' },
+];
+
+/* =========================================================
+   DEMO SCENARIO LOADER
+   ========================================================= */
+function loadDemoScenario(key) {
+  state.demoScenario = key;
+  state.tab = 'email-channel';
+  state.byo = { subStep: null, rootDomain: 'muskingumcofair.com', subdomain: 'send', dmarcOn: true, paused: false, pausedAt: null, verifyProgress: 0, isVerifying: false };
+
+  const managed = {
+    id: 'managed',
+    fullDomain: 'muskingum-county-fair.fairs-mail.com',
+    purpose: 'Managed domain · always available',
+    status: 'managed',
+    lastVerified: null,
+    isDefault: false,
+    isManaged: true,
+  };
+
+  if (key === 'verified-1') {
+    state.domains = [
+      { id: 'send', fullDomain: 'send.muskingumcofair.com', purpose: 'Marketing', status: 'verified', lastVerified: '2 min ago', isDefault: true, isManaged: false },
+      managed,
+    ];
+  } else if (key === 'verified-2') {
+    state.domains = [
+      { id: 'send', fullDomain: 'send.muskingumcofair.com', purpose: 'Marketing', status: 'verified', lastVerified: '2 hr ago', isDefault: true, isManaged: false },
+      { id: 'notif', fullDomain: 'notifications.muskingumcofair.com', purpose: 'Transactional', status: 'verified', lastVerified: '1 day ago', isDefault: false, isManaged: false },
+      managed,
+    ];
+  } else if (key === 'pending') {
+    state.domains = [
+      { id: 'send', fullDomain: 'send.muskingumcofair.com', purpose: 'Marketing · Verifying 2 of 3 records', status: 'pending', lastVerified: null, isDefault: true, isManaged: false },
+      managed,
+    ];
+  } else if (key === 'disconnected') {
+    state.domains = [
+      { id: 'send', fullDomain: 'send.muskingumcofair.com', purpose: 'Marketing · DKIM record missing', status: 'disconnected', lastVerified: '3 days ago', isDefault: true, isManaged: false },
+      { id: 'notif', fullDomain: 'notifications.muskingumcofair.com', purpose: 'Transactional', status: 'verified', lastVerified: '2 hr ago', isDefault: false, isManaged: false },
+      managed,
+    ];
+  } else if (key === 'managed-only') {
+    state.domains = [managed];
+  }
+  render();
+}
+
+/* =========================================================
+   NAVIGATION
+   ========================================================= */
+function setTab(key) {
+  state.tab = key;
+  state.byo.subStep = null;
+  render();
+}
+
+/* =========================================================
+   DOMAIN ACTIONS
+   ========================================================= */
+function startAddDomain() {
+  state.byo.subStep = 'root';
+  state.byo.subdomain = state.domains.length === 1 ? 'send' : 'notifications';
+  state.byo.paused = false;
+  render();
+}
+
+function reverify(id) {
+  state.toast = { kind: 'info', text: 'Re-checking DNS records…' };
+  render();
+  setTimeout(() => {
+    const d = state.domains.find(x => x.id === id);
+    if (d) {
+      d.status = 'verified';
+      d.lastVerified = 'just now';
+      d.purpose = d.purpose.replace(' · DKIM record missing', '').replace(/ · Verifying.*$/, '');
+    }
+    state.toast = { kind: 'success', text: 'Verified successfully.' };
+    render();
+    setTimeout(() => { state.toast = null; render(); }, 2400);
+  }, 1400);
+}
+
+function setDefault(id) {
+  state.domains.forEach(d => { d.isDefault = (d.id === id); });
+  state.toast = { kind: 'success', text: 'Default domain updated.' };
+  render();
+  setTimeout(() => { state.toast = null; render(); }, 2400);
+}
+
+function confirmRemove(id) {
+  const d = state.domains.find(x => x.id === id);
+  if (!d) return;
+  state.confirmModal = {
+    title: `Remove ${d.fullDomain}?`,
+    body: `This deletes the domain from ${d.fullDomain.split('.')[0] === 'send' ? 'Postmark' : 'your ESP'} and removes its records from your settings. ${d.isDefault ? 'Another domain will be promoted to default.' : ''}`,
+    confirmLabel: 'Remove domain',
+    onConfirm: () => {
+      const wasDefault = d.isDefault;
+      state.domains = state.domains.filter(x => x.id !== id);
+      if (wasDefault) {
+        const next = state.domains.find(x => !x.isManaged);
+        if (next) next.isDefault = true;
+      }
+      state.confirmModal = null;
+      state.toast = { kind: 'success', text: `${d.fullDomain} removed.` };
+      render();
+      setTimeout(() => { state.toast = null; render(); }, 2400);
+    },
+  };
+  render();
+}
+
+function reconnectDisconnected(id) {
+  const d = state.domains.find(x => x.id === id);
+  if (!d) return;
+  // Re-launch the connect flow — for prototype, jump to Entri modal
+  state.byo.subdomain = d.fullDomain.split('.')[0];
+  state.byo.rootDomain = d.fullDomain.split('.').slice(1).join('.');
+  state.showEntriModal = true;
+  state.byo.reconnectingId = id;
+  render();
+}
+
+/* =========================================================
+   BYO SUB-JOURNEY
+   ========================================================= */
+function byoNext() {
+  const order = BYO_SUBSTEPS.map(s => s.key);
+  const idx = order.indexOf(state.byo.subStep);
+  if (idx === order.length - 1) {
+    state.showEntriModal = true;
+  } else {
+    state.byo.subStep = order[idx + 1];
+  }
+  render();
+}
+
+function byoBack() {
+  const order = BYO_SUBSTEPS.map(s => s.key);
+  const idx = order.indexOf(state.byo.subStep);
+  if (idx === 0) {
+    exitBYOPaused();
+  } else {
+    state.byo.subStep = order[idx - 1];
+    render();
+  }
+}
+
+function exitBYOPaused() {
+  if (state.byo.subStep) {
+    state.byo.paused = true;
+    state.byo.pausedAt = state.byo.subStep;
+  }
+  state.byo.subStep = null;
+  render();
+}
+
+function entriSuccess() {
+  state.showEntriModal = false;
+
+  // If reconnecting an existing domain
+  if (state.byo.reconnectingId) {
+    const d = state.domains.find(x => x.id === state.byo.reconnectingId);
+    if (d) {
+      d.status = 'pending';
+      d.purpose = d.purpose.replace(' · DKIM record missing', '');
+      state.byo.isVerifying = true;
+      state.byo.verifyProgress = 0;
+      animateVerification(state.byo.reconnectingId);
+    }
+    state.byo.reconnectingId = null;
+    render();
+    return;
+  }
+
+  // New domain being added
+  state.byo.isVerifying = true;
+  state.byo.verifyProgress = 0;
+  state.byo.subStep = null;
+  // Add a new pending domain
+  const newDomain = {
+    id: state.byo.subdomain + '-' + Date.now(),
+    fullDomain: state.byo.subdomain + '.' + state.byo.rootDomain,
+    purpose: state.domains.filter(d => !d.isManaged).length === 0 ? 'Marketing' : 'Transactional',
+    status: 'pending',
+    lastVerified: null,
+    isDefault: state.domains.filter(d => !d.isManaged).length === 0,
+    isManaged: false,
+  };
+  // Insert before managed
+  const managedIdx = state.domains.findIndex(d => d.isManaged);
+  state.domains.splice(managedIdx, 0, newDomain);
+  animateVerification(newDomain.id);
+  render();
+}
+
+function animateVerification(domainId) {
+  setTimeout(() => { state.byo.verifyProgress = 1; render(); }, 1800);
+  setTimeout(() => { state.byo.verifyProgress = 2; render(); }, 3600);
+  setTimeout(() => {
+    state.byo.verifyProgress = 3;
+    state.byo.isVerifying = false;
+    const d = state.domains.find(x => x.id === domainId);
+    if (d) {
+      d.status = 'verified';
+      d.lastVerified = 'just now';
+      d.purpose = d.purpose.split(' · ')[0]; // strip status suffix
+    }
+    state.toast = { kind: 'success', text: `${d ? d.fullDomain : 'Domain'} verified.` };
+    render();
+    setTimeout(() => { state.toast = null; render(); }, 2800);
+  }, 5400);
+}
+
+function entriClose() {
+  state.showEntriModal = false;
+  if (state.byo.reconnectingId) {
+    state.byo.reconnectingId = null;
+  }
+  render();
+}
+
+function dismissResume() {
+  state.byo.paused = false;
+  state.byo.pausedAt = null;
+  state.byo.subStep = null;
+  render();
+}
+
+function resumeBYO() {
+  state.byo.subStep = state.byo.pausedAt;
+  state.byo.paused = false;
+  render();
+}
+
+/* =========================================================
+   RENDER HELPERS
+   ========================================================= */
+function shellHeader() {
+  return `
+    <header class="shell-topbar">
+      <div class="shell-title">
+        <h1>Engage Settings</h1>
+        <p>Manage your brand, channels, and personalization for email & SMS.</p>
+      </div>
+      <button class="close-btn" aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l10 10M14 4L4 14"/></svg>
+      </button>
+    </header>
+  `;
+}
+
+function settingsSidebar() {
+  return `
+    <aside class="shell-sidebar">
+      <div class="shell-sidebar-eyebrow">Settings</div>
+      ${SETTINGS_TABS.map(t => `
+        <button class="shell-sidebar-item" data-state="${state.tab === t.key ? 'active' : 'inactive'}" onclick="setTab('${t.key}')">
+          ${t.label}
+        </button>
+      `).join('')}
+    </aside>
+  `;
+}
+
+function byoSidebar() {
+  const order = BYO_SUBSTEPS.map(s => s.key);
+  const currentIdx = order.indexOf(state.byo.subStep);
+  return `
+    <aside class="shell-sidebar">
+      <div class="shell-sidebar-eyebrow">Add a domain</div>
+      <button class="shell-sidebar-parent" onclick="exitBYOPaused()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3L4 7l5 4"/></svg>
+        Email Channel
+      </button>
+      <ul class="shell-sidebar-substeps">
+        ${BYO_SUBSTEPS.map((s, i) => {
+          const stateAttr = i < currentIdx ? 'complete' : (i === currentIdx ? 'active' : 'upcoming');
+          return `<li data-state="${stateAttr}">
+            <span class="shell-sidebar-substep-marker">${stateAttr === 'complete' ? '' : (i + 1)}</span>
+            ${s.label}
+          </li>`;
+        }).join('')}
+        ${state.byo.isVerifying ? '<li data-state="active"><span class="shell-sidebar-substep-marker">5</span>Verifying</li>' : ''}
+      </ul>
+    </aside>
+  `;
+}
+
+/* =========================================================
+   PAGES
+   ========================================================= */
+function emailChannelPage() {
+  // Get the default verified BYO domain (or null)
+  const defaultBYO = state.domains.find(d => d.isDefault && !d.isManaged && d.status === 'verified');
+  const senderDomain = defaultBYO ? defaultBYO.fullDomain : state.email.managedDomain;
+  const showVia = !defaultBYO;
+
+  return `
+    ${settingsSidebar()}
+    <main class="shell-main">
+      <div class="page-header">
+        <h1>Email Channel</h1>
+        <p>Configure your email sending settings, then manage the domains your messages send from.</p>
+      </div>
+
+      ${state.byo.paused ? `
+        <div class="resume-chip" style="margin-bottom: 24px; margin-top: 0;">
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M10 6v4l2.5 2.5"/></svg>
+          <div>
+            <strong>Domain setup paused.</strong> You started connecting <code style="font-family:var(--font-mono);font-size:12px;">${state.byo.subdomain}.${state.byo.rootDomain}</code>.
+          </div>
+          <button class="resume-cta" onclick="resumeBYO()">Resume →</button>
+        </div>
+      ` : ''}
+
+      <!-- Section 1: Sender details -->
+      <div class="section-block">
+        <h3 class="section-block-title">Sender details</h3>
+
+        <div class="form-group">
+          <label>Sending email address</label>
+          <span class="helper">Edit the prefix to match your team — common choices: <code>marketing</code>, <code>hello</code>, <code>news</code></span>
+          <div class="sender-prefix-row">
+            <input class="form-input" type="text" value="${state.email.prefix}"
+              oninput="state.email.prefix=this.value; state.dirty=true; render();" />
+            <span class="at-sign">@</span>
+            <span class="domain-suffix">${senderDomain}</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Display name</label>
+          <span class="helper">What customers see in their inbox before the email opens.</span>
+          <input class="form-input" type="text" value="${state.email.displayName}"
+            oninput="state.email.displayName=this.value; state.dirty=true; render();" />
+        </div>
+
+        <div class="form-group">
+          <label>Reply-to email</label>
+          <span class="helper">When customers reply, their response goes here.</span>
+          <input class="form-input" type="email" value="${state.email.replyTo}"
+            oninput="state.email.replyTo=this.value; state.dirty=true;" />
+        </div>
+
+        <div style="margin-top: 20px;">
+          <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:10px;">How it appears in inbox</div>
+          <div class="inbox-preview">
+            <div class="inbox-row">
+              <div class="inbox-avatar">${(state.email.displayName || 'E').charAt(0).toUpperCase()}</div>
+              <div class="inbox-meta">
+                <div class="inbox-from">
+                  ${state.email.displayName || 'Your business'}
+                  ${showVia ? `<span class="inbox-via">via <strong style="color:var(--warning);">${state.email.managedDomain}</strong></span>` : ''}
+                </div>
+                <div class="inbox-subject">${state.email.prefix || 'hello'}@${senderDomain} · Get your tickets for the 2026 Fair</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Sending domains -->
+      <div class="section-block">
+        <div class="section-block-header">
+          <h3>Sending domains</h3>
+          <button class="btn btn-secondary" onclick="startAddDomain()">+ Add domain</button>
+        </div>
+
+        ${renderDisconnectBanners()}
+        ${renderDomainTable()}
+
+        <p style="margin-top: 14px; font-size: 12.5px; color: var(--text-muted);">The default domain is used for all Engage broadcasts unless overridden on a specific automation or campaign.</p>
+      </div>
+
+      ${state.dirty ? `
+        <div class="save-bar">
+          <span class="dirty-text">You have unsaved changes.</span>
+          <div style="display:flex; gap:10px;">
+            <button class="btn btn-ghost" onclick="state.dirty=false; render();">Discard</button>
+            <button class="btn btn-primary" onclick="state.dirty=false; state.toast={kind:'success',text:'Settings saved.'}; render(); setTimeout(()=>{state.toast=null; render();}, 2400);">Save changes</button>
+          </div>
+        </div>
+      ` : ''}
+    </main>
+  `;
+}
+
+function renderDisconnectBanners() {
+  const disconnected = state.domains.filter(d => d.status === 'disconnected');
+  if (disconnected.length === 0) return '';
+  return disconnected.map(d => `
+    <div class="disconnect-banner">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 22h20L12 2z"/><path d="M12 9v5M12 18h.01"/></svg>
+      <div style="flex: 1;">
+        <h4>${d.fullDomain} is no longer verified</h4>
+        <p>The DKIM record is missing from your DNS. Your campaigns are temporarily falling back to <code>${state.email.managedDomain}</code> — deliverability may drop.</p>
+        <div class="actions">
+          <button class="btn btn-primary" style="background: var(--danger); padding: 7px 12px; font-size: 13px;" onclick="reconnectDisconnected('${d.id}')">Reconnect domain</button>
+          <button class="btn-link" style="color: var(--danger);" onclick="alert('Demo: would show the missing DNS records and a shareable link to send to IT')">Forward fix to IT</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderDomainTable() {
+  return `
+    <table class="domain-table">
+      <thead>
+        <tr>
+          <th>Domain</th>
+          <th>Status</th>
+          <th>Last verified</th>
+          <th style="text-align:right;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${state.domains.map(d => renderDomainRow(d)).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function renderDomainRow(d) {
+  const pillClass = `status-${d.status}`;
+  const pillLabel = d.status === 'verified' ? 'Verified'
+    : d.status === 'pending' ? 'Verifying'
+    : d.status === 'disconnected' ? 'Disconnected'
+    : 'Managed';
+  const rowStyle = d.status === 'disconnected' ? 'background: var(--danger-bg);' : '';
+
+  let actions = '';
+  if (d.isManaged) {
+    actions = `<span style="font-size:12px; color:var(--text-faint);">Always available</span>`;
+  } else {
+    const reverifyBtn = `<button class="icon-btn" onclick="reverify('${d.id}')" title="Re-verify"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8a6 6 0 1110 4.5"/><path d="M12 13.5l-1-1 1-1"/></svg></button>`;
+    const setDefaultBtn = !d.isDefault && d.status === 'verified'
+      ? `<button class="icon-btn" onclick="setDefault('${d.id}')" title="Set as default"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1l2 5 5 .5-3.7 3.5L13 15l-5-2.5L3 15l1.7-4.5L1 6.5l5-.5z"/></svg></button>`
+      : '';
+    const removeBtn = `<button class="icon-btn" onclick="confirmRemove('${d.id}')" title="Remove" style="color:var(--danger);"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h10M6 4V2.5h4V4M5 4l1 9h4l1-9"/></svg></button>`;
+    actions = `<div class="actions">${reverifyBtn}${setDefaultBtn}${removeBtn}</div>`;
+  }
+
+  return `
+    <tr style="${rowStyle}">
+      <td>
+        <div class="domain-name-cell">
+          <span class="name" style="${d.isManaged ? 'color: var(--text-muted);' : ''}">
+            ${d.fullDomain}
+            ${d.isDefault ? '<span class="default-badge">Default</span>' : ''}
+          </span>
+          <span class="purpose">${d.purpose}</span>
+        </div>
+      </td>
+      <td><span class="status-pill ${pillClass}">${pillLabel}</span></td>
+      <td style="color: var(--text-muted); font-family: var(--font-mono); font-size: 12px;">${d.lastVerified || '—'}</td>
+      <td>${actions}</td>
+    </tr>
+  `;
+}
+
+/* BYO SUB-FLOW SCREENS (settings flavor) */
+function byoRootSubstep() {
+  return `
+    <main class="shell-main">
+      <div class="step-header">
+        <h2>What's your root domain?</h2>
+        <p>This is the domain your customers know you by — usually the same as your website.</p>
+      </div>
+      <div style="max-width: 480px;">
+        <div class="form-group">
+          <label>Root domain</label>
+          <span class="helper">For example: muskingumcofair.com</span>
+          <input class="form-input" type="text" value="${state.byo.rootDomain}"
+            oninput="state.byo.rootDomain=this.value;" />
+        </div>
+        <div class="info-banner">
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M10 6.5v4M10 13.5h.01"/></svg>
+          <div>We pulled this from your business website. Looks wrong? Edit above.</div>
+        </div>
+      </div>
+      <div style="margin-top: 32px; display: flex; justify-content: space-between; gap: 16px; padding-top: 24px; border-top: 1px solid var(--border);">
+        <button class="btn btn-ghost" onclick="byoBack()">← Back</button>
+        <button class="btn btn-primary" onclick="byoNext()">Continue</button>
+      </div>
+    </main>
+  `;
+}
+
+function byoSubdomainSubstep() {
+  return `
+    <main class="shell-main">
+      <div class="step-header">
+        <h2>Pick a sending subdomain</h2>
+        <p>This is where your emails will be sent from. Use a subdomain you're not already using for your website or work email.</p>
+      </div>
+      <div style="max-width: 540px;">
+        <div class="preview-chip">
+          <svg width="16" height="16" style="color:var(--text-muted);" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="2.5"/><path d="M2 10s2.5-5 8-5 8 5 8 5-2.5 5-8 5-8-5-8-5z"/></svg>
+          <div>
+            <div class="preview-chip-label">Preview</div>
+            <div class="preview-chip-value">${state.byo.subdomain}.${state.byo.rootDomain}</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Sending subdomain</label>
+          <span class="helper">Common choices: <code>send</code>, <code>email</code>, <code>notifications</code></span>
+          <div class="subdomain-row">
+            <input class="form-input" type="text" value="${state.byo.subdomain}"
+              oninput="state.byo.subdomain=this.value; render();" />
+            <span class="domain-suffix">.${state.byo.rootDomain}</span>
+          </div>
+        </div>
+        <p style="font-size: 12.5px; color: var(--text-muted); margin-top: 4px;">When you continue, we'll check whether your DNS provider supports automatic setup so we can route you to the smoothest path on the next step.</p>
+      </div>
+      <div style="margin-top: 32px; display: flex; justify-content: space-between; gap: 16px; padding-top: 24px; border-top: 1px solid var(--border);">
+        <button class="btn btn-ghost" onclick="byoBack()">← Back</button>
+        <button class="btn btn-primary" onclick="byoNext()">Continue</button>
+      </div>
+    </main>
+  `;
+}
+
+function byoDmarcSubstep() {
+  return `
+    <main class="shell-main">
+      <div class="step-header">
+        <h2>Add a DMARC record</h2>
+        <p>DMARC tells inbox providers like Gmail what to do with mail that fails authentication. Required for senders at scale.</p>
+      </div>
+      <div style="max-width: 600px;">
+        <div class="dmarc-card">
+          <div class="dmarc-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
+          </div>
+          <div class="dmarc-content">
+            <h4>Add DMARC record <span class="recommended-pill">Recommended</span></h4>
+            <p>Protects your sending reputation and meets Gmail and Yahoo's bulk sender requirements.</p>
+          </div>
+          <button class="toggle" data-on="${state.byo.dmarcOn}" onclick="state.byo.dmarcOn=!state.byo.dmarcOn; render();"></button>
+        </div>
+      </div>
+      <div style="margin-top: 32px; display: flex; justify-content: space-between; gap: 16px; padding-top: 24px; border-top: 1px solid var(--border);">
+        <button class="btn btn-ghost" onclick="byoBack()">← Back</button>
+        <button class="btn btn-primary" onclick="byoNext()">Continue</button>
+      </div>
+    </main>
+  `;
+}
+
+function byoConnectSubstep() {
+  return `
+    <main class="shell-main">
+      <div class="connect-screen">
+        <div>
+          <h2 style="font-size:22px; font-weight:600; margin:0 0 8px; letter-spacing:-0.02em;">Connect with Entri</h2>
+          <p style="margin:0; color:var(--text-secondary); font-size:14px;">Entri logs into your DNS provider for you and adds the right records — no copy-paste, no mistakes.</p>
+          <ul>
+            <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M6.5 10l2.5 2.5 5-5"/></svg> Fast, secure setup</li>
+            <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M6.5 10l2.5 2.5 5-5"/></svg> Detects your DNS provider automatically</li>
+            <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M6.5 10l2.5 2.5 5-5"/></svg> Forward to your IT contact if you don't have access</li>
+          </ul>
+          <div class="connect-actions">
+            <button class="btn btn-primary" style="padding: 11px 20px;" onclick="state.showEntriModal=true; render();">Connect with Entri</button>
+            <button class="btn btn-secondary" style="padding: 11px 20px;" onclick="alert('In production: would show manual DNS records to copy/paste')">Set up manually</button>
+          </div>
+          <p class="connect-fineprint">By selecting "Connect with Entri" you agree to Entri's Terms of Service and Privacy Policy.</p>
+        </div>
+        <div class="connect-art" aria-hidden="true">
+          <div class="connect-art-card secondary"><svg width="40" height="40" viewBox="0 0 40 40" fill="none"><path d="M10 10h20v20H10z" stroke="#9ca3af" stroke-width="2" stroke-dasharray="2 3"/></svg></div>
+          <div class="connect-art-card primary"><svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="14" fill="var(--text)"/><path d="M14 20l4 4 8-8" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div>
+        </div>
+      </div>
+      <div style="margin-top: 32px; display: flex; justify-content: space-between; gap: 16px; padding-top: 24px; border-top: 1px solid var(--border);">
+        <button class="btn btn-ghost" onclick="byoBack()">← Back</button>
+        <span style="font-size:12px; color:var(--text-muted); align-self: center;">Choose an option above to continue</span>
+      </div>
+    </main>
+  `;
+}
+
+function byoVerifyingScreen() {
+  const p = state.byo.verifyProgress;
+  const dkimState = p >= 1 ? 'ok' : (p === 0 ? 'working' : 'pending');
+  const rpState = p >= 2 ? 'ok' : (p === 1 ? 'working' : 'pending');
+  const dmarcState = p >= 3 ? 'ok' : (p === 2 ? 'working' : 'pending');
+
+  const renderIcon = (st) => {
+    if (st === 'ok') return `<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.5l2.5 2.5L10 3.5"/></svg>`;
+    if (st === 'working') return `<div class="spinner" style="border-top-color: var(--info);"></div>`;
+    return '';
+  };
+  const renderLabel = (st) => st === 'ok' ? 'verified just now' : (st === 'working' ? 'checking…' : 'pending');
+
+  return `
+    <main class="shell-main">
+      <div class="step-header">
+        <h2>Verifying your domain</h2>
+        <p>Entri is publishing your DNS records. We'll be notified the moment each one propagates worldwide. This usually takes 1–5 minutes.</p>
+      </div>
+      <div style="max-width: 640px;">
+        <div class="verifying-card">
+          <div class="verifying-header">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);"><path d="M12 2v6m0 8v6M2 12h6m8 0h6M5 5l4 4m6 6l4 4M5 19l4-4m6-6l4-4"/></svg>
+            <span class="domain-name">${state.byo.subdomain}.${state.byo.rootDomain}</span>
+            <span class="status-pill status-pending" style="margin-left:auto;">Verifying</span>
+          </div>
+          <div class="verifying-list">
+            <div class="verifying-row">
+              <div class="verifying-icon" data-state="${dkimState}">${renderIcon(dkimState)}</div>
+              <div>
+                <div class="label">DKIM signing key</div>
+                <div class="desc">TXT record for <code style="font-family:var(--font-mono);font-size:11.5px;">_domainkey.${state.byo.subdomain}</code></div>
+              </div>
+              <span class="timestamp">${renderLabel(dkimState)}</span>
+            </div>
+            <div class="verifying-row">
+              <div class="verifying-icon" data-state="${rpState}">${renderIcon(rpState)}</div>
+              <div>
+                <div class="label">Return-Path</div>
+                <div class="desc">CNAME for <code style="font-family:var(--font-mono);font-size:11.5px;">pm-bounces.${state.byo.subdomain}</code></div>
+              </div>
+              <span class="timestamp">${renderLabel(rpState)}</span>
+            </div>
+            ${state.byo.dmarcOn ? `
+              <div class="verifying-row">
+                <div class="verifying-icon" data-state="${dmarcState}">${renderIcon(dmarcState)}</div>
+                <div>
+                  <div class="label">DMARC policy</div>
+                  <div class="desc">TXT record for <code style="font-family:var(--font-mono);font-size:11.5px;">_dmarc.${state.byo.subdomain}</code></div>
+                </div>
+                <span class="timestamp">${renderLabel(dmarcState)}</span>
+              </div>` : ''}
+          </div>
+          <div class="verifying-foot">
+            ${p < 3 ? `<div class="spinner"></div><span>You can leave this page — we'll update once verification finishes.</span>` : `<span style="color:var(--success); font-weight:500;">All records verified.</span>`}
+          </div>
+        </div>
+      </div>
+      <div style="margin-top: 32px; display: flex; justify-content: flex-end; gap: 16px; padding-top: 24px; border-top: 1px solid var(--border);">
+        <button class="btn btn-secondary" onclick="state.byo.isVerifying=false; state.byo.subStep=null; render();">Continue verifying in background</button>
+      </div>
+    </main>
+  `;
+}
+
+/* OTHER TABS (placeholder content) */
+function placeholderTab(label, body) {
+  return `
+    ${settingsSidebar()}
+    <main class="shell-main">
+      <div class="page-header">
+        <h1>${label}</h1>
+        <p>${body}</p>
+      </div>
+      <p style="font-size: 13px; color: var(--text-muted);"><em>Demo:</em> this tab uses the existing Engage settings component unchanged. Click <strong>Email Channel</strong> in the sidebar to see the redesigned experience.</p>
+    </main>
+  `;
+}
+
+function entriModalHTML() {
+  return `
+    <div class="entri-overlay">
+      <div class="entri-modal">
+        <div class="entri-modal-mark">E</div>
+        <h2>This is where Entri's modal would launch</h2>
+        <p>In production, Entri's iframe takes over here. The user logs into their DNS provider (Cloudflare, GoDaddy, etc.) and Entri publishes the DKIM, Return-Path, and DMARC records.</p>
+        <p style="font-size:12.5px; color:var(--text-muted);">Records being published for <code style="font-family:var(--font-mono);">${state.byo.subdomain}.${state.byo.rootDomain}</code>.</p>
+        <div class="entri-modal-actions">
+          <button class="btn btn-secondary" onclick="entriClose()">Simulate close</button>
+          <button class="btn btn-primary" onclick="entriSuccess()">Simulate success →</button>
+        </div>
+        <p class="demo-note">Demo only — Entri's real modal is not embedded here.</p>
+      </div>
+    </div>
+  `;
+}
+
+function confirmModalHTML() {
+  if (!state.confirmModal) return '';
+  return `
+    <div class="confirm-overlay">
+      <div class="confirm-modal">
+        <h2>${state.confirmModal.title}</h2>
+        <p>${state.confirmModal.body}</p>
+        <div class="actions">
+          <button class="btn btn-ghost" onclick="state.confirmModal=null; render();">Cancel</button>
+          <button class="btn btn-danger" onclick="(${state.confirmModal.onConfirm.toString()})()">${state.confirmModal.confirmLabel}</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function toastHTML() {
+  if (!state.toast) return '';
+  const bg = state.toast.kind === 'success' ? 'var(--success)' : 'var(--info)';
+  return `
+    <div style="position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: ${bg}; color: white; padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; box-shadow: 0 6px 24px rgba(0,0,0,0.18); z-index: 90; animation: fadeIn 180ms ease;">
+      ${state.toast.text}
+    </div>
+  `;
+}
+
+function demoSwitcher() {
+  const sw = document.getElementById('demoSwitcher');
+  sw.innerHTML = DEMO_SCENARIOS.map(s => `
+    <button class="${state.demoScenario === s.key ? 'active' : ''}" onclick="loadDemoScenario('${s.key}')">${s.label}</button>
+  `).join('');
+}
+
+/* =========================================================
+   RENDER
+   ========================================================= */
+function render() {
+  const stage = document.getElementById('stage');
+
+  let body;
+  if (state.byo.isVerifying) {
+    body = `<div class="shell-body" data-mode="byo">${byoSidebar()}${byoVerifyingScreen()}</div>`;
+  } else if (state.byo.subStep) {
+    let sub;
+    if (state.byo.subStep === 'root') sub = byoRootSubstep();
+    else if (state.byo.subStep === 'subdomain') sub = byoSubdomainSubstep();
+    else if (state.byo.subStep === 'dmarc') sub = byoDmarcSubstep();
+    else if (state.byo.subStep === 'connect') sub = byoConnectSubstep();
+    body = `<div class="shell-body" data-mode="byo">${byoSidebar()}${sub}</div>`;
+  } else {
+    let pageContent;
+    if (state.tab === 'email-channel') pageContent = emailChannelPage();
+    else if (state.tab === 'brand') pageContent = placeholderTab('Brand Settings', 'Configure your brand colors, tone, and logo for messages.');
+    else if (state.tab === 'business') pageContent = placeholderTab('Business Information', 'Update your DBA, address, and contact info. Changes here may trigger SMS re-verification.');
+    else if (state.tab === 'sms') pageContent = placeholderTab('SMS Channel', 'Manage your SMS sending number and request approval for new ones.');
+    else if (state.tab === 'merge-fields') pageContent = placeholderTab('Merge Fields', 'Manage merge fields used for personalization in email and SMS.');
+    body = `<div class="shell-body">${pageContent}</div>`;
+  }
+
+  let html = `<div class="shell">${shellHeader()}${body}</div>`;
+  if (state.showEntriModal) html += entriModalHTML();
+  if (state.confirmModal) html += confirmModalHTML();
+  if (state.toast) html += toastHTML();
+
+  stage.innerHTML = html;
+  demoSwitcher();
+}
+
+render();
+</script>
+
+</body>
+</html>
