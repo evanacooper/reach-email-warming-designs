@@ -402,6 +402,29 @@ tr:hover .row-actions { opacity: 1; }
 .disqualify-btn { font-size: 10px; color: #9ca3af; border: 1px solid #e5e7eb; border-radius: 5px; padding: 2px 7px; background: white; cursor: pointer; }
 .disqualify-btn:hover { background: #fef2f2; border-color: #fca5a5; color: #dc2626; }
 
+/* ─── Lead quality indicator ─── */
+.lead-quality { display: flex; flex-direction: column; gap: 3px; min-width: 110px; }
+.lq-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; width: fit-content; }
+.lq-badge.qualified   { background: #dcfce7; color: #15803d; }
+.lq-badge.likely      { background: #fef9c3; color: #854d0e; }
+.lq-badge.unqualified { background: #fee2e2; color: #b91c1c; }
+.lq-badge.pending     { background: #f3f4f6; color: #6b7280; }
+.lq-source { display: flex; align-items: center; gap: 3px; font-size: 10px; color: #9ca3af; }
+.lq-source-icon { font-size: 9px; }
+.lq-detail { font-size: 10px; color: #6b7280; font-style: italic; max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: default; }
+.lq-detail:hover { white-space: normal; overflow: visible; position: relative; z-index: 10; background: white; padding: 2px 4px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+
+/* Quality filter pills above leads table */
+.quality-filter { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+.quality-filter-label { font-size: 11px; color: #9ca3af; font-weight: 500; }
+.qf-pill { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; border: 1px solid #e5e7eb; background: white; color: #6b7280; cursor: pointer; transition: all 0.1s; }
+.qf-pill:hover { border-color: #a5b4fc; color: #4338ca; }
+.qf-pill.active { background: #eef2ff; border-color: #a5b4fc; color: #4338ca; }
+.qf-spacer { flex: 1; }
+.qf-legend { display: flex; align-items: center; gap: 8px; font-size: 10px; color: #9ca3af; }
+.qf-legend-item { display: flex; align-items: center; gap: 3px; }
+.qf-legend-dot { width: 6px; height: 6px; border-radius: 50%; }
+
 /* ─── Metric card signal dot (Northbeam-style stoplight) ─── */
 .metric-signal { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 .metric-signal.green  { background: #16a34a; box-shadow: 0 0 0 2px #dcfce7; }
@@ -1343,13 +1366,30 @@ tr:hover .row-actions { opacity: 1; }
             </div>
           </div>
 
+          <!-- Quality filter row -->
+          <div class="quality-filter">
+            <span class="quality-filter-label">Quality:</span>
+            <button class="qf-pill active" onclick="filterQuality(this,'all')">All</button>
+            <button class="qf-pill" onclick="filterQuality(this,'qualified')">✓ Qualified</button>
+            <button class="qf-pill" onclick="filterQuality(this,'likely')">~ Likely</button>
+            <button class="qf-pill" onclick="filterQuality(this,'unqualified')">✕ Unqualified</button>
+            <button class="qf-pill" onclick="filterQuality(this,'pending')">⏳ Pending</button>
+            <span class="qf-spacer"></span>
+            <span class="qf-legend">
+              <span class="qf-legend-item"><span class="qf-legend-dot" style="background:#16a34a"></span>AI analysis</span>
+              <span class="qf-legend-item"><span class="qf-legend-dot" style="background:#6366f1"></span>Partner signal</span>
+              <span class="qf-legend-item"><span class="qf-legend-dot" style="background:#d1d5db"></span>Pending</span>
+            </span>
+          </div>
+
           <div class="table-section">
             <div class="table-wrap">
-              <table class="data-table">
+              <table class="data-table" id="leads-table">
                 <thead>
                   <tr>
                     <th>Contact</th>
                     <th>Source Type</th>
+                    <th>Quality</th>
                     <th>Channel</th>
                     <th>Campaign</th>
                     <th>Lead Created</th>
@@ -1360,12 +1400,20 @@ tr:hover .row-actions { opacity: 1; }
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
+                  <!-- Sarah M. — call, AI Qualified, high confidence -->
+                  <tr data-quality="qualified">
                     <td>
                       <a class="lead-link">Sarah M.</a>
                       <div style="font-size:11px;color:#9ca3af">sarah@example.com</div>
                     </td>
                     <td><span class="lead-source-badge call">📞 Call</span></td>
+                    <td>
+                      <div class="lead-quality">
+                        <span class="lq-badge qualified">✓ Qualified</span>
+                        <span class="lq-source"><span class="lq-source-icon">🤖</span> AI · 94% confidence</span>
+                        <span class="lq-detail" title="Requested AC replacement quote + asked about financing">"Requested AC replacement + financing"</span>
+                      </div>
+                    </td>
                     <td style="font-size:11px;color:#6366f1;font-weight:600">Google Ads</td>
                     <td style="font-size:11px;color:#6b7280">Emergency HVAC</td>
                     <td style="font-size:11px;color:#9ca3af">Feb 27, 2026</td>
@@ -1374,12 +1422,20 @@ tr:hover .row-actions { opacity: 1; }
                     <td><span class="lead-status-badge converted">Converted</span></td>
                     <td><div class="row-actions"><button class="disqualify-btn">✕ Exclude</button></div></td>
                   </tr>
-                  <tr>
+                  <!-- James R. — form, partner CRM signal -->
+                  <tr data-quality="qualified">
                     <td>
                       <a class="lead-link">James R.</a>
                       <div style="font-size:11px;color:#9ca3af">james@example.com</div>
                     </td>
                     <td><span class="lead-source-badge form">📋 Form</span></td>
+                    <td>
+                      <div class="lead-quality">
+                        <span class="lq-badge qualified">✓ Qualified</span>
+                        <span class="lq-source"><span style="color:#6366f1;font-size:10px">⬡</span> Partner signal</span>
+                        <span class="lq-detail" title="CRM status set to Opportunity">CRM status: Opportunity</span>
+                      </div>
+                    </td>
                     <td style="font-size:11px;color:#10b981;font-weight:600">Google Organic</td>
                     <td style="font-size:11px;color:#9ca3af">—</td>
                     <td style="font-size:11px;color:#9ca3af">Feb 26, 2026</td>
@@ -1388,12 +1444,20 @@ tr:hover .row-actions { opacity: 1; }
                     <td><span class="lead-status-badge open">Open</span></td>
                     <td><div class="row-actions"><button class="disqualify-btn">✕ Exclude</button></div></td>
                   </tr>
-                  <tr>
+                  <!-- Karen L. — call, AI Likely, lower confidence -->
+                  <tr data-quality="likely">
                     <td>
                       <a class="lead-link">Karen L.</a>
                       <div style="font-size:11px;color:#9ca3af">(555) 248-1190</div>
                     </td>
                     <td><span class="lead-source-badge call">📞 Call</span></td>
+                    <td>
+                      <div class="lead-quality">
+                        <span class="lq-badge likely">~ Likely</span>
+                        <span class="lq-source"><span class="lq-source-icon">🤖</span> AI · 71% confidence</span>
+                        <span class="lq-detail" title="Asked about tune-up, mentioned 12yr old unit">"Tune-up inquiry, 12yr old unit"</span>
+                      </div>
+                    </td>
                     <td style="font-size:11px;color:#818cf8;font-weight:600">Meta Ads</td>
                     <td style="font-size:11px;color:#6b7280">Home Comfort</td>
                     <td style="font-size:11px;color:#9ca3af">Feb 25, 2026</td>
@@ -1402,12 +1466,20 @@ tr:hover .row-actions { opacity: 1; }
                     <td><span class="lead-status-badge converted">Converted</span></td>
                     <td><div class="row-actions"><button class="disqualify-btn">✕ Exclude</button></div></td>
                   </tr>
-                  <tr>
+                  <!-- Tom B. — call, AI Unqualified -->
+                  <tr data-quality="unqualified">
                     <td>
                       <a class="lead-link">Tom B.</a>
                       <div style="font-size:11px;color:#9ca3af">tom@example.com</div>
                     </td>
                     <td><span class="lead-source-badge call">📞 Call</span></td>
+                    <td>
+                      <div class="lead-quality">
+                        <span class="lq-badge unqualified">✕ Unqualified</span>
+                        <span class="lq-source"><span class="lq-source-icon">🤖</span> AI · 88% confidence</span>
+                        <span class="lq-detail" title="Existing customer calling about prior service warranty">"Existing customer, warranty question"</span>
+                      </div>
+                    </td>
                     <td style="font-size:11px;color:#6366f1;font-weight:600">Google Ads</td>
                     <td style="font-size:11px;color:#6b7280">HVAC Local Map</td>
                     <td style="font-size:11px;color:#9ca3af">Feb 18, 2026</td>
@@ -1416,12 +1488,19 @@ tr:hover .row-actions { opacity: 1; }
                     <td><span class="lead-status-badge stale">Stale</span></td>
                     <td><div class="row-actions"><button class="disqualify-btn">✕ Exclude</button></div></td>
                   </tr>
-                  <tr>
+                  <!-- Priya N. — form, no signal yet -->
+                  <tr data-quality="pending">
                     <td>
                       <a class="lead-link">Priya N.</a>
                       <div style="font-size:11px;color:#9ca3af">priya@example.com</div>
                     </td>
                     <td><span class="lead-source-badge form">📋 Form</span></td>
+                    <td>
+                      <div class="lead-quality">
+                        <span class="lq-badge pending">⏳ Pending</span>
+                        <span class="lq-source" style="color:#d1d5db">No signal yet</span>
+                      </div>
+                    </td>
                     <td style="font-size:11px;color:#818cf8;font-weight:600">Meta Ads</td>
                     <td style="font-size:11px;color:#6b7280">Home Comfort</td>
                     <td style="font-size:11px;color:#9ca3af">Feb 15, 2026</td>
@@ -1430,12 +1509,20 @@ tr:hover .row-actions { opacity: 1; }
                     <td><span class="lead-status-badge stale">Stale</span></td>
                     <td><div class="row-actions"><button class="disqualify-btn">✕ Exclude</button></div></td>
                   </tr>
-                  <tr>
+                  <!-- Mike H. — call+form, AI + partner both signal Qualified -->
+                  <tr data-quality="qualified">
                     <td>
                       <a class="lead-link">Mike H.</a>
                       <div style="font-size:11px;color:#9ca3af">(555) 190-3341</div>
                     </td>
                     <td><span class="lead-source-badge form">📋 Form</span></td>
+                    <td>
+                      <div class="lead-quality">
+                        <span class="lq-badge qualified">✓ Qualified</span>
+                        <span class="lq-source"><span class="lq-source-icon">🤖</span> AI + <span style="color:#6366f1;font-size:10px">⬡</span> Partner</span>
+                        <span class="lq-detail" title="CRM: Booked appointment. AI: Discussed full system replacement.">"Booked appt · Full system replacement"</span>
+                      </div>
+                    </td>
                     <td style="font-size:11px;color:#10b981;font-weight:600">Google Organic</td>
                     <td style="font-size:11px;color:#9ca3af">—</td>
                     <td style="font-size:11px;color:#9ca3af">Feb 14, 2026</td>
@@ -2256,6 +2343,22 @@ function drillDownFull(tab) {
 function clearDrill(tab) {
   document.getElementById(tab + '-drill-banner').classList.remove('visible');
   document.getElementById(tab + '-attr-strip').classList.remove('visible');
+}
+
+function filterQuality(btn, value) {
+  // Update active pill
+  var pills = btn.parentElement.querySelectorAll('.qf-pill');
+  pills.forEach(function(p) { p.classList.remove('active'); });
+  btn.classList.add('active');
+  // Filter rows
+  var rows = document.querySelectorAll('#leads-table tbody tr');
+  rows.forEach(function(row) {
+    if (value === 'all' || row.getAttribute('data-quality') === value) {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
+  });
 }
 </script>
 </body>
