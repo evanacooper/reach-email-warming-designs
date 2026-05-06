@@ -210,8 +210,8 @@ html, body {
 
   <div class="header">
     <div class="eyebrow">Reach · Engage</div>
-    <h1 class="title">BYO Sending Domain — Design Review</h1>
-    <p class="subtitle">Klaviyo-inspired flow that lets tenants connect their own sending domain via Entri, with a managed-domain fallback. Spans onboarding and settings.</p>
+    <h1 class="title">Engage Onboarding & BYO Sending Domain — Design Review</h1>
+    <p class="subtitle">Two designs in one doc: a redesigned Engage onboarding wizard (new shell, new step order, mandatory Business Info gate, redesigned Email Channel) and the BYO sending-domain flow that now lives as a sub-journey of the Email Channel step.</p>
     <div class="status-chip"><span class="status-dot"></span>Design in review</div>
   </div>
 
@@ -221,11 +221,13 @@ html, body {
     <a class="card" href="finalized.html">
       <div class="card-num">1</div>
       <div class="card-body">
-        <div class="card-title">Full flow — onboarding & settings</div>
-        <div class="card-desc">Choice screen, sub-flow (root → subdomain → Entri/manual → DMARC → verifying), settings list view with multi-domain support, empty state, and disconnected-domain banner. Includes a flow reference table at the top mapping each screen to its purpose and Entri integration points.</div>
+        <div class="card-title">Onboarding redesign + BYO sending domain flow</div>
+        <div class="card-desc">Sections R0–R6 cover the new onboarding shell (top horizontal stepper, contextual sidebar), the mandatory Business Info gate, the redesigned Email Channel step (managed-always + soft BYO encouragement), and the BYO sub-journey + resume state. Sections 00–08 below cover the detailed BYO sending-domain flow (Entri integration, multi-domain settings, disconnected state) that lives as a sub-journey of the Email Channel step.</div>
         <div class="card-tags">
-          <span class="tag">10 screens</span>
-          <span class="tag">Choice screen</span>
+          <span class="tag">15+ screens</span>
+          <span class="tag">New shell</span>
+          <span class="tag">Business Info gate</span>
+          <span class="tag">Email Channel redesign</span>
           <span class="tag">Multi-domain</span>
           <span class="tag">Entri integration</span>
           <span class="tag">ENG-2161</span>
@@ -240,13 +242,13 @@ html, body {
 
   <div class="section-label">Background</div>
   <div class="context">
-    <strong>Problem:</strong> Tenants currently send from a platform-controlled sending domain. Emails show "via" the platform domain in Gmail/Outlook headers, signaling to inbox providers that the sender isn't the business itself — driving spam/promotions placement and conflicting with Google/Yahoo bulk sender requirements (>5k/day to Gmail). It's also a brand-trust blocker that several partners have cited as the reason their tenants won't adopt Engage.<br><br>
-    <strong>Approach:</strong> Let tenants connect a branded sending subdomain (e.g. <code>send.acmeinsurance.com</code>) that becomes the DKIM-signing domain for outbound mail. DNS automation via <strong>Entri</strong> (50+ provider coverage, manual fallback). ESP-agnostic backend so it works for Postmark and SES tenants. Multi-domain support so tenants can split marketing and transactional onto different subdomains.<br><br>
-    <strong>Reference:</strong> Klaviyo's branded sending domain flow. Linear ticket <code>ENG-2161</code> with sub-tasks ENG-2670 through ENG-2749.
+    <strong>Onboarding redesign:</strong> The current Engage onboarding wizard uses a left-only sidebar and orders steps as Brand → Email → Business → SMS → Merge Fields. Business Information is a separate modal that's not strictly required to advance. The redesign moves to a top horizontal stepper with a contextual sidebar (only visible during sub-journeys), promotes Business Info to step 2 as a hard compliance gate, and rebuilds the Email Channel step around an always-provisioned managed domain with optional BYO connection.<br><br>
+    <strong>BYO sending domain:</strong> Tenants currently send from a platform-controlled sending domain. Emails show "via" the platform domain in Gmail/Outlook headers, driving spam/promotions placement and conflicting with Google/Yahoo bulk sender requirements (>5k/day to Gmail). The BYO flow lets tenants connect a branded sending subdomain (e.g. <code>send.acmeinsurance.com</code>) that becomes the DKIM-signing domain for outbound mail. DNS automation via <strong>Entri</strong> (50+ provider coverage, manual fallback). Multi-domain support so tenants can split marketing and transactional onto different subdomains.<br><br>
+    <strong>Reference:</strong> Klaviyo's branded sending domain flow. Linear ticket <code>ENG-2161</code> with sub-tasks ENG-2670 through ENG-2749. Entri integration plan reviewed with Matt and Felipe at Entri (May 6 kickoff call).
   </div>
 
   <div class="context">
-    <strong>How to read the design:</strong> Section 00 is a flow reference table — start there. It maps every screen to its purpose, what the user does, what data we collect, and how each step feeds Entri or our backend. Sections 01–08 are the visual mocks for each screen, with commentary blocks explaining design choices and tradeoffs.
+    <strong>How to read the design:</strong> Sections R0–R6 are the onboarding redesign — shell, Business Info gate, redesigned Email Channel, BYO sub-journey, resume state, and SMS/Merge/Automations in the new shell. Sections 00–08 are the detailed sending-domain flow that lives as a sub-journey of the Email Channel step (R3). Section 00 in particular is a flow reference table mapping every BYO screen to its purpose, what the user does, what data we collect, and how each step feeds Entri or our backend — read this first if you're building the integration.
   </div>
 
   <div class="footer">
