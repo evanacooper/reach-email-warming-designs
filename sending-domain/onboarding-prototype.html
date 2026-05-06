@@ -1471,15 +1471,15 @@ function brandStep() {
             <div class="form-group">
               <label>Business name</label>
               <span class="helper">This is how we'll refer to your business across emails and SMS.</span>
-              <input class="form-input" type="text" value="${state.brand.name}"
-                oninput="state.brand.name=this.value; state.email.displayName=this.value;" />
+              <input class="form-input" type="text" value="${state.brand.name}" data-focus-key="brand.name"
+                oninput="state.brand.name=this.value; state.email.displayName=this.value; render();" />
             </div>
 
             <div class="form-group">
               <label>Business website</label>
               <span class="helper">Used to suggest your sending domain later.</span>
-              <input class="form-input" type="text" value="${state.brand.website}"
-                oninput="state.brand.website=this.value; state.byo.rootDomain=this.value;" />
+              <input class="form-input" type="text" value="${state.brand.website}" data-focus-key="brand.website"
+                oninput="state.brand.website=this.value; state.byo.rootDomain=this.value; render();" />
             </div>
 
             <p style="font-size: 12.5px; color: var(--text-muted); margin-top: 12px;">
@@ -1513,36 +1513,36 @@ function businessStep() {
 
             <div class="form-group">
               <label>DBA legal name<span class="req-asterisk">*</span></label>
-              <input class="form-input" type="text" value="${state.business.dba}"
+              <input class="form-input" type="text" value="${state.business.dba}" data-focus-key="business.dba"
                 oninput="state.business.dba=this.value; render();" />
             </div>
 
             <div class="form-group">
               <label>Business address<span class="req-asterisk">*</span></label>
-              <input class="form-input" type="text" placeholder="Street address" value="${state.business.address1}"
+              <input class="form-input" type="text" placeholder="Street address" value="${state.business.address1}" data-focus-key="business.address1"
                 oninput="state.business.address1=this.value; render();" />
             </div>
 
             <div class="form-group">
               <label>Address line 2</label>
-              <input class="form-input" type="text" placeholder="Apartment, suite, unit (optional)" value="${state.business.address2}"
+              <input class="form-input" type="text" placeholder="Apartment, suite, unit (optional)" value="${state.business.address2}" data-focus-key="business.address2"
                 oninput="state.business.address2=this.value;" />
             </div>
 
             <div class="form-row">
               <div class="form-group">
                 <label>City<span class="req-asterisk">*</span></label>
-                <input class="form-input" type="text" placeholder="City" value="${state.business.city}"
+                <input class="form-input" type="text" placeholder="City" value="${state.business.city}" data-focus-key="business.city"
                   oninput="state.business.city=this.value; render();" />
               </div>
               <div class="form-group">
                 <label>State<span class="req-asterisk">*</span></label>
-                <input class="form-input" type="text" placeholder="State" value="${state.business.state}"
+                <input class="form-input" type="text" placeholder="State" value="${state.business.state}" data-focus-key="business.state"
                   oninput="state.business.state=this.value; render();" />
               </div>
               <div class="form-group">
                 <label>ZIP<span class="req-asterisk">*</span></label>
-                <input class="form-input" type="text" placeholder="ZIP" value="${state.business.zip}"
+                <input class="form-input" type="text" placeholder="ZIP" value="${state.business.zip}" data-focus-key="business.zip"
                   oninput="state.business.zip=this.value; render();" />
               </div>
             </div>
@@ -1643,7 +1643,7 @@ function emailStep() {
               <label>Sending email address</label>
               <span class="helper">Edit the prefix to match your team — common choices: <code>marketing</code>, <code>hello</code>, <code>news</code></span>
               <div class="sender-prefix-row">
-                <input class="form-input" type="text" value="${state.email.prefix}"
+                <input class="form-input" type="text" value="${state.email.prefix}" data-focus-key="email.prefix"
                   oninput="state.email.prefix=this.value; render();" />
                 <span class="at-sign">@</span>
                 <span class="domain-suffix">${senderDomain}</span>
@@ -1653,14 +1653,14 @@ function emailStep() {
             <div class="form-group">
               <label>Display name<span class="req-asterisk">*</span></label>
               <span class="helper">What customers see in their inbox before the email opens.</span>
-              <input class="form-input" type="text" value="${state.email.displayName}"
+              <input class="form-input" type="text" value="${state.email.displayName}" data-focus-key="email.displayName"
                 oninput="state.email.displayName=this.value; render();" />
             </div>
 
             <div class="form-group">
               <label>Reply-to email</label>
               <span class="helper">When customers reply, their response goes here. If left blank, replies go to a no-reply address.</span>
-              <input class="form-input" type="email" placeholder="info@${state.brand.website}" value="${state.email.replyTo}"
+              <input class="form-input" type="email" placeholder="info@${state.brand.website}" value="${state.email.replyTo}" data-focus-key="email.replyTo"
                 oninput="state.email.replyTo=this.value;" />
             </div>
 
@@ -1727,7 +1727,7 @@ function byoRootSubstep() {
         <div class="form-group">
           <label>Root domain</label>
           <span class="helper">For example: ${state.brand.website}</span>
-          <input class="form-input" type="text" value="${state.byo.rootDomain}"
+          <input class="form-input" type="text" value="${state.byo.rootDomain}" data-focus-key="byo.rootDomain"
             oninput="state.byo.rootDomain=this.value;" />
         </div>
 
@@ -1761,7 +1761,7 @@ function byoSubdomainSubstep() {
           <label>Sending subdomain</label>
           <span class="helper">Common choices: <code>send</code>, <code>email</code>, <code>notifications</code></span>
           <div class="subdomain-row">
-            <input class="form-input" type="text" value="${state.byo.subdomain}"
+            <input class="form-input" type="text" value="${state.byo.subdomain}" data-focus-key="byo.subdomain"
               oninput="state.byo.subdomain=this.value; render();" />
             <span class="domain-suffix">.${state.byo.rootDomain}</span>
           </div>
@@ -2012,7 +2012,7 @@ function mergeStep() {
               </div>
               <div class="form-group" style="margin:0;">
                 <label style="font-size:11.5px;">Backup text</label>
-                <input class="form-input" type="text" placeholder="there" value="${state.merge.firstName}"
+                <input class="form-input" type="text" placeholder="there" value="${state.merge.firstName}" data-focus-key="merge.firstName"
                   oninput="state.merge.firstName=this.value; render();" />
               </div>
             </div>
@@ -2024,7 +2024,7 @@ function mergeStep() {
               </div>
               <div class="form-group" style="margin:0;">
                 <label style="font-size:11.5px;">Backup text</label>
-                <input class="form-input" type="text" placeholder="" value="${state.merge.lastName}"
+                <input class="form-input" type="text" placeholder="" value="${state.merge.lastName}" data-focus-key="merge.lastName"
                   oninput="state.merge.lastName=this.value;" />
               </div>
             </div>
@@ -2153,10 +2153,30 @@ function resetPrototype() {
 }
 
 /* =========================================================
-   RENDER
-   ========================================================= */
+   RENDER — with focus preservation across rerenders
+   =========================================================
+   The rerender pattern (innerHTML = new HTML) blows away the focused
+   input on every keystroke. To preserve focus + caret position, we:
+     1. Read the active element's data-focus-key + selectionStart/End
+     2. Replace innerHTML
+     3. Re-find the matching data-focus-key in the new tree, refocus,
+        and restore caret position.
+   Every input that should retain focus across renders has a unique
+   data-focus-key attribute matching its state path. */
 function render() {
   const stage = document.getElementById('stage');
+
+  // Capture focus state BEFORE rerender
+  const active = document.activeElement;
+  let focusKey = null;
+  let selStart = null, selEnd = null;
+  if (active && active.dataset && active.dataset.focusKey) {
+    focusKey = active.dataset.focusKey;
+    if (typeof active.selectionStart === 'number') {
+      selStart = active.selectionStart;
+      selEnd = active.selectionEnd;
+    }
+  }
 
   if (state.closed) {
     stage.innerHTML = closedScreen();
@@ -2183,6 +2203,17 @@ function render() {
   if (state.showEntriModal) content += entriModalHTML();
 
   stage.innerHTML = content;
+
+  // Restore focus AFTER rerender
+  if (focusKey) {
+    const target = stage.querySelector('[data-focus-key="' + focusKey + '"]');
+    if (target) {
+      target.focus();
+      if (selStart !== null && typeof target.setSelectionRange === 'function') {
+        try { target.setSelectionRange(selStart, selEnd); } catch (e) { /* ignore */ }
+      }
+    }
+  }
 }
 
 render();
