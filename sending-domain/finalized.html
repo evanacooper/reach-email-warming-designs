@@ -1238,34 +1238,34 @@
           <tr>
             <td><span class="step-num">03</span></td>
             <td>
-              <div class="screen-name">Subdomain + provider check</div>
+              <div class="screen-name">Subdomain</div>
             </td>
-            <td>Sets the subdomain prefix (<code>send</code>) so the full sending domain becomes <code>send.acmeinsurance.com</code>. Critical: Postmark/SES need the full subdomain to mint DNS records, and we want to surface "automatic vs manual setup" expectations <em>before</em> we kick off the modal.</td>
-            <td>Enters subdomain prefix (default: <code>send</code>). Sees a live preview chip showing the full domain.</td>
-            <td>Subdomain string + the result of <code>entri.checkDomain(fullDomain)</code>.</td>
-            <td><strong>First Entri call: <code>entri.checkDomain(fullDomain, config)</code>.</strong> Returns <code>{ provider: "Cloudflare", setupType: "Automatic", NSSupport: {...} }</code>. We use this to set expectations ("we'll set up records for you" vs "you'll copy records manually") — it's not gating, just informational.</td>
+            <td>Sets the subdomain prefix (<code>send</code>) so the full sending domain becomes <code>send.acmeinsurance.com</code>. Postmark/SES need the full subdomain to mint DNS records. Per product policy, we never let tenants send from the apex domain — we don't trust untrained customers not to damage email reputation on a domain they also use for personal mail.</td>
+            <td>Enters subdomain prefix (default: <code>send</code>). Sees a live preview chip showing the full domain. Clicks Continue.</td>
+            <td>Subdomain string. We then call <code>entri.checkDomain</code> on Continue (gating).</td>
+            <td><strong>First Entri call: <code>entri.checkDomain(fullDomain, config)</code> — fires when the user clicks Continue, before advancing.</strong> Returns <code>{ provider, setupType: "Automatic" | "Manual", NSSupport }</code>. We use it to gate: if the provider is supported we advance; if unsupported we still advance but route the user toward "Set up manually" on the next screen and surface a heads-up. This is a paid add-on not included in the base startup plan — Entri is providing one-off pricing.</td>
           </tr>
 
           <tr>
             <td><span class="step-num">04</span></td>
             <td>
-              <div class="screen-name">Connect with Entri / Set up manually</div>
+              <div class="screen-name">DMARC opt-in</div>
             </td>
-            <td>The "are you ready to give us write access to your DNS?" moment. Klaviyo includes this as an explicit step — gives the tenant a beat to opt out, see the legal terms, and choose manual fallback if they don't trust auto-setup or their provider isn't supported.</td>
-            <td>Picks "Connect with Entri" (most users) or "Set up manually" (power users / unsupported providers / IT pushback).</td>
-            <td>Choice of automatic vs manual path.</td>
-            <td><strong>Backend kicks off here.</strong> We call our <code>POST /api/sending-domain</code> endpoint, which: (1) calls Postmark <code>POST /domains</code> to register the sending domain and gets back the DKIM TXT + Return-Path CNAME records, (2) translates them into Entri's <code>dnsRecords[]</code> shape, (3) mints a 60-min Entri JWT via <code>POST https://api.goentri.com/token</code>, (4) returns the JWT + records to the browser. The browser already has everything it needs to launch the Entri modal — but doesn't launch yet.</td>
+            <td>DMARC isn't strictly required by Postmark, but Gmail/Yahoo bulk-sender rules effectively require it for any tenant sending &gt;5k/day. Splitting it as its own screen with a default-on toggle gives tenants visibility (so they don't get a surprise DNS record they didn't approve) and a way to opt out if they already manage DMARC themselves. <strong>Now placed before the Entri/manual screen so the full DNS payload is committed before we launch the modal — Entri runs once with all records (per Felipe at Entri).</strong></td>
+            <td>Confirms DMARC is on (default) or toggles off.</td>
+            <td>Boolean: include DMARC record?</td>
+            <td><strong>No Entri call yet.</strong> The choice gets stashed locally; we'll append the DMARC record to the <code>dnsRecords[]</code> array on the next screen if the toggle is on. Format: <code>_dmarc.send TXT "v=DMARC1; p=none; rua=mailto:dmarc@..."</code>. Because we're always writing to a fresh subdomain, we don't need Entri's "Validate DMARC" feature (would only matter if we were ever overwriting an existing DMARC record on the apex).</td>
           </tr>
 
           <tr>
             <td><span class="step-num">05</span></td>
             <td>
-              <div class="screen-name">DMARC opt-in</div>
+              <div class="screen-name">Connect with Entri / Set up manually</div>
             </td>
-            <td>DMARC isn't strictly required by Postmark, but Gmail/Yahoo bulk-sender rules effectively require it for any tenant sending &gt;5k/day. Splitting it as its own screen with a default-on toggle gives tenants visibility (so they don't get a surprise DNS record they didn't approve) and a way to opt out if they already manage DMARC themselves.</td>
-            <td>Confirms DMARC is on (default) or toggles off.</td>
-            <td>Boolean: include DMARC record?</td>
-            <td><strong>We append a DMARC record to the <code>dnsRecords[]</code> array</strong> before launching Entri. Format: <code>_dmarc.send TXT "v=DMARC1; p=none; rua=mailto:dmarc@..."</code>. If toggled off, we skip it. The submit button on this screen is what launches the Entri modal.</td>
+            <td>The "are you ready to give us write access to your DNS?" moment. Gives the tenant a beat to opt out, see the legal terms, and choose manual fallback if they don't trust auto-setup or their provider wasn't detected. The submit button on this screen is what actually launches the Entri modal.</td>
+            <td>Picks "Connect with Entri" (most users) or "Set up manually" (power users / unsupported providers / IT pushback).</td>
+            <td>Choice of automatic vs manual path.</td>
+            <td><strong>Backend + Entri both kick off here.</strong> We call our <code>POST /api/sending-domain</code> endpoint, which: (1) calls Postmark <code>POST /domains</code> to register the sending domain and gets back the DKIM TXT + Return-Path CNAME records, (2) translates them into Entri's <code>dnsRecords[]</code> shape, (3) appends the DMARC record from screen 04 if opted in, (4) mints a 60-min Entri JWT via <code>POST https://api.goentri.com/token</code>, (5) returns the JWT + records to the browser. The browser then calls <code>entri.showEntri({ applicationId, token, userId, prefilledDomain, dnsRecords })</code> to open the modal with the full payload at once.</td>
           </tr>
 
           <tr class="entri-row">
@@ -1285,10 +1285,10 @@
             <td>
               <div class="screen-name">Verifying</div>
             </td>
-            <td>Entri saying "records are written" ≠ Postmark saying "I can DKIM-sign for this domain." There's a propagation delay (1–5 min typical). This screen shows per-record progress against Postmark's verify endpoints — the source of truth — and crucially says "you can leave this page" so users don't bounce while watching a spinner.</td>
+            <td>After the Entri modal closes successfully, DNS records have been written but propagation isn't instant (1–5 min typical). This screen shows per-record progress and crucially says "you can leave this page" so users don't bounce while watching a spinner.</td>
             <td>Sees per-record status (DKIM, Return-Path, DMARC). Can re-check now, or click "continue setup" and verify in background.</td>
-            <td>Postmark verification status per record.</td>
-            <td><strong>No more Entri calls.</strong> Backend polls Postmark <code>PUT /domains/{id}/verifyDkim</code> and <code>PUT /domains/{id}/verifyReturnPath</code> on a backoff schedule (every 30s for 5 min, then every 2 min for 30 min, etc.). Frontend polls our status endpoint or subscribes via websocket. Also receives Entri <code>domain.added</code> webhooks server-side as a fast signal to trigger an immediate Postmark verify. Once both Postmark verifications return <code>true</code>, we flip the domain to Verified and the tenant can send.</td>
+            <td>Per-record propagation status, driven by Entri webhooks.</td>
+            <td><strong>No more outbound Entri calls — we listen for webhooks.</strong> Per Felipe at Entri: "at that point you're going to only listen to the webhook and the record propagation." We need a webhook handler at e.g. <code>POST /api/webhooks/entri</code> that receives <code>domain.added</code> with <code>propagation_status: "pending" | "success" | "failed"</code> for each record, plus <code>domain.flow.completed</code>. Webhook signing uses <code>Entri-Signature-V2</code> + <code>Entri-Timestamp</code> headers (SHA-256 over <code>webhook_id + timestamp + client_secret</code>). All production webhook traffic comes from a fixed Entri IP — IP-allowlist at the edge. Once all expected records report <code>success</code>, we flip the domain to Verified and the tenant can send.</td>
           </tr>
 
           <tr>
@@ -1299,7 +1299,7 @@
             <td>The post-onboarding home for sending domains. Tenants need to (a) see what's connected, (b) add a second domain (transactional + marketing pattern), (c) re-verify or remove existing ones, (d) pick a default. Always shown alongside the managed-domain row as a fallback that's never deletable.</td>
             <td>Views status per domain. Adds a new domain (re-enters the flow at screen 01). Re-verifies, sets default, removes.</td>
             <td>Existing domains, status, last-verified timestamp, default flag.</td>
-            <td><strong>Re-enters the same flow</strong> when "Add domain" is clicked. Re-verify hits Postmark verify endpoints again. Remove calls Postmark <code>DELETE /domains/{id}</code> <em>and</em> deletes our row.</td>
+            <td><strong>Re-enters the same flow</strong> when "Add domain" is clicked. Re-verify is a user-initiated check (we don't have streaming webhooks for an idle domain) — backend does a fresh DNS lookup against Postmark's verify endpoints and updates our record. Remove calls Postmark <code>DELETE /domains/{id}</code> <em>and</em> deletes our row.</td>
           </tr>
 
           <tr>
@@ -1317,11 +1317,12 @@
             <td><span class="step-num">08</span></td>
             <td>
               <div class="screen-name">Disconnected — banner + table state</div>
+              <span class="screen-tag">Post-MVP</span>
             </td>
-            <td>A previously verified domain stopped resolving — IT changed providers, someone deleted the record, etc. Critical to surface immediately because deliverability quietly tanks otherwise. Per-domain because in multi-domain setups one can fail while others stay healthy.</td>
+            <td>A previously verified domain stopped resolving — IT changed providers, someone deleted the record, an SPF record got overwritten by another tool, etc. Per-domain because in multi-domain setups one can fail while others stay healthy. <strong>Deferred from MVP.</strong> Detection requires Entri Monitor ($50/mo for up to 600 domains on the startup plan). The Entri team flagged the most likely real-world failure as customers using a second email tool that overwrites SPF instead of merging — worth revisiting once we see actual disconnect rates in production.</td>
             <td>Sees the banner, clicks "Reconnect" (re-launches Entri with the same records) or "Forward fix to IT".</td>
             <td>The specific record that's missing (DKIM / Return-Path / DMARC) and what the value should be.</td>
-            <td><strong>Either Entri's <code>domain.record_missing</code> webhook</strong> (if we subscribe to Entri Monitor — paid, recommended) <strong>or our own reconciler job</strong> that periodically re-hits Postmark verify endpoints. Reconnect re-launches <code>entri.showEntri()</code> with the original record set; no need to re-mint or re-create the Postmark domain.</td>
+            <td><strong>When we add this:</strong> subscribe to Entri Monitor and listen for <code>domain.record_missing</code> and <code>domain.record_restored</code> webhooks. Reconnect re-launches <code>entri.showEntri()</code> with the original record set; no need to re-mint or re-create the Postmark domain. Until then, tenants who silently disconnect will surface only via deliverability complaints.</td>
           </tr>
 
         </tbody>
@@ -1332,10 +1333,13 @@
       <h3>Flow rules worth calling out</h3>
       <ul>
         <li><strong>Steps 02–05 collapse into one onboarding wizard step</strong> in the existing left sidebar (<code>Brand → Sending domain → Email → Business → SMS → Merge fields</code>). The 4-of-4 sub-stepper at the top of the right pane handles internal progression.</li>
+        <li><strong>Entri runs once, with the full DNS payload at once.</strong> This is why DMARC opt-in (04) comes before the Entri/manual screen (05): we want DKIM + Return-Path + DMARC all decided before we open the modal so the user goes through the OAuth dance only one time. Confirmed by Felipe at Entri.</li>
         <li><strong>The Entri modal (05.5) is the only non-platform UI in the flow.</strong> Everything else is ours to design and own.</li>
-        <li><strong>Postmark is the source of truth for "verified."</strong> Entri can say "records are published" and that's a useful fast signal, but we don't flip a domain to Verified until Postmark independently confirms via its verify endpoints. This is why screen 06 exists as its own state.</li>
-        <li><strong>Managed domain is always present in the background</strong>, even for BYO tenants. If their connected domain disconnects (screen 08), we automatically fall back to the managed one so sends keep going while they fix DNS. The managed row in screen 07 is informational and not removable.</li>
-        <li><strong>The user's data accumulates across screens but only one external call happens during the flow</strong> — <code>checkDomain</code> on screen 03 (informational) and the backend domain-creation + JWT mint that happens between screen 04 and the Entri modal launch on screen 05.</li>
+        <li><strong>Webhooks are the verification mechanism, not polling.</strong> After <code>entri.showEntri</code> resolves, we don't poll — we listen. Entri pushes <code>domain.added</code> events with per-record propagation status, plus <code>domain.flow.completed</code>. Build the webhook handler with HMAC verification (<code>Entri-Signature-V2</code> over <code>webhook_id + timestamp + client_secret</code>, SHA-256, hex), idempotency on <code>webhook_id</code>, and an IP allowlist for Entri's fixed origin IP. This is the load-bearing integration boundary on our side.</li>
+        <li><strong><code>checkDomain</code> is a paid one-off add-on.</strong> Not on the base startup plan; Entri is providing per-feature pricing. Treat it as a Continue-time gate from the subdomain step (screen 03), not an inline blur hint. The result decides whether the next screen leans toward "Connect with Entri" or "Set up manually".</li>
+        <li><strong>Apex-domain sending is disallowed.</strong> Product policy: tenants can only send from a subdomain we provision (<code>send.acme.com</code>, never <code>acme.com</code>). Untrained customers shouldn't be able to torch the reputation of the domain that also hosts their personal email.</li>
+        <li><strong>Managed domain is always present in the background</strong>, even for BYO tenants. The managed row in screen 07 is informational and not removable. Future state: if a BYO domain disconnects, we automatically fall back to the managed one so sends keep going.</li>
+        <li><strong>SPF, Entri Monitor, and Validate-DMARC are out of scope for MVP.</strong> SPF: Postmark doesn't require it for DKIM-aligned auth, and we're writing to a fresh subdomain. Entri Monitor (screen 08): $50/mo for 600 domains on the startup plan, deferred until we see real-world disconnect rates. Validate-DMARC and Advanced DMARC options: only matter if we ever overwrite an existing DMARC on the apex, which we don't.</li>
       </ul>
     </div>
   </section>
@@ -1536,8 +1540,8 @@
   <section class="section" id="subdomain">
     <div class="section-header">
       <span class="num">03</span>
-      <h2>Subdomain entry · live preview chip + checkDomain hint</h2>
-      <span class="note">Sub-step 2 of 4 — calls entri.checkDomain on blur</span>
+      <h2>Subdomain entry · gates on entri.checkDomain</h2>
+      <span class="note">Sub-step 2 of 4 — calls entri.checkDomain on Continue, before advancing</span>
     </div>
 
     <div class="wizard">
@@ -1589,10 +1593,7 @@
               </div>
             </div>
 
-            <div class="provider-hint">
-              <span class="pill">✓ Cloudflare detected</span>
-              We'll set up DNS for you automatically — no copying records.
-            </div>
+            <p style="font-size: 12.5px; color: var(--text-muted); margin-top: 4px;">When you continue, we'll check whether your DNS provider supports automatic setup so we can route you to the smoothest path on the next step.</p>
           </div>
         </div>
 
@@ -1604,18 +1605,19 @@
     </div>
 
     <div class="commentary">
-      <strong>checkDomain states:</strong> we detected Cloudflare → automatic. Other states would swap the green pill: <em>"GoDaddy detected — we'll guide you through it"</em>, or for unknown providers we hide the pill entirely so we don't promise something we can't deliver.
+      <strong>How the domain check actually works (per Felipe at Entri):</strong> <code>entri.checkDomain(fullDomain, config)</code> fires when the user clicks Continue, <em>before</em> the next screen renders — not on blur of the subdomain input. The result (<code>{ provider, setupType: "Automatic" | "Manual", NSSupport }</code>) decides what we show on screen 05: if a supported provider is detected, the "Connect with Entri" CTA stays primary; if the provider is unknown or unsupported, we keep both options visible but lead with a heads-up that they'll likely need the manual path. We don't block the user — we just route. <br><br>
+      <strong>Plan note:</strong> <code>checkDomain</code> isn't on the base Entri startup plan. The Entri team is providing one-off pricing per the kickoff call.
     </div>
   </section>
 
   <!-- ============================================== -->
-  <!-- ENTRI vs MANUAL                                 -->
+  <!-- DMARC OPT-IN                                    -->
   <!-- ============================================== -->
-  <section class="section" id="entri">
+  <section class="section" id="dmarc">
     <div class="section-header">
       <span class="num">04</span>
-      <h2>Connect with Entri or set up manually</h2>
-      <span class="note">Sub-step 3 of 4 — the Klaviyo screen, with our voice</span>
+      <h2>DMARC opt-in · single toggle</h2>
+      <span class="note">Sub-step 3 of 4 — comes BEFORE Entri so the full DNS payload is committed up front</span>
     </div>
 
     <div class="wizard">
@@ -1642,6 +1644,73 @@
               <div class="dot"></div>
             </div>
             <span style="margin-left: auto;">3 of 4</span>
+          </div>
+
+          <div class="wizard-step-header">
+            <h1>Add a DMARC record</h1>
+            <p>DMARC tells inbox providers like Gmail what to do with mail that fails authentication. Required for senders at scale.</p>
+          </div>
+
+          <div style="max-width: 600px;">
+            <div class="dmarc-card">
+              <div class="dmarc-icon">
+                <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
+              </div>
+              <div class="dmarc-content">
+                <h4>Add DMARC record <span class="recommended-pill">Recommended</span></h4>
+                <p>Protects your sending reputation and meets Gmail and Yahoo's bulk sender requirements. <a href="#" style="color: var(--info);">Learn more about DMARC →</a></p>
+              </div>
+              <div class="toggle" data-on="true"></div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="wizard-footer">
+          <button class="btn btn-ghost">← Back</button>
+          <button class="btn btn-primary">Continue</button>
+        </footer>
+      </main>
+    </div>
+
+    <div class="commentary">
+      <strong>Why this comes before the Entri screen:</strong> Per Felipe at Entri, the modal should run once with the complete DNS payload. We commit the DMARC choice here so on the next screen we already know whether the <code>dnsRecords[]</code> array we hand to Entri includes a DMARC TXT or not. Because we always write to a fresh subdomain, we don't need Entri's "Validate DMARC" feature (paid, growth plan) — there's no existing DMARC record to compare against.
+    </div>
+  </section>
+
+  <!-- ============================================== -->
+  <!-- ENTRI vs MANUAL                                 -->
+  <!-- ============================================== -->
+  <section class="section" id="entri">
+    <div class="section-header">
+      <span class="num">05</span>
+      <h2>Connect with Entri or set up manually</h2>
+      <span class="note">Sub-step 4 of 4 — the button on this screen launches the Entri modal</span>
+    </div>
+
+    <div class="wizard">
+      <aside class="wizard-sidebar">
+        <div class="wizard-sidebar-title">Engage setup</div>
+        <ol>
+          <li data-state="complete"><span class="step-marker"></span> Brand</li>
+          <li data-state="active"><span class="step-marker">2</span> Sending domain</li>
+          <li data-state="upcoming"><span class="step-marker">3</span> Email</li>
+          <li data-state="upcoming"><span class="step-marker">4</span> Business</li>
+          <li data-state="upcoming"><span class="step-marker">5</span> SMS</li>
+          <li data-state="upcoming"><span class="step-marker">6</span> Merge fields</li>
+        </ol>
+      </aside>
+
+      <main class="wizard-main">
+        <div class="wizard-content">
+          <div class="substep-bar">
+            <span>Connect a domain</span>
+            <div class="dots">
+              <div class="dot" data-state="complete"></div>
+              <div class="dot" data-state="complete"></div>
+              <div class="dot" data-state="complete"></div>
+              <div class="dot" data-state="active"></div>
+            </div>
+            <span style="margin-left: auto;">4 of 4</span>
           </div>
 
           <div class="entri-screen">
@@ -1696,68 +1765,9 @@
         </footer>
       </main>
     </div>
-  </section>
 
-  <!-- ============================================== -->
-  <!-- DMARC OPT-IN                                    -->
-  <!-- ============================================== -->
-  <section class="section" id="dmarc">
-    <div class="section-header">
-      <span class="num">05</span>
-      <h2>DMARC opt-in · single toggle</h2>
-      <span class="note">Sub-step 4 of 4 — Klaviyo's DMARC screen, our voice</span>
-    </div>
-
-    <div class="wizard">
-      <aside class="wizard-sidebar">
-        <div class="wizard-sidebar-title">Engage setup</div>
-        <ol>
-          <li data-state="complete"><span class="step-marker"></span> Brand</li>
-          <li data-state="active"><span class="step-marker">2</span> Sending domain</li>
-          <li data-state="upcoming"><span class="step-marker">3</span> Email</li>
-          <li data-state="upcoming"><span class="step-marker">4</span> Business</li>
-          <li data-state="upcoming"><span class="step-marker">5</span> SMS</li>
-          <li data-state="upcoming"><span class="step-marker">6</span> Merge fields</li>
-        </ol>
-      </aside>
-
-      <main class="wizard-main">
-        <div class="wizard-content">
-          <div class="substep-bar">
-            <span>Connect a domain</span>
-            <div class="dots">
-              <div class="dot" data-state="complete"></div>
-              <div class="dot" data-state="complete"></div>
-              <div class="dot" data-state="complete"></div>
-              <div class="dot" data-state="active"></div>
-            </div>
-            <span style="margin-left: auto;">4 of 4</span>
-          </div>
-
-          <div class="wizard-step-header">
-            <h1>Add a DMARC record</h1>
-            <p>DMARC tells inbox providers like Gmail what to do with mail that fails authentication. Required for senders at scale.</p>
-          </div>
-
-          <div style="max-width: 600px;">
-            <div class="dmarc-card">
-              <div class="dmarc-icon">
-                <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
-              </div>
-              <div class="dmarc-content">
-                <h4>Add DMARC record <span class="recommended-pill">Recommended</span></h4>
-                <p>Protects your sending reputation and meets Gmail and Yahoo's bulk sender requirements. <a href="#" style="color: var(--info);">Learn more about DMARC →</a></p>
-              </div>
-              <div class="toggle" data-on="true"></div>
-            </div>
-          </div>
-        </div>
-
-        <footer class="wizard-footer">
-          <button class="btn btn-ghost">← Back</button>
-          <button class="btn btn-primary">Connect domain</button>
-        </footer>
-      </main>
+    <div class="commentary">
+      <strong>What happens when "Connect with Entri" is clicked:</strong> backend calls Postmark <code>POST /domains</code>, translates the returned DKIM TXT and Return-Path CNAME into Entri's <code>dnsRecords[]</code> shape, appends the DMARC TXT from screen 04 if opted in, mints a 60-min Entri JWT, and the browser launches <code>entri.showEntri({ applicationId, token, userId, prefilledDomain, dnsRecords })</code>. From here we don't make any more outbound calls to Entri — we listen for webhooks (see screen 06).
     </div>
   </section>
 
@@ -1768,7 +1778,7 @@
     <div class="section-header">
       <span class="num">06</span>
       <h2>Verifying state · per-record progress</h2>
-      <span class="note">After Entri modal closes — Postmark verifies in the background</span>
+      <span class="note">After Entri modal closes — we listen for webhook events, no polling</span>
     </div>
 
     <div class="wizard">
@@ -1788,7 +1798,7 @@
         <div class="wizard-content">
           <div class="wizard-step-header">
             <h1>Verifying your domain</h1>
-            <p>DNS records are published. We're confirming with Postmark that everything's set up correctly. This usually takes 1–5 minutes.</p>
+            <p>Entri is publishing your DNS records. We'll be notified the moment each one propagates worldwide. This usually takes 1–5 minutes.</p>
           </div>
 
           <div style="max-width: 640px;">
@@ -1851,7 +1861,8 @@
     </div>
 
     <div class="commentary">
-      <strong>Tone notes:</strong> the foot note "You can leave this page" matters a lot — DNS propagation can take minutes. If we trap users on a spinner they'll bounce. Letting them continue while we verify in the background is the right move; we surface the result via the existing notifications system. Per ENG-2161 research, Postmark verify is the source of truth, not Entri propagation.
+      <strong>How this state is driven (per Felipe at Entri):</strong> after <code>entri.showEntri</code> resolves we don't poll Postmark — we listen. Entri pushes <code>domain.added</code> webhooks with <code>propagation_status</code> per record, plus a <code>domain.flow.completed</code> when everything's resolved. We need a webhook handler at <code>POST /api/webhooks/entri</code> with HMAC verification on the <code>Entri-Signature-V2</code> header (SHA-256 over <code>webhook_id + timestamp + client_secret</code>), idempotency on <code>webhook_id</code>, and an IP allowlist for Entri's fixed origin IP. The frontend either polls our own status endpoint or subscribes via websocket; the source of truth lives in our DB, populated by the webhook handler.<br><br>
+      <strong>Tone:</strong> "You can leave this page" matters a lot — DNS propagation can take minutes. If we trap users on a spinner they'll bounce. We surface the final result via the existing notifications system once <code>domain.flow.completed</code> arrives.
     </div>
   </section>
 
@@ -2017,7 +2028,7 @@
     <div class="section-header">
       <span class="num">08</span>
       <h2>Disconnected state · banner + recovery</h2>
-      <span class="note">ENG-2673 — DNS records went missing after verification</span>
+      <span class="note">ENG-2673 · POST-MVP — requires Entri Monitor subscription</span>
     </div>
 
     <div class="settings-shell">
@@ -2104,7 +2115,8 @@
     </div>
 
     <div class="commentary">
-      <strong>Per-domain disconnect:</strong> ENG-2673 calls out that one domain can disconnect while others stay healthy. The banner is per-domain, the table row tints red, and we automatically fall back to the managed domain so sends keep going (with a deliverability warning). The "Forward fix to IT" CTA reuses the same shareable-link pattern from the onboarding flow — important because the person seeing this banner often isn't the person who controls DNS.
+      <strong>This screen is post-MVP.</strong> Detection requires <strong>Entri Monitor</strong>, a separate add-on ($50/mo for up to 600 domains on the startup plan). The Entri team flagged the most likely real-world failure as <em>customers running a second email tool (e.g. a newsletter platform) that overwrites the SPF record instead of merging it</em> — emails silently stop sending, and we'd never know without active monitoring. We're deferring this until we see actual disconnect rates in production. For MVP, tenants who silently disconnect surface only via deliverability complaints — acceptable for the partner mix at our current scale.<br><br>
+      <strong>When we add it:</strong> subscribe to Entri Monitor, listen for <code>domain.record_missing</code> and <code>domain.record_restored</code> webhooks. Per-domain because in multi-domain setups one can fail while others stay healthy. The banner is per-domain, the table row tints red, and we automatically fall back to the managed domain so sends keep going (with a deliverability warning). "Forward fix to IT" reuses the shareable-link pattern from onboarding — important because the person seeing the banner often isn't the person who controls DNS. Reconnect re-launches <code>entri.showEntri()</code> with the original record set; no re-mint needed.
     </div>
   </section>
 
