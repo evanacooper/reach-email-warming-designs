@@ -1946,6 +1946,14 @@ function selectFlow(flowId) {
 // ═══════════════════════════════════════════════════════════════════════════
 function goNext() {
   const steps = getSteps();
+  // If leaving step 2 without connecting GBP when Google is needed, treat as skipped
+  const currentStep = steps[state.currentStep];
+  if (currentStep && currentStep.panel === 'panel-step2') {
+    const needsGoogle = ['google_only', 'internal_then_google', 'smart_routing'].includes(state.selectedFlow);
+    if (needsGoogle && !state.gbpConnected) {
+      state.gbpSkipped = true;
+    }
+  }
   if (state.currentStep < steps.length - 1) {
     jumpToStep(state.currentStep + 1);
   }
