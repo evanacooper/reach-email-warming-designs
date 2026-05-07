@@ -499,6 +499,35 @@
     background: #f0f7ff;
   }
 
+  /* GBP access note */
+  .gbp-access-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+  }
+  .gbp-access-note svg { flex-shrink: 0; margin-top: 1px; }
+
+  /* GBP skip warning banner */
+  .gbp-skip-warning {
+    display: none;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--color-warning-bg);
+    border: 1px solid var(--color-warning-border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: #92400e;
+    line-height: 1.5;
+  }
+  .gbp-skip-warning.visible { display: flex; }
+  .gbp-skip-warning svg { flex-shrink: 0; margin-top: 1px; }
+
   /* ── Buttons ── */
   .btn {
     display: inline-flex;
@@ -1169,8 +1198,8 @@
       <div class="step-panel active" id="panel-step1" role="region" aria-label="Choose your review flow">
         <h2 class="step-title">Choose Your Review Flow</h2>
         <p class="step-description">
-          Set up how you'll reach out to customers after each visit or purchase.
-          This determines what your customers experience when you send a review request.
+          Choose how you'd like to collect feedback and reviews from your customers.
+          This determines what your customers experience when a review request is sent.
         </p>
 
         <div class="flow-options" role="radiogroup" aria-label="Review flow options">
@@ -1247,6 +1276,12 @@
           Connect your Google Business Profile to monitor your Google reviews in your dashboard.
         </div>
 
+        <!-- Skip warning — shown when user proceeds without connecting GBP -->
+        <div class="gbp-skip-warning" id="gbp-skip-warning">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#d97706" stroke-width="1.5"/><path d="M8 5v3.5M8 10.5v.5" stroke="#d97706" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span>Your Google review flow won't be active until your Google Business Profile is connected. You can complete this step now or return to it from your dashboard settings.</span>
+        </div>
+
         <div class="account-cards">
 
           <!-- Internal Feedback card -->
@@ -1277,6 +1312,12 @@
                 Connect to send customers to Google for reviews and to monitor your public rating in this dashboard.
               </p>
               <p class="connected-since" id="gbp-connected-since" style="display:none">Connected since Mar 11, 2026</p>
+
+              <!-- Access requirement note -->
+              <div class="gbp-access-note" id="gbp-access-note">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.75" stroke="#9ca3af" stroke-width="1.25"/><path d="M6.5 4v3M6.5 8.5v.5" stroke="#9ca3af" stroke-width="1.25" stroke-linecap="round"/></svg>
+                You must be an <strong>Owner or Admin</strong> on every Google Business Profile location you want to connect.
+              </div>
 
               <!-- Inline connect prompt (shown when Google flow selected + not connected) -->
               <div class="gbp-connect-prompt" id="gbp-connect-prompt">
@@ -1592,6 +1633,14 @@ function renderStep2() {
     }
   }
 
+  // Access note — hide when connected
+  const accessNote = document.getElementById('gbp-access-note');
+  if (accessNote) accessNote.style.display = state.gbpConnected ? 'none' : '';
+
+  // Skip warning banner
+  const skipWarning = document.getElementById('gbp-skip-warning');
+  if (skipWarning) skipWarning.classList.toggle('visible', needsGoogle && state.gbpSkipped && !state.gbpConnected);
+
   const hint = document.getElementById('footer-hint');
   const hintText = document.getElementById('footer-hint-text');
   if (needsGoogle && state.gbpSkipped && !state.gbpConnected) {
@@ -1686,7 +1735,7 @@ const FLOWS_META = {
 };
 
 const PREVIEW_SCENARIOS = {
-  smart:    { desc: 'Smart Review Routing is active. Customers receive a private feedback request first. Those who had a great experience are then invited to leave a Google review.', flows: ['internal','google'] },
+  smart:    { desc: 'Smart Review Routing is active. Customers first receive a private feedback request, followed by a Google review request.', flows: ['internal','google'] },
   internal: { desc: 'Private Feedback Only is active. Customers receive a private survey. No Google review request will be sent.', flows: ['internal'] },
   google:   { desc: 'Google Reviews Only is active. Customers are sent directly to Google to leave a review.', flows: ['google'] },
   both:     { desc: 'Private First, Then Google is active. Every customer gets a private feedback request, then a Google review invitation.', flows: ['internal','google'] },
@@ -2075,6 +2124,10 @@ function setScenario(key) {
       p.innerHTML = `
         <h2 class="step-title">Connect Your Review Platform</h2>
         <div class="context-copy" id="context-copy-text"></div>
+        <div class="gbp-skip-warning" id="gbp-skip-warning">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#d97706" stroke-width="1.5"/><path d="M8 5v3.5M8 10.5v.5" stroke="#d97706" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span>Your Google review flow won't be active until your Google Business Profile is connected. You can complete this step now or return to it from your dashboard settings.</span>
+        </div>
         <div class="account-cards">
           <div class="account-card" id="internal-card">
             <div class="account-icon">✉️</div>
@@ -2097,6 +2150,10 @@ function setScenario(key) {
               <div class="account-card-title" id="gbp-card-title">Google Business Profile</div>
               <p class="account-card-desc" id="gbp-card-desc"></p>
               <p class="connected-since" id="gbp-connected-since" style="display:none">Connected since Mar 11, 2026</p>
+              <div class="gbp-access-note" id="gbp-access-note">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.75" stroke="#9ca3af" stroke-width="1.25"/><path d="M6.5 4v3M6.5 8.5v.5" stroke="#9ca3af" stroke-width="1.25" stroke-linecap="round"/></svg>
+                You must be an <strong>Owner or Admin</strong> on every Google Business Profile location you want to connect.
+              </div>
               <div class="gbp-connect-prompt" id="gbp-connect-prompt">
                 <p id="gbp-prompt-text"></p>
                 <div class="gbp-connect-prompt-actions">
