@@ -1105,15 +1105,20 @@ const state = {
     isVerifying: false,
   },
 
-  // Email channel managed config
+  // Account-level email metadata (used as defaults when adding new domains)
   email: {
-    prefix: 'marketing',
-    displayName: 'Muskingum County Fair',
-    replyTo: 'info@muskingumcofair.com',
     managedDomain: 'muskingum-county-fair.fairs-mail.com',
   },
 
+  // Master→detail nav within Email Channel: null = list view, otherwise a domain id
+  selectedDomainId: null,
+
+  // Pending edits for the currently-open domain detail page (so we can show a
+  // sticky save bar scoped to that domain only)
+  pendingEdits: null, // { domainId, prefix, displayName, replyTo }
+
   // Domains list (entry state: 1 verified BYO + always-present managed row)
+  // Each domain owns its OWN sender identity (prefix, displayName, replyTo)
   domains: [
     {
       id: 'send',
@@ -1123,6 +1128,9 @@ const state = {
       lastVerified: '2 min ago',
       isDefault: true,
       isManaged: false,
+      prefix: 'marketing',
+      displayName: 'Muskingum County Fair',
+      replyTo: 'info@muskingumcofair.com',
     },
     {
       id: 'managed',
@@ -1132,6 +1140,9 @@ const state = {
       lastVerified: null,
       isDefault: false,
       isManaged: true,
+      prefix: 'marketing',
+      displayName: 'Muskingum County Fair',
+      replyTo: 'info@muskingumcofair.com',
     },
   ],
 
@@ -1177,7 +1188,16 @@ const DEMO_SCENARIOS = [
 function loadDemoScenario(key) {
   state.demoScenario = key;
   state.tab = 'email-channel';
+  state.selectedDomainId = null;
+  state.pendingEdits = null;
   state.byo = { subStep: null, rootDomain: 'muskingumcofair.com', subdomain: 'send', dmarcOn: true, paused: false, pausedAt: null, verifyProgress: 0, isVerifying: false };
+
+  // Default identity used for all baseline domains in demo scenarios
+  const defaultIdentity = (prefix) => ({
+    prefix,
+    displayName: 'Muskingum County Fair',
+    replyTo: 'info@muskingumcofair.com',
+  });
 
   const managed = {
     id: 'managed',
@@ -1187,28 +1207,29 @@ function loadDemoScenario(key) {
     lastVerified: null,
     isDefault: false,
     isManaged: true,
+    ...defaultIdentity('marketing'),
   };
 
   if (key === 'verified-1') {
     state.domains = [
-      { id: 'send', fullDomain: 'send.muskingumcofair.com', purpose: 'Marketing', status: 'verified', lastVerified: '2 min ago', isDefault: true, isManaged: false },
+      { id: 'send', fullDomain: 'send.muskingumcofair.com', purpose: 'Marketing', status: 'verified', lastVerified: '2 min ago', isDefault: true, isManaged: false, ...defaultIdentity('marketing') },
       managed,
     ];
   } else if (key === 'verified-2') {
     state.domains = [
-      { id: 'send', fullDomain: 'send.muskingumcofair.com', purpose: 'Marketing', status: 'verified', lastVerified: '2 hr ago', isDefault: true, isManaged: false },
-      { id: 'notif', fullDomain: 'notifications.muskingumcofair.com', purpose: 'Transactional', status: 'verified', lastVerified: '1 day ago', isDefault: false, isManaged: false },
+      { id: 'send', fullDomain: 'send.muskingumcofair.com', purpose: 'Marketing', status: 'verified', lastVerified: '2 hr ago', isDefault: true, isManaged: false, ...defaultIdentity('marketing') },
+      { id: 'notif', fullDomain: 'notifications.muskingumcofair.com', purpose: 'Transactional', status: 'verified', lastVerified: '1 day ago', isDefault: false, isManaged: false, prefix: 'noreply', displayName: 'Muskingum County Fair Tickets', replyTo: 'support@muskingumcofair.com' },
       managed,
     ];
   } else if (key === 'pending') {
     state.domains = [
-      { id: 'send', fullDomain: 'send.muskingumcofair.com', purpose: 'Marketing · Verifying 2 of 3 records', status: 'pending', lastVerified: null, isDefault: true, isManaged: false },
+      { id: 'send', fullDomain: 'send.muskingumcofair.com', purpose: 'Marketing · Verifying 2 of 3 records', status: 'pending', lastVerified: null, isDefault: true, isManaged: false, ...defaultIdentity('marketing') },
       managed,
     ];
   } else if (key === 'disconnected') {
     state.domains = [
-      { id: 'send', fullDomain: 'send.muskingumcofair.com', purpose: 'Marketing · DKIM record missing', status: 'disconnected', lastVerified: '3 days ago', isDefault: true, isManaged: false },
-      { id: 'notif', fullDomain: 'notifications.muskingumcofair.com', purpose: 'Transactional', status: 'verified', lastVerified: '2 hr ago', isDefault: false, isManaged: false },
+      { id: 'send', fullDomain: 'send.muskingumcofair.com', purpose: 'Marketing · DKIM record missing', status: 'disconnected', lastVerified: '3 days ago', isDefault: true, isManaged: false, ...defaultIdentity('marketing') },
+      { id: 'notif', fullDomain: 'notifications.muskingumcofair.com', purpose: 'Transactional', status: 'verified', lastVerified: '2 hr ago', isDefault: false, isManaged: false, prefix: 'noreply', displayName: 'Muskingum County Fair Tickets', replyTo: 'support@muskingumcofair.com' },
       managed,
     ];
   } else if (key === 'managed-only') {
@@ -1223,6 +1244,8 @@ function loadDemoScenario(key) {
 function setTab(key) {
   state.tab = key;
   state.byo.subStep = null;
+  state.selectedDomainId = null;
+  state.pendingEdits = null;
   render();
 }
 
@@ -1264,7 +1287,7 @@ function confirmRemove(id) {
   if (!d) return;
   state.confirmModal = {
     title: `Remove ${d.fullDomain}?`,
-    body: `This deletes the domain from ${d.fullDomain.split('.')[0] === 'send' ? 'Postmark' : 'your ESP'} and removes its records from your settings. ${d.isDefault ? 'Another domain will be promoted to default.' : ''}`,
+    body: `This deletes the domain from your ESP and removes its records from your settings. ${d.isDefault ? 'Another domain will be promoted to default.' : ''}`,
     confirmLabel: 'Remove domain',
     onConfirm: () => {
       const wasDefault = d.isDefault;
@@ -1272,6 +1295,11 @@ function confirmRemove(id) {
       if (wasDefault) {
         const next = state.domains.find(x => !x.isManaged);
         if (next) next.isDefault = true;
+      }
+      // If we removed the domain we were viewing in detail, pop back to the list
+      if (state.selectedDomainId === id) {
+        state.selectedDomainId = null;
+        state.pendingEdits = null;
       }
       state.confirmModal = null;
       state.toast = { kind: 'success', text: `${d.fullDomain} removed.` };
@@ -1345,11 +1373,14 @@ function entriSuccess() {
     return;
   }
 
-  // New domain being added
+  // New domain being added — inherits sender identity from the managed domain
   state.byo.isVerifying = true;
   state.byo.verifyProgress = 0;
   state.byo.subStep = null;
-  // Add a new pending domain
+  const managedDomain = state.domains.find(d => d.isManaged);
+  const inheritedIdentity = managedDomain
+    ? { prefix: managedDomain.prefix, displayName: managedDomain.displayName, replyTo: managedDomain.replyTo }
+    : { prefix: 'marketing', displayName: '', replyTo: '' };
   const newDomain = {
     id: state.byo.subdomain + '-' + Date.now(),
     fullDomain: state.byo.subdomain + '.' + state.byo.rootDomain,
@@ -1358,6 +1389,7 @@ function entriSuccess() {
     lastVerified: null,
     isDefault: state.domains.filter(d => !d.isManaged).length === 0,
     isManaged: false,
+    ...inheritedIdentity,
   };
   // Insert before managed
   const managedIdx = state.domains.findIndex(d => d.isManaged);
@@ -1463,17 +1495,12 @@ function byoSidebar() {
    PAGES
    ========================================================= */
 function emailChannelPage() {
-  // Get the default verified BYO domain (or null)
-  const defaultBYO = state.domains.find(d => d.isDefault && !d.isManaged && d.status === 'verified');
-  const senderDomain = defaultBYO ? defaultBYO.fullDomain : state.email.managedDomain;
-  const showVia = !defaultBYO;
-
   return `
     ${settingsSidebar()}
     <main class="shell-main">
       <div class="page-header">
         <h1>Email Channel</h1>
-        <p>Configure your email sending settings, then manage the domains your messages send from.</p>
+        <p>Manage the domains your messages send from. Each domain has its own sender identity — click a domain to configure its prefix, display name, and reply-to.</p>
       </div>
 
       ${state.byo.paused ? `
@@ -1486,53 +1513,6 @@ function emailChannelPage() {
         </div>
       ` : ''}
 
-      <!-- Section 1: Sender details -->
-      <div class="section-block">
-        <h3 class="section-block-title">Sender details</h3>
-
-        <div class="form-group">
-          <label>Sending email address</label>
-          <span class="helper">Edit the prefix to match your team — common choices: <code>marketing</code>, <code>hello</code>, <code>news</code></span>
-          <div class="sender-prefix-row">
-            <input class="form-input" type="text" value="${state.email.prefix}" data-focus-key="email.prefix"
-              oninput="state.email.prefix=this.value; state.dirty=true; render();" />
-            <span class="at-sign">@</span>
-            <span class="domain-suffix">${senderDomain}</span>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>Display name</label>
-          <span class="helper">What customers see in their inbox before the email opens.</span>
-          <input class="form-input" type="text" value="${state.email.displayName}" data-focus-key="email.displayName"
-            oninput="state.email.displayName=this.value; state.dirty=true; render();" />
-        </div>
-
-        <div class="form-group">
-          <label>Reply-to email</label>
-          <span class="helper">When customers reply, their response goes here.</span>
-          <input class="form-input" type="email" value="${state.email.replyTo}" data-focus-key="email.replyTo"
-            oninput="state.email.replyTo=this.value; state.dirty=true;" />
-        </div>
-
-        <div style="margin-top: 20px;">
-          <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:10px;">How it appears in inbox</div>
-          <div class="inbox-preview">
-            <div class="inbox-row">
-              <div class="inbox-avatar">${(state.email.displayName || 'E').charAt(0).toUpperCase()}</div>
-              <div class="inbox-meta">
-                <div class="inbox-from">
-                  ${state.email.displayName || 'Your business'}
-                  ${showVia ? `<span class="inbox-via">via <strong style="color:var(--warning);">${state.email.managedDomain}</strong></span>` : ''}
-                </div>
-                <div class="inbox-subject">${state.email.prefix || 'hello'}@${senderDomain} · Get your tickets for the 2026 Fair</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Section 2: Sending domains -->
       <div class="section-block">
         <div class="section-block-header">
           <h3>Sending domains</h3>
@@ -1542,20 +1522,204 @@ function emailChannelPage() {
         ${renderDisconnectBanners()}
         ${renderDomainTable()}
 
-        <p style="margin-top: 14px; font-size: 12.5px; color: var(--text-muted);">The default domain is used for all Engage broadcasts unless overridden on a specific automation or campaign.</p>
+        <p style="margin-top: 14px; font-size: 12.5px; color: var(--text-muted);">The default domain is used for all Engage broadcasts unless overridden on a specific automation or campaign. Click any row to configure that domain's sender identity.</p>
+      </div>
+    </main>
+  `;
+}
+
+/* Per-domain detail page — master→detail navigation from the domain table */
+function emailChannelDomainDetailPage(domainId) {
+  const d = state.domains.find(x => x.id === domainId);
+  if (!d) {
+    state.selectedDomainId = null;
+    return emailChannelPage();
+  }
+
+  // Pending edits live separately so we can show a sticky save bar
+  // scoped to this domain only. We initialize them lazily.
+  if (!state.pendingEdits || state.pendingEdits.domainId !== domainId) {
+    state.pendingEdits = {
+      domainId,
+      prefix: d.prefix,
+      displayName: d.displayName,
+      replyTo: d.replyTo,
+    };
+  }
+  const edits = state.pendingEdits;
+  const dirty = edits.prefix !== d.prefix || edits.displayName !== d.displayName || edits.replyTo !== d.replyTo;
+
+  // Status pill for the header
+  const pillClass = `status-${d.status}`;
+  const pillLabel = d.status === 'verified' ? 'Verified'
+    : d.status === 'pending' ? 'Verifying'
+    : d.status === 'disconnected' ? 'Disconnected'
+    : 'Managed';
+
+  const showVia = d.isManaged;
+
+  return `
+    ${settingsSidebar()}
+    <main class="shell-main">
+      <button class="btn-link" style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 14px; display: inline-flex; align-items: center; gap: 6px;" onclick="closeDomainDetail()">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 2L3 6l4 4"/></svg>
+        Email Channel
+      </button>
+
+      <div class="page-header" style="margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+          <h1 style="margin: 0; font-family: var(--font-mono); font-size: 18px;">${d.fullDomain}</h1>
+          <span class="status-pill ${pillClass}">${pillLabel}</span>
+          ${d.isDefault ? '<span class="default-badge">Default</span>' : ''}
+          ${d.isManaged ? '<span class="default-badge" style="background: var(--bg-subtle); color: var(--text-secondary);">Managed</span>' : ''}
+        </div>
+        <p style="margin-top: 6px;">${d.purpose}${d.lastVerified ? ` · Last verified ${d.lastVerified}` : ''}</p>
       </div>
 
-      ${state.dirty ? `
+      ${d.status === 'disconnected' ? renderDomainDetailDisconnectBanner(d) : ''}
+
+      <!-- Sender identity for this specific domain -->
+      <div class="section-block">
+        <h3 class="section-block-title">Sender identity for this domain</h3>
+
+        <div class="form-group">
+          <label>Sending email address</label>
+          <span class="helper">Edit the prefix to match your team — common choices: <code>marketing</code>, <code>hello</code>, <code>news</code>, <code>noreply</code></span>
+          <div class="sender-prefix-row">
+            <input class="form-input" type="text" value="${edits.prefix}" data-focus-key="detail.prefix"
+              oninput="state.pendingEdits.prefix=this.value; render();" />
+            <span class="at-sign">@</span>
+            <span class="domain-suffix">${d.fullDomain}</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Display name</label>
+          <span class="helper">What customers see in their inbox before the email opens.</span>
+          <input class="form-input" type="text" value="${edits.displayName}" data-focus-key="detail.displayName"
+            oninput="state.pendingEdits.displayName=this.value; render();" />
+        </div>
+
+        <div class="form-group">
+          <label>Reply-to email</label>
+          <span class="helper">When customers reply, their response goes here.</span>
+          <input class="form-input" type="email" value="${edits.replyTo}" data-focus-key="detail.replyTo"
+            oninput="state.pendingEdits.replyTo=this.value; render();" />
+        </div>
+
+        <div style="margin-top: 20px;">
+          <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:10px;">How it appears in inbox</div>
+          <div class="inbox-preview">
+            <div class="inbox-row">
+              <div class="inbox-avatar">${(edits.displayName || 'E').charAt(0).toUpperCase()}</div>
+              <div class="inbox-meta">
+                <div class="inbox-from">
+                  ${edits.displayName || 'Your business'}
+                  ${showVia ? `<span class="inbox-via">via <strong style="color:var(--warning);">${d.fullDomain}</strong></span>` : ''}
+                </div>
+                <div class="inbox-subject">${edits.prefix || 'hello'}@${d.fullDomain} · Get your tickets for the 2026 Fair</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Domain-level actions -->
+      <div class="section-block">
+        <h3 class="section-block-title">Domain</h3>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          ${!d.isManaged && d.status === 'verified' && !d.isDefault ? `<button class="btn btn-secondary" onclick="setDefault('${d.id}')">Set as default</button>` : ''}
+          ${!d.isManaged ? `<button class="btn btn-secondary" onclick="reverify('${d.id}')">Re-verify DNS</button>` : ''}
+          ${!d.isManaged ? `<button class="btn btn-danger" onclick="confirmRemove('${d.id}')">Remove domain</button>` : ''}
+          ${d.isManaged ? `<span style="font-size: 12.5px; color: var(--text-muted); padding: 9px 0;">The managed domain is always available and can't be removed. It's used as a fallback if all your other domains disconnect.</span>` : ''}
+        </div>
+      </div>
+
+      ${dirty ? `
         <div class="save-bar">
-          <span class="dirty-text">You have unsaved changes.</span>
+          <span class="dirty-text">You have unsaved changes for <code style="font-family:var(--font-mono);font-size:12px;">${d.fullDomain}</code>.</span>
           <div style="display:flex; gap:10px;">
-            <button class="btn btn-ghost" onclick="state.dirty=false; render();">Discard</button>
-            <button class="btn btn-primary" onclick="state.dirty=false; state.toast={kind:'success',text:'Settings saved.'}; render(); setTimeout(()=>{state.toast=null; render();}, 2400);">Save changes</button>
+            <button class="btn btn-ghost" onclick="discardDomainEdits()">Discard</button>
+            <button class="btn btn-primary" onclick="saveDomainEdits()">Save changes</button>
           </div>
         </div>
       ` : ''}
     </main>
   `;
+}
+
+function renderDomainDetailDisconnectBanner(d) {
+  return `
+    <div class="disconnect-banner" style="margin-bottom: 24px;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 22h20L12 2z"/><path d="M12 9v5M12 18h.01"/></svg>
+      <div style="flex: 1;">
+        <h4>This domain is no longer verified</h4>
+        <p>The DKIM record is missing from your DNS. Your campaigns are temporarily falling back to the managed domain — deliverability may drop.</p>
+        <div class="actions">
+          <button class="btn btn-primary" style="background: var(--danger); padding: 7px 12px; font-size: 13px;" onclick="reconnectDisconnected('${d.id}')">Reconnect domain</button>
+          <button class="btn-link" style="color: var(--danger);" onclick="alert('Demo: would show the missing DNS records and a shareable link to send to IT')">Forward fix to IT</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* =========================================================
+   DOMAIN DETAIL ACTIONS
+   ========================================================= */
+function openDomainDetail(id) {
+  state.selectedDomainId = id;
+  state.pendingEdits = null; // will be lazily initialized in the page
+  render();
+}
+
+function closeDomainDetail() {
+  // If there are unsaved edits, confirm before bailing
+  if (state.pendingEdits) {
+    const d = state.domains.find(x => x.id === state.pendingEdits.domainId);
+    if (d) {
+      const dirty = state.pendingEdits.prefix !== d.prefix || state.pendingEdits.displayName !== d.displayName || state.pendingEdits.replyTo !== d.replyTo;
+      if (dirty && !confirm('You have unsaved changes. Discard them?')) {
+        return;
+      }
+    }
+  }
+  state.selectedDomainId = null;
+  state.pendingEdits = null;
+  render();
+}
+
+function discardDomainEdits() {
+  if (!state.pendingEdits) return;
+  const d = state.domains.find(x => x.id === state.pendingEdits.domainId);
+  if (d) {
+    state.pendingEdits = {
+      domainId: d.id,
+      prefix: d.prefix,
+      displayName: d.displayName,
+      replyTo: d.replyTo,
+    };
+  }
+  render();
+}
+
+function saveDomainEdits() {
+  if (!state.pendingEdits) return;
+  const d = state.domains.find(x => x.id === state.pendingEdits.domainId);
+  if (!d) return;
+  d.prefix = state.pendingEdits.prefix;
+  d.displayName = state.pendingEdits.displayName;
+  d.replyTo = state.pendingEdits.replyTo;
+  state.toast = { kind: 'success', text: `${d.fullDomain} sender identity saved.` };
+  // Reset pending so the save bar disappears
+  state.pendingEdits = {
+    domainId: d.id,
+    prefix: d.prefix,
+    displayName: d.displayName,
+    replyTo: d.replyTo,
+  };
+  render();
+  setTimeout(() => { state.toast = null; render(); }, 2400);
 }
 
 function renderDisconnectBanners() {
@@ -1600,29 +1764,34 @@ function renderDomainRow(d) {
     : d.status === 'pending' ? 'Verifying'
     : d.status === 'disconnected' ? 'Disconnected'
     : 'Managed';
-  const rowStyle = d.status === 'disconnected' ? 'background: var(--danger-bg);' : '';
+  const rowStyle = d.status === 'disconnected' ? 'background: var(--danger-bg); cursor: pointer;' : 'cursor: pointer;';
 
+  // Quick actions live in the row; the row body itself navigates to the detail page.
+  // Clicks on action buttons must not bubble up to the row click.
   let actions = '';
   if (d.isManaged) {
     actions = `<span style="font-size:12px; color:var(--text-faint);">Always available</span>`;
   } else {
-    const reverifyBtn = `<button class="icon-btn" onclick="reverify('${d.id}')" title="Re-verify"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8a6 6 0 1110 4.5"/><path d="M12 13.5l-1-1 1-1"/></svg></button>`;
     const setDefaultBtn = !d.isDefault && d.status === 'verified'
-      ? `<button class="icon-btn" onclick="setDefault('${d.id}')" title="Set as default"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1l2 5 5 .5-3.7 3.5L13 15l-5-2.5L3 15l1.7-4.5L1 6.5l5-.5z"/></svg></button>`
+      ? `<button class="icon-btn" onclick="event.stopPropagation(); setDefault('${d.id}')" title="Set as default"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1l2 5 5 .5-3.7 3.5L13 15l-5-2.5L3 15l1.7-4.5L1 6.5l5-.5z"/></svg></button>`
       : '';
-    const removeBtn = `<button class="icon-btn" onclick="confirmRemove('${d.id}')" title="Remove" style="color:var(--danger);"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h10M6 4V2.5h4V4M5 4l1 9h4l1-9"/></svg></button>`;
-    actions = `<div class="actions">${reverifyBtn}${setDefaultBtn}${removeBtn}</div>`;
+    const removeBtn = `<button class="icon-btn" onclick="event.stopPropagation(); confirmRemove('${d.id}')" title="Remove" style="color:var(--danger);"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h10M6 4V2.5h4V4M5 4l1 9h4l1-9"/></svg></button>`;
+    actions = `<div class="actions">${setDefaultBtn}${removeBtn}</div>`;
   }
 
+  // Compose the per-row "from" line for hover/scan: prefix@fullDomain · displayName
+  const senderSummary = `${d.prefix}@${d.fullDomain}`;
+
   return `
-    <tr style="${rowStyle}">
+    <tr style="${rowStyle}" onclick="openDomainDetail('${d.id}')">
       <td>
         <div class="domain-name-cell">
           <span class="name" style="${d.isManaged ? 'color: var(--text-muted);' : ''}">
             ${d.fullDomain}
             ${d.isDefault ? '<span class="default-badge">Default</span>' : ''}
           </span>
-          <span class="purpose">${d.purpose}</span>
+          <span class="purpose" style="font-family: var(--font-mono); font-size: 11.5px; color: var(--text-muted);">${senderSummary}</span>
+          <span class="purpose" style="margin-top: 2px;">${d.purpose} · ${d.displayName}</span>
         </div>
       </td>
       <td><span class="status-pill ${pillClass}">${pillLabel}</span></td>
@@ -1912,7 +2081,11 @@ function render() {
     body = `<div class="shell-body" data-mode="byo">${byoSidebar()}${sub}</div>`;
   } else {
     let pageContent;
-    if (state.tab === 'email-channel') pageContent = emailChannelPage();
+    if (state.tab === 'email-channel') {
+      pageContent = state.selectedDomainId
+        ? emailChannelDomainDetailPage(state.selectedDomainId)
+        : emailChannelPage();
+    }
     else if (state.tab === 'brand') pageContent = placeholderTab('Brand Settings', 'Configure your brand colors, tone, and logo for messages.');
     else if (state.tab === 'business') pageContent = placeholderTab('Business Information', 'Update your DBA, address, and contact info. Changes here may trigger SMS re-verification.');
     else if (state.tab === 'sms') pageContent = placeholderTab('SMS Channel', 'Manage your SMS sending number and request approval for new ones.');
