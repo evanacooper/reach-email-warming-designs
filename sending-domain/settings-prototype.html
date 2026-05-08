@@ -623,6 +623,259 @@
     margin-top: 4px;
   }
 
+  /* ============================================== */
+  /* DNS CONNECTION SECTION (Voice-style splash/    */
+  /* configured/disconnected/wizard inline)         */
+  /* ============================================== */
+  .dns-section {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--bg-elevated);
+    overflow: hidden;
+  }
+  .dns-section[data-state="disconnected"] {
+    border-color: var(--danger-border);
+    background: var(--danger-bg);
+  }
+  .dns-section[data-state="pending"] {
+    border-color: var(--info-border);
+  }
+  .dns-section[data-state="wizard"] {
+    background: var(--bg-elevated);
+  }
+
+  .dns-section-header {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid transparent;
+  }
+  .dns-section[data-state="wizard"] .dns-section-header {
+    border-bottom-color: var(--border);
+    background: var(--bg-subtle);
+  }
+  .dns-section-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+  }
+  .dns-section[data-state="disconnected"] .dns-section-title {
+    color: #7f1d1d;
+  }
+  .dns-section-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .dns-section-icon[data-tone="success"] {
+    background: var(--success-pill-bg);
+    color: var(--success);
+  }
+  .dns-section-icon[data-tone="info"] {
+    background: var(--info-bg);
+    color: var(--info);
+  }
+  .dns-section-icon[data-tone="warning"] {
+    background: var(--warning-bg);
+    color: var(--warning);
+  }
+  .dns-section-icon[data-tone="danger"] {
+    background: white;
+    color: var(--danger);
+    border: 1.5px solid var(--danger-border);
+  }
+  .dns-section-icon[data-tone="muted"] {
+    background: var(--bg-subtle);
+    color: var(--text-secondary);
+  }
+
+  .dns-section-cancel {
+    margin-left: auto;
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    font-size: 12.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .dns-section-cancel:hover { color: var(--text); }
+
+  .dns-section-body {
+    padding: 20px;
+  }
+  .dns-section-body p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+  .dns-section[data-state="disconnected"] .dns-section-body p {
+    color: #991b1b;
+  }
+  .dns-section-body p + p { margin-top: 8px; }
+  .dns-section-body code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: var(--bg-subtle);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+  .dns-section[data-state="disconnected"] .dns-section-body code {
+    background: rgba(127, 29, 29, 0.08);
+  }
+  .dns-section-actions {
+    margin-top: 16px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  /* Configured-state metadata grid */
+  .dns-meta {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px 16px;
+    margin-top: 12px;
+    font-size: 12.5px;
+  }
+  .dns-meta dt {
+    color: var(--text-muted);
+    margin: 0;
+  }
+  .dns-meta dd {
+    color: var(--text);
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  /* Inline wizard within the DNS section */
+  .dns-wizard {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    min-height: 380px;
+  }
+  .dns-wizard-sidebar {
+    background: var(--bg-subtle);
+    border-right: 1px solid var(--border);
+    padding: 18px 12px;
+  }
+  .dns-wizard-sidebar-eyebrow {
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+    padding: 0 10px 8px;
+  }
+  .dns-wizard-sidebar ul {
+    list-style: none;
+    margin: 4px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .dns-wizard-sidebar li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 10px;
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-size: 12.5px;
+  }
+  .dns-wizard-sidebar li[data-state="active"] {
+    background: var(--bg-elevated);
+    color: var(--text);
+    font-weight: 500;
+    box-shadow: var(--shadow-card);
+  }
+  .dns-wizard-sidebar li[data-state="complete"] { color: var(--text); }
+  .dns-wizard-sidebar li .marker {
+    width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    background: var(--bg-elevated);
+    border: 1.5px solid var(--border-strong);
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8.5px;
+    font-weight: 600;
+    color: var(--text-faint);
+  }
+  .dns-wizard-sidebar li[data-state="active"] .marker {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: white;
+  }
+  .dns-wizard-sidebar li[data-state="complete"] .marker {
+    border-color: var(--success);
+    background: var(--success);
+    color: white;
+    font-size: 0;
+  }
+  .dns-wizard-sidebar li[data-state="complete"] .marker::before {
+    content: "✓";
+    font-size: 8.5px;
+    font-weight: 700;
+  }
+
+  .dns-wizard-content {
+    padding: 22px 26px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .dns-wizard-content h3 {
+    margin: 0 0 6px;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .dns-wizard-content > p {
+    margin: 0 0 18px;
+    color: var(--text-secondary);
+    font-size: 13.5px;
+  }
+  .dns-wizard-content-body {
+    flex: 1;
+  }
+  .dns-wizard-footer {
+    border-top: 1px solid var(--border);
+    margin-top: 18px;
+    padding-top: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* Managed pill on managed-row's DNS section */
+  .managed-pill-block {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--bg-subtle);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 500;
+  }
+
   /* BYO sub-flow shared with onboarding */
   .step-header h2 {
     font-size: 22px;
@@ -1103,6 +1356,11 @@ const state = {
     pausedAt: null,
     verifyProgress: 0,
     isVerifying: false,
+    // Whether this BYO sub-journey is for an EXISTING domain on the detail
+    // page (inline DNS wizard) vs ADDING a new domain (full-page navigation
+    // from list view). When inlineForDomainId is set, the sub-flow renders
+    // inside the DNS section of that domain's detail page.
+    inlineForDomainId: null,
   },
 
   // Account-level email metadata (used as defaults when adding new domains)
@@ -1190,7 +1448,7 @@ function loadDemoScenario(key) {
   state.tab = 'email-channel';
   state.selectedDomainId = null;
   state.pendingEdits = null;
-  state.byo = { subStep: null, rootDomain: 'muskingumcofair.com', subdomain: 'send', dmarcOn: true, paused: false, pausedAt: null, verifyProgress: 0, isVerifying: false };
+  state.byo = { subStep: null, rootDomain: 'muskingumcofair.com', subdomain: 'send', dmarcOn: true, paused: false, pausedAt: null, verifyProgress: 0, isVerifying: false, inlineForDomainId: null };
 
   // Default identity used for all baseline domains in demo scenarios
   const defaultIdentity = (prefix) => ({
@@ -1223,9 +1481,11 @@ function loadDemoScenario(key) {
     ];
   } else if (key === 'pending') {
     state.domains = [
-      { id: 'send', fullDomain: 'send.muskingumcofair.com', purpose: 'Marketing · Verifying 2 of 3 records', status: 'pending', lastVerified: null, isDefault: true, isManaged: false, ...defaultIdentity('marketing') },
+      { id: 'send', fullDomain: 'send.muskingumcofair.com', purpose: 'Marketing · Verifying 1 of 3 records', status: 'pending', lastVerified: null, isDefault: true, isManaged: false, ...defaultIdentity('marketing') },
       managed,
     ];
+    // Show a meaningful midway state in the DNS section: DKIM verified, Return-Path checking, DMARC pending
+    state.byo.verifyProgress = 1;
   } else if (key === 'disconnected') {
     state.domains = [
       { id: 'send', fullDomain: 'send.muskingumcofair.com', purpose: 'Marketing · DKIM record missing', status: 'disconnected', lastVerified: '3 days ago', isDefault: true, isManaged: false, ...defaultIdentity('marketing') },
@@ -1313,11 +1573,71 @@ function confirmRemove(id) {
 function reconnectDisconnected(id) {
   const d = state.domains.find(x => x.id === id);
   if (!d) return;
-  // Re-launch the connect flow — for prototype, jump to Entri modal
+  // Re-launch the connect flow inline on the domain detail page (Voice pattern).
+  // Pre-populates subdomain/root from the existing domain so the user starts
+  // already inside the wizard at sub-step 1 with their values filled in.
   state.byo.subdomain = d.fullDomain.split('.')[0];
   state.byo.rootDomain = d.fullDomain.split('.').slice(1).join('.');
-  state.showEntriModal = true;
-  state.byo.reconnectingId = id;
+  state.byo.subStep = 'root';
+  state.byo.dmarcOn = true;
+  state.byo.inlineForDomainId = id;
+  state.byo.paused = false;
+  state.byo.pausedAt = null;
+  // Make sure the user is on this domain's detail page so the inline wizard renders
+  state.selectedDomainId = id;
+  render();
+}
+
+/* Start the inline DNS wizard from the detail page's DNS splash CTA.
+   Used when the user is on a domain detail page that has no DNS connection yet
+   (today, only the managed domain when shown in 'splash' state — but reserved
+   for any future scenario where a row exists without DNS connection started). */
+function startInlineDnsWizard(domainId) {
+  const d = state.domains.find(x => x.id === domainId);
+  if (!d) return;
+  state.byo.subdomain = 'send';
+  state.byo.rootDomain = 'muskingumcofair.com';
+  state.byo.subStep = 'root';
+  state.byo.dmarcOn = true;
+  state.byo.inlineForDomainId = domainId;
+  state.byo.paused = false;
+  state.byo.pausedAt = null;
+  state.selectedDomainId = domainId;
+  render();
+}
+
+/* Cancel the inline DNS wizard — drops back to whatever the section's
+   pre-wizard state was (configured, disconnected, splash). Does NOT
+   navigate away from the detail page. */
+function cancelInlineDnsWizard() {
+  state.byo.subStep = null;
+  state.byo.inlineForDomainId = null;
+  state.byo.isVerifying = false;
+  state.byo.verifyProgress = 0;
+  state.byo.paused = false;
+  state.byo.pausedAt = null;
+  render();
+}
+
+/* Disconnect a verified domain — sets status to disconnected and shows
+   the disconnected-state DNS section. Confirmation modal first. */
+function confirmDisconnect(id) {
+  const d = state.domains.find(x => x.id === id);
+  if (!d) return;
+  state.confirmModal = {
+    title: `Disconnect ${d.fullDomain}?`,
+    body: `Outbound mail will fall back to the managed domain until DNS is reconnected. The domain row stays in your list — you can reconnect anytime from this page.`,
+    confirmLabel: 'Disconnect DNS',
+    onConfirm: () => {
+      d.status = 'disconnected';
+      d.lastVerified = 'just now';
+      d.purpose = d.purpose.split(' · ')[0] + ' · DKIM record missing';
+      state.confirmModal = null;
+      state.toast = { kind: 'info', text: `${d.fullDomain} disconnected.` };
+      render();
+      setTimeout(() => { state.toast = null; render(); }, 2400);
+    },
+  };
   render();
 }
 
@@ -1339,7 +1659,12 @@ function byoBack() {
   const order = BYO_SUBSTEPS.map(s => s.key);
   const idx = order.indexOf(state.byo.subStep);
   if (idx === 0) {
-    exitBYOPaused();
+    // Inline DNS wizard cancels back to the section; full-page wizard pauses on the parent
+    if (state.byo.inlineForDomainId) {
+      cancelInlineDnsWizard();
+    } else {
+      exitBYOPaused();
+    }
   } else {
     state.byo.subStep = order[idx - 1];
     render();
@@ -1358,7 +1683,23 @@ function exitBYOPaused() {
 function entriSuccess() {
   state.showEntriModal = false;
 
-  // If reconnecting an existing domain
+  // Inline DNS wizard on an existing domain — mutate that domain in place
+  if (state.byo.inlineForDomainId) {
+    const d = state.domains.find(x => x.id === state.byo.inlineForDomainId);
+    if (d) {
+      d.status = 'pending';
+      d.purpose = d.purpose.replace(' · DKIM record missing', '');
+      state.byo.isVerifying = true;
+      state.byo.verifyProgress = 0;
+      state.byo.subStep = null;
+      animateVerification(d.id);
+    }
+    render();
+    return;
+  }
+
+  // Legacy reconnect path (kept for safety; should be unused now that
+  // reconnectDisconnected goes through the inline wizard)
   if (state.byo.reconnectingId) {
     const d = state.domains.find(x => x.id === state.byo.reconnectingId);
     if (d) {
@@ -1404,6 +1745,7 @@ function animateVerification(domainId) {
   setTimeout(() => {
     state.byo.verifyProgress = 3;
     state.byo.isVerifying = false;
+    state.byo.inlineForDomainId = null; // clear inline-wizard flag once verified
     const d = state.domains.find(x => x.id === domainId);
     if (d) {
       d.status = 'verified';
@@ -1519,10 +1861,9 @@ function emailChannelPage() {
           <button class="btn btn-secondary" onclick="startAddDomain()">+ Add domain</button>
         </div>
 
-        ${renderDisconnectBanners()}
         ${renderDomainTable()}
 
-        <p style="margin-top: 14px; font-size: 12.5px; color: var(--text-muted);">The default domain is used for all Engage broadcasts unless overridden on a specific automation or campaign. Click any row to configure that domain's sender identity.</p>
+        <p style="margin-top: 14px; font-size: 12.5px; color: var(--text-muted);">The default domain is used for all Engage broadcasts unless overridden on a specific automation or campaign. Click any row to configure its sender identity and DNS connection.</p>
       </div>
     </main>
   `;
@@ -1549,7 +1890,7 @@ function emailChannelDomainDetailPage(domainId) {
   const edits = state.pendingEdits;
   const dirty = edits.prefix !== d.prefix || edits.displayName !== d.displayName || edits.replyTo !== d.replyTo;
 
-  // Status pill for the header
+  // Header status pill
   const pillClass = `status-${d.status}`;
   const pillLabel = d.status === 'verified' ? 'Verified'
     : d.status === 'pending' ? 'Verifying'
@@ -1576,11 +1917,9 @@ function emailChannelDomainDetailPage(domainId) {
         <p style="margin-top: 6px;">${d.purpose}${d.lastVerified ? ` · Last verified ${d.lastVerified}` : ''}</p>
       </div>
 
-      ${d.status === 'disconnected' ? renderDomainDetailDisconnectBanner(d) : ''}
-
-      <!-- Sender identity for this specific domain -->
+      <!-- Section 1: Sender identity (flat form) -->
       <div class="section-block">
-        <h3 class="section-block-title">Sender identity for this domain</h3>
+        <h3 class="section-block-title">Sender identity</h3>
 
         <div class="form-group">
           <label>Sending email address</label>
@@ -1624,20 +1963,32 @@ function emailChannelDomainDetailPage(domainId) {
         </div>
       </div>
 
-      <!-- Domain-level actions -->
+      <!-- Section 2: DNS connection (Voice-style splash/configured/disconnected/wizard) -->
       <div class="section-block">
-        <h3 class="section-block-title">Domain</h3>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <div class="section-block-header">
+          <h3>DNS connection</h3>
           ${!d.isManaged && d.status === 'verified' && !d.isDefault ? `<button class="btn btn-secondary" onclick="setDefault('${d.id}')">Set as default</button>` : ''}
-          ${!d.isManaged ? `<button class="btn btn-secondary" onclick="reverify('${d.id}')">Re-verify DNS</button>` : ''}
-          ${!d.isManaged ? `<button class="btn btn-danger" onclick="confirmRemove('${d.id}')">Remove domain</button>` : ''}
-          ${d.isManaged ? `<span style="font-size: 12.5px; color: var(--text-muted); padding: 9px 0;">The managed domain is always available and can't be removed. It's used as a fallback if all your other domains disconnect.</span>` : ''}
         </div>
+        ${renderDnsSection(d)}
       </div>
+
+      ${!d.isManaged ? `
+        <!-- Danger zone for non-managed domains -->
+        <div class="section-block">
+          <h3 class="section-block-title">Danger zone</h3>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius);">
+            <div>
+              <div style="font-size: 13.5px; font-weight: 500;">Remove this domain</div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Deletes the domain from your ESP and removes its records from your settings.</div>
+            </div>
+            <button class="btn btn-danger" onclick="confirmRemove('${d.id}')">Remove domain</button>
+          </div>
+        </div>
+      ` : ''}
 
       ${dirty ? `
         <div class="save-bar">
-          <span class="dirty-text">You have unsaved changes for <code style="font-family:var(--font-mono);font-size:12px;">${d.fullDomain}</code>.</span>
+          <span class="dirty-text">You have unsaved sender identity changes for <code style="font-family:var(--font-mono);font-size:12px;">${d.fullDomain}</code>.</span>
           <div style="display:flex; gap:10px;">
             <button class="btn btn-ghost" onclick="discardDomainEdits()">Discard</button>
             <button class="btn btn-primary" onclick="saveDomainEdits()">Save changes</button>
@@ -1648,18 +1999,277 @@ function emailChannelDomainDetailPage(domainId) {
   `;
 }
 
-function renderDomainDetailDisconnectBanner(d) {
+/* DNS connection section — Voice-style splash/configured/disconnected/wizard.
+   Returns one of four variants based on the domain's state and whether the
+   inline wizard is currently open for THIS domain. */
+function renderDnsSection(d) {
+  // Inline wizard takes precedence over any other state
+  const isInlineWizardForThis = state.byo.inlineForDomainId === d.id && state.byo.subStep;
+  const isInlineVerifyingForThis = state.byo.inlineForDomainId === d.id && state.byo.isVerifying;
+
+  if (isInlineWizardForThis) return renderDnsSectionWizard(d);
+  if (isInlineVerifyingForThis) return renderDnsSectionVerifying(d);
+
+  if (d.isManaged) return renderDnsSectionManaged(d);
+  if (d.status === 'pending') return renderDnsSectionVerifying(d);
+  if (d.status === 'disconnected') return renderDnsSectionDisconnected(d);
+  if (d.status === 'verified') return renderDnsSectionConfigured(d);
+
+  return '';
+}
+
+/* Variant: managed domain — DNS is platform-managed, nothing for tenant to configure */
+function renderDnsSectionManaged(d) {
   return `
-    <div class="disconnect-banner" style="margin-bottom: 24px;">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 22h20L12 2z"/><path d="M12 9v5M12 18h.01"/></svg>
-      <div style="flex: 1;">
-        <h4>This domain is no longer verified</h4>
-        <p>The DKIM record is missing from your DNS. Your campaigns are temporarily falling back to the managed domain — deliverability may drop.</p>
-        <div class="actions">
-          <button class="btn btn-primary" style="background: var(--danger); padding: 7px 12px; font-size: 13px;" onclick="reconnectDisconnected('${d.id}')">Reconnect domain</button>
-          <button class="btn-link" style="color: var(--danger);" onclick="alert('Demo: would show the missing DNS records and a shareable link to send to IT')">Forward fix to IT</button>
+    <div class="dns-section">
+      <div class="dns-section-header">
+        <span class="dns-section-icon" data-tone="muted">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l3 3 7-7"/></svg>
+        </span>
+        <span class="dns-section-title">Managed by the platform</span>
+        <span class="managed-pill-block" style="margin-left: auto;">No DNS setup needed</span>
+      </div>
+      <div class="dns-section-body">
+        <p>This is your always-available managed domain. DNS records are signed automatically by the platform — there's nothing for you to configure here.</p>
+        <p>Mail sent from this domain shows "via <code>${d.fullDomain}</code>" in some inboxes. To remove that, connect a custom domain on a different row.</p>
+      </div>
+    </div>
+  `;
+}
+
+/* Variant: configured (verified BYO domain) — show summary + actions */
+function renderDnsSectionConfigured(d) {
+  return `
+    <div class="dns-section">
+      <div class="dns-section-header">
+        <span class="dns-section-icon" data-tone="success">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3 3L13 4.5"/></svg>
+        </span>
+        <span class="dns-section-title">DNS connected</span>
+        <span style="margin-left: auto; font-size: 12px; color: var(--text-muted); font-family: var(--font-mono);">last verified ${d.lastVerified || 'just now'}</span>
+      </div>
+      <div class="dns-section-body">
+        <p>Outbound mail is DKIM-signed under your domain. Recipients see emails as coming from <code>${d.fullDomain}</code> — no platform tag.</p>
+        <dl class="dns-meta">
+          <dt>DKIM</dt><dd>Verified</dd>
+          <dt>Return-Path</dt><dd>pm-bounces.${d.fullDomain.split('.')[0]}</dd>
+          <dt>DMARC</dt><dd>v=DMARC1; p=none</dd>
+        </dl>
+        <div class="dns-section-actions">
+          <button class="btn btn-secondary" onclick="reverify('${d.id}')">Re-verify DNS</button>
+          <button class="btn btn-secondary" onclick="reconnectDisconnected('${d.id}')">Reconfigure</button>
+          <button class="btn btn-secondary" style="margin-left: auto; color: var(--danger); border-color: var(--danger-border);" onclick="confirmDisconnect('${d.id}')">Disconnect DNS</button>
         </div>
       </div>
+    </div>
+  `;
+}
+
+/* Variant: disconnected — red treatment, urgent CTAs */
+function renderDnsSectionDisconnected(d) {
+  return `
+    <div class="dns-section" data-state="disconnected">
+      <div class="dns-section-header">
+        <span class="dns-section-icon" data-tone="danger">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2L1 14h14L8 2z"/><path d="M8 7v3M8 12h.01"/></svg>
+        </span>
+        <span class="dns-section-title">DNS disconnected</span>
+        <span style="margin-left: auto; font-size: 12px; color: #991b1b; font-family: var(--font-mono);">last verified ${d.lastVerified || 'unknown'}</span>
+      </div>
+      <div class="dns-section-body">
+        <p><strong>The DKIM record is missing from your DNS.</strong> Outbound mail from this domain is failing authentication and falling back to the managed domain. Deliverability may drop until reconnected.</p>
+        <div class="dns-section-actions">
+          <button class="btn btn-primary" style="background: var(--danger);" onclick="reconnectDisconnected('${d.id}')">Reconnect DNS</button>
+          <button class="btn btn-secondary" onclick="alert('Demo: would show the missing DNS records and a shareable link to forward to IT')">Forward fix to IT</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* Variant: verifying — animated record-by-record progress */
+function renderDnsSectionVerifying(d) {
+  const p = state.byo.verifyProgress;
+  const dkimState = p >= 1 ? 'ok' : (p === 0 ? 'working' : 'pending');
+  const rpState = p >= 2 ? 'ok' : (p === 1 ? 'working' : 'pending');
+  const dmarcState = p >= 3 ? 'ok' : (p === 2 ? 'working' : 'pending');
+
+  const renderIcon = (st) => {
+    if (st === 'ok') return `<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.5l2.5 2.5L10 3.5"/></svg>`;
+    if (st === 'working') return `<div class="spinner" style="border-top-color: var(--info);"></div>`;
+    return '';
+  };
+  const renderLabel = (st) => st === 'ok' ? 'verified just now' : (st === 'working' ? 'checking…' : 'pending');
+
+  return `
+    <div class="dns-section" data-state="pending">
+      <div class="dns-section-header">
+        <span class="dns-section-icon" data-tone="info">
+          <div class="spinner" style="width: 12px; height: 12px;"></div>
+        </span>
+        <span class="dns-section-title">Verifying DNS records</span>
+        <span style="margin-left: auto; font-size: 12px; color: var(--text-muted);">${p < 3 ? 'usually 1–5 minutes' : 'all records verified'}</span>
+      </div>
+      <div class="dns-section-body" style="padding: 0;">
+        <div class="verifying-list" style="padding: 4px 0;">
+          <div class="verifying-row">
+            <div class="verifying-icon" data-state="${dkimState}">${renderIcon(dkimState)}</div>
+            <div>
+              <div class="label">DKIM signing key</div>
+              <div class="desc">TXT record for <code style="font-family:var(--font-mono);font-size:11.5px;">_domainkey.${d.fullDomain.split('.')[0]}</code></div>
+            </div>
+            <span class="timestamp">${renderLabel(dkimState)}</span>
+          </div>
+          <div class="verifying-row">
+            <div class="verifying-icon" data-state="${rpState}">${renderIcon(rpState)}</div>
+            <div>
+              <div class="label">Return-Path</div>
+              <div class="desc">CNAME for <code style="font-family:var(--font-mono);font-size:11.5px;">pm-bounces.${d.fullDomain.split('.')[0]}</code></div>
+            </div>
+            <span class="timestamp">${renderLabel(rpState)}</span>
+          </div>
+          <div class="verifying-row">
+            <div class="verifying-icon" data-state="${dmarcState}">${renderIcon(dmarcState)}</div>
+            <div>
+              <div class="label">DMARC policy</div>
+              <div class="desc">TXT record for <code style="font-family:var(--font-mono);font-size:11.5px;">_dmarc.${d.fullDomain.split('.')[0]}</code></div>
+            </div>
+            <span class="timestamp">${renderLabel(dmarcState)}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* Variant: inline wizard — replaces the section with the BYO sub-flow */
+function renderDnsSectionWizard(d) {
+  const sub = state.byo.subStep;
+  const order = BYO_SUBSTEPS.map(s => s.key);
+  const currentIdx = order.indexOf(sub);
+
+  let body;
+  if (sub === 'root') body = renderInlineWizardRoot();
+  else if (sub === 'subdomain') body = renderInlineWizardSubdomain();
+  else if (sub === 'dmarc') body = renderInlineWizardDmarc();
+  else if (sub === 'connect') body = renderInlineWizardConnect();
+
+  const isConnect = sub === 'connect';
+
+  return `
+    <div class="dns-section" data-state="wizard">
+      <div class="dns-section-header">
+        <span class="dns-section-icon" data-tone="info">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8s2-4 6-4 6 4 6 4-2 4-6 4-6-4-6-4z"/><circle cx="8" cy="8" r="2"/></svg>
+        </span>
+        <span class="dns-section-title">Connect DNS for ${d.fullDomain}</span>
+        <button class="dns-section-cancel" onclick="cancelInlineDnsWizard()">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 3l8 8M11 3l-8 8"/></svg>
+          Cancel
+        </button>
+      </div>
+      <div class="dns-wizard">
+        <aside class="dns-wizard-sidebar">
+          <div class="dns-wizard-sidebar-eyebrow">Connect DNS</div>
+          <ul>
+            ${BYO_SUBSTEPS.map((s, i) => {
+              const stateAttr = i < currentIdx ? 'complete' : (i === currentIdx ? 'active' : 'upcoming');
+              return `<li data-state="${stateAttr}">
+                <span class="marker">${stateAttr === 'complete' ? '' : (i + 1)}</span>
+                ${s.label}
+              </li>`;
+            }).join('')}
+          </ul>
+        </aside>
+        <div class="dns-wizard-content">
+          ${body}
+          <div class="dns-wizard-footer">
+            <button class="btn btn-ghost" onclick="byoBack()">← Back</button>
+            ${isConnect
+              ? '<span style="font-size:12px; color:var(--text-muted);">Choose an option above to continue</span>'
+              : '<button class="btn btn-primary" onclick="byoNext()">Continue</button>'}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* Inline wizard sub-step bodies — compact versions of the full-page versions */
+function renderInlineWizardRoot() {
+  return `
+    <h3>What's your root domain?</h3>
+    <p>This is the domain your customers know you by — usually the same as your website.</p>
+    <div class="dns-wizard-content-body">
+      <div class="form-group">
+        <label>Root domain</label>
+        <input class="form-input" type="text" value="${state.byo.rootDomain}" data-focus-key="byo.rootDomain"
+          oninput="state.byo.rootDomain=this.value;" />
+        <span class="helper">For example: muskingumcofair.com</span>
+      </div>
+    </div>
+  `;
+}
+
+function renderInlineWizardSubdomain() {
+  return `
+    <h3>Pick a sending subdomain</h3>
+    <p>This is where your emails will be sent from. Use a subdomain you're not already using elsewhere.</p>
+    <div class="dns-wizard-content-body">
+      <div class="preview-chip">
+        <svg width="14" height="14" style="color:var(--text-muted);" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="2.5"/><path d="M2 10s2.5-5 8-5 8 5 8 5-2.5 5-8 5-8-5-8-5z"/></svg>
+        <div>
+          <div class="preview-chip-label">Preview</div>
+          <div class="preview-chip-value">${state.byo.subdomain}.${state.byo.rootDomain}</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Sending subdomain</label>
+        <span class="helper">Common choices: <code>send</code>, <code>email</code>, <code>notifications</code></span>
+        <div class="subdomain-row">
+          <input class="form-input" type="text" value="${state.byo.subdomain}" data-focus-key="byo.subdomain"
+            oninput="state.byo.subdomain=this.value; render();" />
+          <span class="domain-suffix">.${state.byo.rootDomain}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderInlineWizardDmarc() {
+  return `
+    <h3>Add a DMARC record</h3>
+    <p>DMARC tells inbox providers how to handle mail that fails authentication. Required for senders at scale.</p>
+    <div class="dns-wizard-content-body">
+      <div class="dmarc-card">
+        <div class="dmarc-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
+        </div>
+        <div class="dmarc-content">
+          <h4>Add DMARC record <span class="recommended-pill">Recommended</span></h4>
+          <p>Protects your sending reputation and meets Gmail and Yahoo's bulk sender requirements.</p>
+        </div>
+        <button class="toggle" data-on="${state.byo.dmarcOn}" onclick="state.byo.dmarcOn=!state.byo.dmarcOn; render();"></button>
+      </div>
+    </div>
+  `;
+}
+
+function renderInlineWizardConnect() {
+  return `
+    <h3>Connect with Entri</h3>
+    <p>Entri logs into your DNS provider for you and adds the right records — no copy-paste, no mistakes.</p>
+    <div class="dns-wizard-content-body">
+      <ul style="list-style: none; margin: 0 0 18px; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 13.5px;">
+        <li style="display: flex; align-items: center; gap: 8px;"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M6.5 10l2.5 2.5 5-5"/></svg> Detects your DNS provider automatically</li>
+        <li style="display: flex; align-items: center; gap: 8px;"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M6.5 10l2.5 2.5 5-5"/></svg> Forward to your IT contact if you don't have access</li>
+        <li style="display: flex; align-items: center; gap: 8px;"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M6.5 10l2.5 2.5 5-5"/></svg> Records published in seconds</li>
+      </ul>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn btn-primary" onclick="state.showEntriModal=true; render();">Connect with Entri</button>
+        <button class="btn btn-secondary" onclick="alert('In production: would show manual DNS records to copy/paste')">Set up manually</button>
+      </div>
+      <p style="margin-top: 12px; font-size: 11.5px; color: var(--text-muted);">By selecting "Connect with Entri" you agree to Entri's Terms of Service and Privacy Policy.</p>
     </div>
   `;
 }
@@ -1683,6 +2293,12 @@ function closeDomainDetail() {
         return;
       }
     }
+  }
+  // Also cancel any in-flight inline DNS wizard for this domain
+  if (state.byo.inlineForDomainId === state.selectedDomainId) {
+    state.byo.subStep = null;
+    state.byo.inlineForDomainId = null;
+    state.byo.isVerifying = false;
   }
   state.selectedDomainId = null;
   state.pendingEdits = null;
