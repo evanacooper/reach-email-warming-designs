@@ -78,7 +78,7 @@
   }
 
   /* ============================================== */
-  /* SHELL                                          */
+  /* SHELL — settings-style sidebar + step circles  */
   /* ============================================== */
   .shell {
     background: var(--bg-elevated);
@@ -92,23 +92,22 @@
   }
   .shell-topbar {
     border-bottom: 1px solid var(--border);
-    padding: 22px 36px 26px;
+    padding: 22px 36px 22px;
     background: var(--bg-elevated);
     display: flex;
-    flex-direction: column;
-    gap: 18px;
-  }
-  .shell-title {
-    display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
-    gap: 16px;
   }
   .shell-title h1 {
     font-size: 17px;
     font-weight: 600;
-    margin: 0;
+    margin: 0 0 2px;
     letter-spacing: -0.01em;
+  }
+  .shell-title p {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin: 0;
   }
   .close-btn {
     color: var(--text-muted);
@@ -119,88 +118,11 @@
   }
   .close-btn:hover { color: var(--text); }
 
-  /* Top stepper */
-  .topstep {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 0;
-  }
-  .topstep-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    position: relative;
-    padding: 0 8px;
-  }
-  .topstep-item::before,
-  .topstep-item::after {
-    content: "";
-    position: absolute;
-    top: 13px;
-    height: 1.5px;
-    background: var(--border);
-    z-index: 0;
-  }
-  .topstep-item::before { left: 0; right: 50%; }
-  .topstep-item::after { left: 50%; right: 0; }
-  .topstep-item:first-child::before { display: none; }
-  .topstep-item:last-child::after { display: none; }
-  .topstep-item[data-state="complete"]::before,
-  .topstep-item[data-state="complete"]::after,
-  .topstep-item[data-state="active"]::before {
-    background: var(--text);
-  }
-  .topstep-circle {
-    width: 28px;
-    height: 28px;
-    border-radius: 999px;
-    background: var(--bg-elevated);
-    border: 1.5px solid var(--border-strong);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-faint);
-    position: relative;
-    z-index: 1;
-    flex-shrink: 0;
-  }
-  .topstep-item[data-state="active"] .topstep-circle,
-  .topstep-item[data-state="complete"] .topstep-circle {
-    border-color: var(--text);
-    background: var(--text);
-    color: white;
-  }
-  .topstep-item[data-state="complete"] .topstep-circle::before {
-    content: "✓";
-    font-size: 13px;
-  }
-  .topstep-item[data-state="complete"] .topstep-circle .num { display: none; }
-  .topstep-label {
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text-muted);
-    text-align: center;
-    line-height: 1.2;
-  }
-  .topstep-item[data-state="active"] .topstep-label,
-  .topstep-item[data-state="complete"] .topstep-label {
-    color: var(--text);
-  }
-  .topstep-item[data-state="active"] .topstep-label { font-weight: 600; }
-
-  /* Body */
   .shell-body {
     display: grid;
     grid-template-columns: 240px 1fr;
     min-height: 0;
   }
-  .shell-body[data-no-sidebar="true"] {
-    grid-template-columns: 1fr;
-  }
-  .shell-body[data-no-sidebar="true"] .shell-sidebar { display: none; }
 
   .shell-sidebar {
     border-right: 1px solid var(--border);
@@ -208,7 +130,7 @@
     padding: 24px 14px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
   }
   .shell-sidebar-eyebrow {
     font-size: 11px;
@@ -218,53 +140,37 @@
     color: var(--text-faint);
     padding: 0 12px 10px;
   }
-  .shell-sidebar-parent {
+
+  /* Step item: circle marker + label, click target spans both */
+  .step-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 8px 12px;
+    gap: 12px;
+    padding: 9px 12px;
     border-radius: var(--radius-sm);
+    color: var(--text-secondary);
     font-size: 13.5px;
-    font-weight: 600;
-    color: var(--text);
-    cursor: pointer;
+    font-weight: 500;
     background: transparent;
     border: 0;
     text-align: left;
     width: 100%;
     font-family: inherit;
+    cursor: pointer;
   }
-  .shell-sidebar-parent:hover { background: rgba(15, 23, 42, 0.04); }
-  .shell-sidebar-parent svg { color: var(--text-muted); }
-  .shell-sidebar-substeps {
-    list-style: none;
-    margin: 4px 0 0;
-    padding: 0 0 0 22px;
-    border-left: 1px dashed var(--border-strong);
-    margin-left: 22px;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  .shell-sidebar-substeps li {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 7px 12px;
-    border-radius: var(--radius-sm);
-    color: var(--text-muted);
-    font-size: 13px;
-  }
-  .shell-sidebar-substeps li[data-state="active"] {
+  .step-item:hover:not([data-clickable="false"]) { background: rgba(15, 23, 42, 0.04); }
+  .step-item[data-clickable="false"] { cursor: not-allowed; }
+  .step-item[data-state="active"] {
     background: var(--bg-elevated);
     color: var(--text);
-    font-weight: 500;
+    font-weight: 600;
     box-shadow: var(--shadow-card);
   }
-  .shell-sidebar-substeps li[data-state="complete"] { color: var(--text); }
-  .shell-sidebar-substep-marker {
-    width: 16px;
-    height: 16px;
+  .step-item[data-state="complete"] { color: var(--text); }
+
+  .step-item-marker {
+    width: 22px;
+    height: 22px;
     border-radius: 999px;
     background: var(--bg-elevated);
     border: 1.5px solid var(--border-strong);
@@ -272,30 +178,30 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 9px;
+    font-size: 11px;
     font-weight: 600;
     color: var(--text-faint);
   }
-  .shell-sidebar-substeps li[data-state="active"] .shell-sidebar-substep-marker {
-    border-color: var(--primary);
-    background: var(--primary);
+  .step-item[data-state="active"] .step-item-marker {
+    border-color: var(--text);
+    background: var(--text);
     color: white;
   }
-  .shell-sidebar-substeps li[data-state="complete"] .shell-sidebar-substep-marker {
+  .step-item[data-state="complete"] .step-item-marker {
     border-color: var(--success);
     background: var(--success);
     color: white;
     font-size: 0;
   }
-  .shell-sidebar-substeps li[data-state="complete"] .shell-sidebar-substep-marker::before {
+  .step-item[data-state="complete"] .step-item-marker::before {
     content: "✓";
-    font-size: 9px;
+    font-size: 12px;
     font-weight: 700;
   }
 
   .shell-main {
     overflow-y: auto;
-    padding: 48px 56px 32px;
+    padding: 36px 48px 32px;
     max-width: 100%;
     min-height: 540px;
   }
@@ -312,6 +218,222 @@
     background: var(--bg-elevated);
     gap: 16px;
   }
+
+  /* ============================================== */
+  /* DNS CONNECTION SECTION (Voice-style)           */
+  /* ============================================== */
+  .dns-section {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--bg-elevated);
+    overflow: hidden;
+  }
+  .dns-section[data-state="pending"] { border-color: var(--info-border); }
+  .dns-section[data-state="wizard"] { background: var(--bg-elevated); }
+
+  .dns-section-header {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid transparent;
+  }
+  .dns-section[data-state="wizard"] .dns-section-header {
+    border-bottom-color: var(--border);
+    background: var(--bg-subtle);
+  }
+  .dns-section-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+  }
+  .dns-section-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .dns-section-icon[data-tone="success"] {
+    background: var(--success-pill-bg);
+    color: var(--success);
+  }
+  .dns-section-icon[data-tone="info"] {
+    background: var(--info-bg);
+    color: var(--info);
+  }
+  .dns-section-icon[data-tone="muted"] {
+    background: var(--bg-subtle);
+    color: var(--text-secondary);
+  }
+
+  .dns-section-cancel {
+    margin-left: auto;
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    font-size: 12.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .dns-section-cancel:hover { color: var(--text); }
+
+  .dns-section-body { padding: 20px; }
+  .dns-section-body p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+  .dns-section-body p + p { margin-top: 8px; }
+  .dns-section-body code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: var(--bg-subtle);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+  .dns-section-actions {
+    margin-top: 16px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .dns-section-bullets {
+    list-style: none;
+    margin: 12px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .dns-section-bullets li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text);
+  }
+  .dns-section-bullets li svg {
+    flex-shrink: 0;
+    color: var(--success);
+  }
+  .reassurance-line {
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  /* Inline wizard within the DNS section */
+  .dns-wizard {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    min-height: 380px;
+  }
+  .dns-wizard-sidebar {
+    background: var(--bg-subtle);
+    border-right: 1px solid var(--border);
+    padding: 18px 12px;
+  }
+  .dns-wizard-sidebar-eyebrow {
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+    padding: 0 10px 8px;
+  }
+  .dns-wizard-sidebar ul {
+    list-style: none;
+    margin: 4px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .dns-wizard-sidebar li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 10px;
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-size: 12.5px;
+  }
+  .dns-wizard-sidebar li[data-state="active"] {
+    background: var(--bg-elevated);
+    color: var(--text);
+    font-weight: 500;
+    box-shadow: var(--shadow-card);
+  }
+  .dns-wizard-sidebar li[data-state="complete"] { color: var(--text); }
+  .dns-wizard-sidebar li .marker {
+    width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    background: var(--bg-elevated);
+    border: 1.5px solid var(--border-strong);
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8.5px;
+    font-weight: 600;
+    color: var(--text-faint);
+  }
+  .dns-wizard-sidebar li[data-state="active"] .marker {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: white;
+  }
+  .dns-wizard-sidebar li[data-state="complete"] .marker {
+    border-color: var(--success);
+    background: var(--success);
+    color: white;
+    font-size: 0;
+  }
+  .dns-wizard-sidebar li[data-state="complete"] .marker::before {
+    content: "✓";
+    font-size: 8.5px;
+    font-weight: 700;
+  }
+
+  .dns-wizard-content {
+    padding: 22px 26px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .dns-wizard-content h3 {
+    margin: 0 0 6px;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .dns-wizard-content > p {
+    margin: 0 0 18px;
+    color: var(--text-secondary);
+    font-size: 13.5px;
+  }
+  .dns-wizard-content-body { flex: 1; }
+  .dns-wizard-footer {
+    border-top: 1px solid var(--border);
+    margin-top: 18px;
+    padding-top: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .verifying-list { padding: 4px 0; }
+  .verifying-row-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 
   /* ============================================== */
   /* COMMON                                         */
@@ -1288,6 +1410,15 @@ const BYO_SUBSTEPS = [
    STEP NAVIGATION
    ========================================================= */
 function goToStep(key) {
+  // Leaving the email step while the inline DNS wizard is open?
+  // Pause the wizard so the user can resume on return.
+  if (state.step === 'email' && key !== 'email') {
+    if (state.byo.status === 'in-progress' && state.byo.subStep) {
+      state.byo.paused = true;
+      state.byo.pausedAt = state.byo.subStep;
+      state.byo.subStep = null;
+    }
+  }
   state.step = key;
   // Don't auto-complete; only mark complete on Continue
   render();
@@ -1410,35 +1541,47 @@ function emailRequiredFilled() {
 /* =========================================================
    RENDER HELPERS
    ========================================================= */
-function topStepperHTML() {
-  return `
-    <div class="topstep">
-      ${STEPS.map((s, i) => {
-        const isActive = state.step === s.key;
-        const isComplete = state.completed.has(s.key);
-        const stateAttr = isComplete ? 'complete' : (isActive ? 'active' : 'upcoming');
-        return `
-          <div class="topstep-item" data-state="${stateAttr}">
-            <span class="topstep-circle"><span class="num">${i + 1}</span></span>
-            <span class="topstep-label">${s.label}</span>
-          </div>
-        `;
-      }).join('')}
-    </div>
-  `;
-}
-
+/* =========================================================
+   SHELL — settings-style sidebar with step circle markers
+   ========================================================= */
 function shellHeader() {
+  // Compose a contextual subtitle so the topbar reads like the settings shell
+  const stepIdx = STEPS.findIndex(s => s.key === state.step);
+  const subtitle = state.step === 'complete'
+    ? 'All set — your workspace is ready.'
+    : `Step ${stepIdx + 1} of ${STEPS.length} · ${STEPS[stepIdx]?.label ?? ''}`;
   return `
     <header class="shell-topbar">
       <div class="shell-title">
         <h1>Engage Setup</h1>
-        <button class="close-btn" onclick="state.closed=true; render();" aria-label="Close">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l10 10M14 4L4 14"/></svg>
-        </button>
+        <p>${subtitle}</p>
       </div>
-      ${topStepperHTML()}
+      <button class="close-btn" onclick="state.closed=true; render();" aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l10 10M14 4L4 14"/></svg>
+      </button>
     </header>
+  `;
+}
+
+function stepSidebar() {
+  return `
+    <aside class="shell-sidebar">
+      <div class="shell-sidebar-eyebrow">Engage setup</div>
+      ${STEPS.map((s, i) => {
+        const isActive = state.step === s.key;
+        const isComplete = state.completed.has(s.key);
+        const stateAttr = isComplete ? 'complete' : (isActive ? 'active' : 'upcoming');
+        // Completed steps and the current step are clickable. Upcoming are not.
+        const clickable = isComplete || isActive;
+        const onclick = clickable && !isActive ? `onclick="goToStep('${s.key}')"` : '';
+        return `
+          <button class="step-item" data-state="${stateAttr}" data-clickable="${clickable}" ${onclick} ${clickable ? '' : 'disabled'}>
+            <span class="step-item-marker">${isComplete ? '' : (i + 1)}</span>
+            ${s.label}
+          </button>
+        `;
+      }).join('')}
+    </aside>
   `;
 }
 
@@ -1453,392 +1596,286 @@ function shellFooter({ canContinue = true, continueLabel = 'Continue', onContinu
   `;
 }
 
+/* Shell wrapper used by every step renderer:
+   - topbar with "Engage Setup" + contextual subtitle + close X
+   - left sidebar with step circle markers
+   - right pane (the step content)
+   - footer with Previous / Continue
+*/
+function shellWrap({ content, footerOpts = {}, hideFooter = false }) {
+  return `
+    <div class="shell">
+      ${shellHeader()}
+      <div class="shell-body">
+        ${stepSidebar()}
+        <main class="shell-main">
+          ${content}
+        </main>
+      </div>
+      ${hideFooter ? '' : shellFooter(footerOpts)}
+    </div>
+  `;
+}
+
 /* =========================================================
    STEP CONTENT
    ========================================================= */
 function brandStep() {
-  return `
-    <div class="shell">
-      ${shellHeader()}
-      <div class="shell-body" data-no-sidebar="true">
-        <main class="shell-main">
-          <div class="shell-main-narrow">
-            <div class="step-header">
-              <h1>Customize your brand</h1>
-              <p>Tell us about your business so we can personalize your messages.</p>
-            </div>
-
-            <div class="form-group">
-              <label>Business name</label>
-              <span class="helper">This is how we'll refer to your business across emails and SMS.</span>
-              <input class="form-input" type="text" value="${state.brand.name}" data-focus-key="brand.name"
-                oninput="state.brand.name=this.value; state.email.displayName=this.value; render();" />
-            </div>
-
-            <div class="form-group">
-              <label>Business website</label>
-              <span class="helper">Used to suggest your sending domain later.</span>
-              <input class="form-input" type="text" value="${state.brand.website}" data-focus-key="brand.website"
-                oninput="state.brand.website=this.value; state.byo.rootDomain=this.value; render();" />
-            </div>
-
-            <p style="font-size: 12.5px; color: var(--text-muted); margin-top: 12px;">
-              <em>Demo:</em> the existing Brand step has more fields (logo, brand colors, tone). For this prototype we're showing just name + website to keep the click-through fast.
-            </p>
-          </div>
-        </main>
+  const content = `
+    <div class="shell-main-narrow">
+      <div class="step-header">
+        <h1>Customize your brand</h1>
+        <p>Tell us about your business so we can personalize your messages.</p>
       </div>
-      ${shellFooter({ showBack: false })}
+
+      <div class="form-group">
+        <label>Business name</label>
+        <span class="helper">This is how we'll refer to your business across emails and SMS.</span>
+        <input class="form-input" type="text" value="${state.brand.name}" data-focus-key="brand.name"
+          oninput="state.brand.name=this.value; state.email.displayName=this.value; render();" />
+      </div>
+
+      <div class="form-group">
+        <label>Business website</label>
+        <span class="helper">Used to suggest your sending domain later.</span>
+        <input class="form-input" type="text" value="${state.brand.website}" data-focus-key="brand.website"
+          oninput="state.brand.website=this.value; state.byo.rootDomain=this.value; render();" />
+      </div>
+
+      <p style="font-size: 12.5px; color: var(--text-muted); margin-top: 12px;">
+        <em>Demo:</em> the existing Brand step has more fields (logo, brand colors, tone). For this prototype we're showing just name + website to keep the click-through fast.
+      </p>
     </div>
   `;
+  return shellWrap({ content, footerOpts: { showBack: false } });
 }
 
 function businessStep() {
   const canContinue = businessRequiredFilled();
-  return `
-    <div class="shell">
-      ${shellHeader()}
-      <div class="shell-body" data-no-sidebar="true">
-        <main class="shell-main">
-          <div class="shell-main-narrow">
-            <div class="step-header">
-              <h1>Business Information</h1>
-              <p>This is required before you can send marketing email or SMS — it's a legal compliance requirement.</p>
-            </div>
-
-            <div class="why-explainer">
-              <svg class="icon-sm" width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M10 6.5v4M10 13.5h.01"/></svg>
-              <div><strong>Why this is required:</strong> CAN-SPAM (US) and similar laws require every marketing email to include a physical postal address. SMS providers also require business verification before they'll assign you a sending number.</div>
-            </div>
-
-            <div class="form-group">
-              <label>DBA legal name<span class="req-asterisk">*</span></label>
-              <input class="form-input" type="text" value="${state.business.dba}" data-focus-key="business.dba"
-                oninput="state.business.dba=this.value; render();" />
-            </div>
-
-            <div class="form-group">
-              <label>Business address<span class="req-asterisk">*</span></label>
-              <input class="form-input" type="text" placeholder="Street address" value="${state.business.address1}" data-focus-key="business.address1"
-                oninput="state.business.address1=this.value; render();" />
-            </div>
-
-            <div class="form-group">
-              <label>Address line 2</label>
-              <input class="form-input" type="text" placeholder="Apartment, suite, unit (optional)" value="${state.business.address2}" data-focus-key="business.address2"
-                oninput="state.business.address2=this.value;" />
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label>City<span class="req-asterisk">*</span></label>
-                <input class="form-input" type="text" placeholder="City" value="${state.business.city}" data-focus-key="business.city"
-                  oninput="state.business.city=this.value; render();" />
-              </div>
-              <div class="form-group">
-                <label>State<span class="req-asterisk">*</span></label>
-                <input class="form-input" type="text" placeholder="State" value="${state.business.state}" data-focus-key="business.state"
-                  oninput="state.business.state=this.value; render();" />
-              </div>
-              <div class="form-group">
-                <label>ZIP<span class="req-asterisk">*</span></label>
-                <input class="form-input" type="text" placeholder="ZIP" value="${state.business.zip}" data-focus-key="business.zip"
-                  oninput="state.business.zip=this.value; render();" />
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>Country<span class="req-asterisk">*</span></label>
-              <select class="form-input" onchange="state.business.country=this.value;">
-                <option ${state.business.country === 'United States' ? 'selected' : ''}>United States</option>
-                <option ${state.business.country === 'Canada' ? 'selected' : ''}>Canada</option>
-                <option ${state.business.country === 'United Kingdom' ? 'selected' : ''}>United Kingdom</option>
-              </select>
-            </div>
-
-            ${!canContinue ? `<p style="font-size: 12.5px; color: var(--text-muted); margin-top: 16px;">Fill in all required fields to continue.</p>` : ''}
-          </div>
-        </main>
+  const content = `
+    <div class="shell-main-narrow">
+      <div class="step-header">
+        <h1>Business Information</h1>
+        <p>This is required before you can send marketing email or SMS — it's a legal compliance requirement.</p>
       </div>
-      ${shellFooter({ canContinue })}
+
+      <div class="why-explainer">
+        <svg class="icon-sm" width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M10 6.5v4M10 13.5h.01"/></svg>
+        <div><strong>Why this is required:</strong> CAN-SPAM (US) and similar laws require every marketing email to include a physical postal address. SMS providers also require business verification before they'll assign you a sending number.</div>
+      </div>
+
+      <div class="form-group">
+        <label>DBA legal name<span class="req-asterisk">*</span></label>
+        <input class="form-input" type="text" value="${state.business.dba}" data-focus-key="business.dba"
+          oninput="state.business.dba=this.value; render();" />
+      </div>
+
+      <div class="form-group">
+        <label>Business address<span class="req-asterisk">*</span></label>
+        <input class="form-input" type="text" placeholder="Street address" value="${state.business.address1}" data-focus-key="business.address1"
+          oninput="state.business.address1=this.value; render();" />
+      </div>
+
+      <div class="form-group">
+        <label>Address line 2</label>
+        <input class="form-input" type="text" placeholder="Apartment, suite, unit (optional)" value="${state.business.address2}" data-focus-key="business.address2"
+          oninput="state.business.address2=this.value;" />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>City<span class="req-asterisk">*</span></label>
+          <input class="form-input" type="text" placeholder="City" value="${state.business.city}" data-focus-key="business.city"
+            oninput="state.business.city=this.value; render();" />
+        </div>
+        <div class="form-group">
+          <label>State<span class="req-asterisk">*</span></label>
+          <input class="form-input" type="text" placeholder="State" value="${state.business.state}" data-focus-key="business.state"
+            oninput="state.business.state=this.value; render();" />
+        </div>
+        <div class="form-group">
+          <label>ZIP<span class="req-asterisk">*</span></label>
+          <input class="form-input" type="text" placeholder="ZIP" value="${state.business.zip}" data-focus-key="business.zip"
+            oninput="state.business.zip=this.value; render();" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Country<span class="req-asterisk">*</span></label>
+        <select class="form-input" onchange="state.business.country=this.value;">
+          <option ${state.business.country === 'United States' ? 'selected' : ''}>United States</option>
+          <option ${state.business.country === 'Canada' ? 'selected' : ''}>Canada</option>
+          <option ${state.business.country === 'United Kingdom' ? 'selected' : ''}>United Kingdom</option>
+        </select>
+      </div>
+
+      ${!canContinue ? `<p style="font-size: 12.5px; color: var(--text-muted); margin-top: 16px;">Fill in all required fields to continue.</p>` : ''}
     </div>
   `;
+  return shellWrap({ content, footerOpts: { canContinue } });
 }
 
 function emailStep() {
-  // Determine BYO state for the bottom card
   const byo = state.byo;
-  let nudgeHTML;
-
-  if (byo.status === 'verified') {
-    nudgeHTML = `
-      <div class="domain-success-card">
-        <div class="icon-circle">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l3 3 9-9"/></svg>
-        </div>
-        <div>
-          <h4>Connected: <code>${byo.subdomain}.${byo.rootDomain}</code></h4>
-          <p>Your branded sending domain is verified. New emails will be sent from this domain.</p>
-        </div>
-        <button class="btn btn-secondary" onclick="alert('In settings: would let you manage / remove this domain')">Manage</button>
-      </div>
-    `;
-  } else if (byo.paused) {
-    const pausedSubLabel = BYO_SUBSTEPS.find(s => s.key === byo.pausedAt)?.label || 'Subdomain';
-    nudgeHTML = `
-      <div class="resume-chip">
-        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M10 6v4l2.5 2.5"/></svg>
-        <div>
-          <strong>Domain setup paused.</strong> You started connecting <code style="font-family:var(--font-mono);font-size:12px;">${byo.subdomain}.${byo.rootDomain}</code> — pick up at <strong>${pausedSubLabel}</strong> or skip for now.
-        </div>
-        <button class="resume-cta" onclick="enterBYO()">Resume →</button>
-      </div>
-      <div class="byo-nudge" style="background: var(--bg-subtle); border-style: dashed; margin-top: 14px;">
-        <div class="byo-nudge-icon">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l7-4 7 4-7 4-7-4z"/><path d="M3 8v6l7 4 7-4V8"/></svg>
-        </div>
-        <div class="byo-nudge-content">
-          <h4>${byo.subdomain}.${byo.rootDomain} · setup paused</h4>
-          <p>Your DMARC and subdomain choices are saved. Continue connecting whenever you're ready, or remove this in-progress domain to start fresh.</p>
-          <span class="reassurance">Last activity: just now · ${pausedSubLabel}</span>
-        </div>
-        <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
-          <button class="btn btn-secondary" onclick="enterBYO()">Resume setup →</button>
-          <button class="btn-link" style="font-size:12px; color:var(--text-muted);" onclick="dismissResume()">Remove</button>
-        </div>
-      </div>
-    `;
-  } else {
-    nudgeHTML = `
-      <div class="byo-nudge">
-        <div class="byo-nudge-icon">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l7-4 7 4-7 4-7-4z"/><path d="M3 8v6l7 4 7-4V8"/></svg>
-        </div>
-        <div class="byo-nudge-content">
-          <h4>Send from your own domain</h4>
-          <p>Improves inbox placement on Gmail and Outlook, and removes the platform tag from your sender line. Takes about 5 minutes.</p>
-          <span class="reassurance">You can do this anytime — skip for now and come back from settings whenever you're ready.</span>
-        </div>
-        <button class="btn btn-secondary" onclick="enterBYO()">Connect your domain →</button>
-      </div>
-    `;
-  }
-
   // Choose what domain to show in the inbox preview
   const senderDomain = byo.status === 'verified' ? `${byo.subdomain}.${byo.rootDomain}` : state.email.managedDomain;
   const showVia = byo.status !== 'verified';
 
-  return `
-    <div class="shell">
-      ${shellHeader()}
-      <div class="shell-body" data-no-sidebar="true">
-        <main class="shell-main">
-          <div class="shell-main-narrow">
-            <div class="step-header">
-              <h1>Email Channel</h1>
-              <p>We've already provisioned a sending address for you. You can start sending right away — or connect your own domain for better deliverability.</p>
-            </div>
-
-            <div class="form-group">
-              <label>Sending email address</label>
-              <span class="helper">Edit the prefix to match your team — common choices: <code>marketing</code>, <code>hello</code>, <code>news</code></span>
-              <div class="sender-prefix-row">
-                <input class="form-input" type="text" value="${state.email.prefix}" data-focus-key="email.prefix"
-                  oninput="state.email.prefix=this.value; render();" />
-                <span class="at-sign">@</span>
-                <span class="domain-suffix">${senderDomain}</span>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>Display name<span class="req-asterisk">*</span></label>
-              <span class="helper">What customers see in their inbox before the email opens.</span>
-              <input class="form-input" type="text" value="${state.email.displayName}" data-focus-key="email.displayName"
-                oninput="state.email.displayName=this.value; render();" />
-            </div>
-
-            <div class="form-group">
-              <label>Reply-to email</label>
-              <span class="helper">When customers reply, their response goes here. If left blank, replies go to a no-reply address.</span>
-              <input class="form-input" type="email" placeholder="info@${state.brand.website}" value="${state.email.replyTo}" data-focus-key="email.replyTo"
-                oninput="state.email.replyTo=this.value;" />
-            </div>
-
-            <div style="margin-top: 24px;">
-              <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:10px;">How it appears in inbox</div>
-              <div class="inbox-preview">
-                <div class="inbox-row">
-                  <div class="inbox-avatar">${(state.email.displayName || 'E').charAt(0).toUpperCase()}</div>
-                  <div class="inbox-meta">
-                    <div class="inbox-from">
-                      ${state.email.displayName || 'Your business'}
-                      ${showVia ? `<span class="inbox-via">via <strong style="color:var(--warning);">${state.email.managedDomain}</strong></span>` : ''}
-                    </div>
-                    <div class="inbox-subject">${state.email.prefix || 'hello'}@${senderDomain} · Get your tickets for the 2026 Fair</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            ${nudgeHTML}
-          </div>
-        </main>
+  const content = `
+    <div class="shell-main-narrow">
+      <div class="step-header">
+        <h1>Email Channel</h1>
+        <p>We've already provisioned a sending address for you. You can start sending right away — or connect your own domain for better deliverability.</p>
       </div>
-      ${shellFooter({ canContinue: emailRequiredFilled() })}
+
+      <!-- Sender identity -->
+      <div class="form-group">
+        <label>Sending email address</label>
+        <span class="helper">Edit the prefix to match your team — common choices: <code>marketing</code>, <code>hello</code>, <code>news</code></span>
+        <div class="sender-prefix-row">
+          <input class="form-input" type="text" value="${state.email.prefix}" data-focus-key="email.prefix"
+            oninput="state.email.prefix=this.value; render();" />
+          <span class="at-sign">@</span>
+          <span class="domain-suffix">${senderDomain}</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Display name<span class="req-asterisk">*</span></label>
+        <span class="helper">What customers see in their inbox before the email opens.</span>
+        <input class="form-input" type="text" value="${state.email.displayName}" data-focus-key="email.displayName"
+          oninput="state.email.displayName=this.value; render();" />
+      </div>
+
+      <div class="form-group">
+        <label>Reply-to email</label>
+        <span class="helper">When customers reply, their response goes here. If left blank, replies go to a no-reply address.</span>
+        <input class="form-input" type="email" placeholder="info@${state.brand.website}" value="${state.email.replyTo}" data-focus-key="email.replyTo"
+          oninput="state.email.replyTo=this.value;" />
+      </div>
+
+      <div style="margin-top: 24px;">
+        <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:10px;">How it appears in inbox</div>
+        <div class="inbox-preview">
+          <div class="inbox-row">
+            <div class="inbox-avatar">${(state.email.displayName || 'E').charAt(0).toUpperCase()}</div>
+            <div class="inbox-meta">
+              <div class="inbox-from">
+                ${state.email.displayName || 'Your business'}
+                ${showVia ? `<span class="inbox-via">via <strong style="color:var(--warning);">${state.email.managedDomain}</strong></span>` : ''}
+              </div>
+              <div class="inbox-subject">${state.email.prefix || 'hello'}@${senderDomain} · Get your tickets for the 2026 Fair</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DNS connection (Voice-style) -->
+      <div style="margin-top: 32px;">
+        <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:10px;">DNS connection</div>
+        ${renderOnboardingDnsSection()}
+      </div>
+    </div>
+  `;
+
+  // Hide the Continue/Previous footer while the inline DNS wizard is open or
+  // verifying — the section has its own controls. Resume/configured/splash all
+  // keep the footer so the user can advance to the next onboarding step.
+  const hideFooter = (byo.status === 'in-progress' && byo.subStep) || byo.status === 'verifying';
+  return shellWrap({ content, footerOpts: { canContinue: emailRequiredFilled() }, hideFooter });
+}
+
+/* =========================================================
+   DNS CONNECTION SECTION (Voice-style, inline on Email step)
+   ========================================================= */
+function renderOnboardingDnsSection() {
+  const byo = state.byo;
+
+  // Inline wizard takes precedence
+  if (byo.status === 'in-progress' && byo.subStep) return renderDnsWizardVariant();
+  if (byo.status === 'verifying') return renderDnsVerifyingVariant();
+  if (byo.status === 'verified') return renderDnsConfiguredVariant();
+  if (byo.paused) return renderDnsPausedVariant();
+  return renderDnsSplashVariant();
+}
+
+/* Splash — first-time state, BYO not started */
+function renderDnsSplashVariant() {
+  return `
+    <div class="dns-section">
+      <div class="dns-section-header">
+        <span class="dns-section-icon" data-tone="muted">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l7-4 7 4-7 4-7-4z"/><path d="M3 8v3l7 4 7-4V8"/></svg>
+        </span>
+        <span class="dns-section-title">Send from your own domain</span>
+        <span style="margin-left: auto; font-size: 12px; color: var(--text-muted);">Optional · ~5 minutes</span>
+      </div>
+      <div class="dns-section-body">
+        <p>Improves inbox placement on Gmail and Outlook, and removes the platform tag from your sender line.</p>
+        <ul class="dns-section-bullets">
+          <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3 3L13 4.5"/></svg> Better deliverability and brand trust</li>
+          <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3 3L13 4.5"/></svg> Detects your DNS provider automatically</li>
+          <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3 3L13 4.5"/></svg> Forward setup to your IT contact if you don't have access</li>
+        </ul>
+        <div class="dns-section-actions">
+          <button class="btn btn-primary" onclick="enterBYO()">Connect your domain</button>
+        </div>
+        <p class="reassurance-line">You can do this anytime — skip for now and come back from settings whenever you're ready.</p>
+      </div>
     </div>
   `;
 }
 
-/* =========================================================
-   BYO SUB-JOURNEY SCREENS (inside Email step)
-   ========================================================= */
-function byoSidebarHTML() {
-  const order = BYO_SUBSTEPS.map(s => s.key);
-  const currentIdx = order.indexOf(state.byo.subStep);
+/* Paused — user bailed out mid-wizard, partial state preserved */
+function renderDnsPausedVariant() {
+  const byo = state.byo;
+  const pausedSubLabel = BYO_SUBSTEPS.find(s => s.key === byo.pausedAt)?.label || 'Subdomain';
   return `
-    <aside class="shell-sidebar">
-      <div class="shell-sidebar-eyebrow">Email setup</div>
-      <button class="shell-sidebar-parent" onclick="exitBYOPaused()">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3L4 7l5 4"/></svg>
-        Email Channel
-      </button>
-      <ul class="shell-sidebar-substeps">
-        ${BYO_SUBSTEPS.map((s, i) => {
-          const stateAttr = i < currentIdx ? 'complete' : (i === currentIdx ? 'active' : 'upcoming');
-          return `<li data-state="${stateAttr}">
-            <span class="shell-sidebar-substep-marker">${stateAttr === 'complete' ? '' : (i + 1)}</span>
-            ${s.label}
-          </li>`;
-        }).join('')}
-      </ul>
-    </aside>
+    <div class="dns-section" data-state="pending">
+      <div class="dns-section-header">
+        <span class="dns-section-icon" data-tone="info">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M10 6v4l2.5 2.5"/></svg>
+        </span>
+        <span class="dns-section-title">Domain setup paused</span>
+        <span style="margin-left: auto; font-size: 12px; color: var(--text-muted);">at ${pausedSubLabel}</span>
+      </div>
+      <div class="dns-section-body">
+        <p>You started connecting <code>${byo.subdomain}.${byo.rootDomain}</code>. Your DMARC and subdomain choices are saved — pick up where you left off, or remove the in-progress domain to start fresh.</p>
+        <div class="dns-section-actions">
+          <button class="btn btn-primary" onclick="enterBYO()">Resume setup</button>
+          <button class="btn btn-secondary" onclick="dismissResume()">Remove in-progress domain</button>
+        </div>
+      </div>
+    </div>
   `;
 }
 
-function byoRootSubstep() {
+/* Configured — BYO verified, mirrors the settings configured-state card */
+function renderDnsConfiguredVariant() {
+  const byo = state.byo;
   return `
-    <main class="shell-main">
-      <div class="step-header">
-        <h1>What's your root domain?</h1>
-        <p>This is the domain your customers know you by — usually the same as your website.</p>
+    <div class="dns-section">
+      <div class="dns-section-header">
+        <span class="dns-section-icon" data-tone="success">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3 3L13 4.5"/></svg>
+        </span>
+        <span class="dns-section-title">DNS connected</span>
+        <span style="margin-left: auto; font-size: 12px; color: var(--text-muted); font-family: var(--font-mono);">last verified just now</span>
       </div>
-
-      <div style="max-width: 480px;">
-        <div class="form-group">
-          <label>Root domain</label>
-          <span class="helper">For example: ${state.brand.website}</span>
-          <input class="form-input" type="text" value="${state.byo.rootDomain}" data-focus-key="byo.rootDomain"
-            oninput="state.byo.rootDomain=this.value;" />
-        </div>
-
-        <div class="info-banner">
-          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M10 6.5v4M10 13.5h.01"/></svg>
-          <div>We pulled this from your business website. Looks wrong? Edit above.</div>
+      <div class="dns-section-body">
+        <p>Outbound mail is DKIM-signed under <code>${byo.subdomain}.${byo.rootDomain}</code>. Recipients see your business — no platform tag.</p>
+        <div class="dns-section-actions">
+          <button class="btn btn-secondary" onclick="dismissResume()">Disconnect & start over</button>
         </div>
       </div>
-    </main>
+    </div>
   `;
 }
 
-function byoSubdomainSubstep() {
-  return `
-    <main class="shell-main">
-      <div class="step-header">
-        <h1>Pick a sending subdomain</h1>
-        <p>This is where your emails will be sent from. Use a subdomain you're not already using for your website or work email.</p>
-      </div>
-
-      <div style="max-width: 540px;">
-        <div class="preview-chip">
-          <svg width="16" height="16" style="color:var(--text-muted);" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="2.5"/><path d="M2 10s2.5-5 8-5 8 5 8 5-2.5 5-8 5-8-5-8-5z"/></svg>
-          <div>
-            <div class="preview-chip-label">Preview</div>
-            <div class="preview-chip-value">${state.byo.subdomain}.${state.byo.rootDomain}</div>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>Sending subdomain</label>
-          <span class="helper">Common choices: <code>send</code>, <code>email</code>, <code>notifications</code></span>
-          <div class="subdomain-row">
-            <input class="form-input" type="text" value="${state.byo.subdomain}" data-focus-key="byo.subdomain"
-              oninput="state.byo.subdomain=this.value; render();" />
-            <span class="domain-suffix">.${state.byo.rootDomain}</span>
-          </div>
-        </div>
-
-        <p style="font-size: 12.5px; color: var(--text-muted); margin-top: 4px;">When you continue, we'll check whether your DNS provider supports automatic setup so we can route you to the smoothest path on the next step.</p>
-      </div>
-    </main>
-  `;
-}
-
-function byoDmarcSubstep() {
-  return `
-    <main class="shell-main">
-      <div class="step-header">
-        <h1>Add a DMARC record</h1>
-        <p>DMARC tells inbox providers like Gmail what to do with mail that fails authentication. Required for senders at scale.</p>
-      </div>
-
-      <div style="max-width: 600px;">
-        <div class="dmarc-card">
-          <div class="dmarc-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
-          </div>
-          <div class="dmarc-content">
-            <h4>Add DMARC record <span class="recommended-pill">Recommended</span></h4>
-            <p>Protects your sending reputation and meets Gmail and Yahoo's bulk sender requirements.</p>
-          </div>
-          <button class="toggle" data-on="${state.byo.dmarcOn}" onclick="state.byo.dmarcOn=!state.byo.dmarcOn; render();"></button>
-        </div>
-      </div>
-    </main>
-  `;
-}
-
-function byoConnectSubstep() {
-  return `
-    <main class="shell-main">
-      <div class="connect-screen">
-        <div>
-          <h1 style="font-size:26px; font-weight:600; margin:0 0 8px; letter-spacing:-0.02em;">Connect with Entri</h1>
-          <p style="margin:0; color:var(--text-secondary); font-size:15px;">Entri logs into your DNS provider for you and adds the right records — no copy-paste, no mistakes.</p>
-
-          <ul>
-            <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M6.5 10l2.5 2.5 5-5"/></svg> Fast, secure setup</li>
-            <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M6.5 10l2.5 2.5 5-5"/></svg> Detects your DNS provider automatically</li>
-            <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M6.5 10l2.5 2.5 5-5"/></svg> Forward to your IT contact if you don't have access</li>
-          </ul>
-
-          <div class="connect-actions">
-            <button class="btn btn-primary btn-large" onclick="state.showEntriModal=true; render();">Connect with Entri</button>
-            <button class="btn btn-secondary btn-large" onclick="alert('In production: would show manual DNS records to copy/paste')">Set up manually</button>
-          </div>
-
-          <p class="connect-fineprint">By selecting "Connect with Entri" you agree to Entri's Terms of Service and Privacy Policy.</p>
-        </div>
-
-        <div class="connect-art" aria-hidden="true">
-          <div class="connect-art-card secondary">
-            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-              <path d="M10 10h20v20H10z" stroke="#9ca3af" stroke-width="2" stroke-dasharray="2 3"/>
-            </svg>
-          </div>
-          <div class="connect-art-card primary">
-            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-              <circle cx="20" cy="20" r="14" fill="var(--text)"/>
-              <path d="M14 20l4 4 8-8" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-            </svg>
-          </div>
-        </div>
-      </div>
-    </main>
-  `;
-}
-
-function byoVerifyingScreen() {
-  const p = state.byo.verifyProgress;
+/* Verifying — animated record-by-record progress, shown after Entri success */
+function renderDnsVerifyingVariant() {
+  const byo = state.byo;
+  const p = byo.verifyProgress;
   const dkimState = p >= 1 ? 'ok' : (p === 0 ? 'working' : 'pending');
   const rpState = p >= 2 ? 'ok' : (p === 1 ? 'working' : 'pending');
   const dmarcState = p >= 3 ? 'ok' : (p === 2 ? 'working' : 'pending');
@@ -1848,229 +1885,286 @@ function byoVerifyingScreen() {
     if (st === 'working') return `<div class="spinner" style="border-top-color: var(--info);"></div>`;
     return '';
   };
-
   const renderLabel = (st) => st === 'ok' ? 'verified just now' : (st === 'working' ? 'checking…' : 'pending');
 
   return `
-    <main class="shell-main">
-      <div class="step-header">
-        <h1>Verifying your domain</h1>
-        <p>Entri is publishing your DNS records. We'll be notified the moment each one propagates worldwide. This usually takes 1–5 minutes.</p>
+    <div class="dns-section" data-state="pending">
+      <div class="dns-section-header">
+        <span class="dns-section-icon" data-tone="info">
+          <div class="spinner" style="width: 12px; height: 12px;"></div>
+        </span>
+        <span class="dns-section-title">Verifying DNS records for ${byo.subdomain}.${byo.rootDomain}</span>
+        <span style="margin-left: auto; font-size: 12px; color: var(--text-muted);">${p < 3 ? 'usually 1–5 minutes' : 'all records verified'}</span>
       </div>
-
-      <div style="max-width: 640px;">
-        <div class="verifying-card">
-          <div class="verifying-header">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);"><path d="M12 2v6m0 8v6M2 12h6m8 0h6M5 5l4 4m6 6l4 4M5 19l4-4m6-6l4-4"/></svg>
-            <span class="domain-name">${state.byo.subdomain}.${state.byo.rootDomain}</span>
-            <span class="status-pill status-pending" style="margin-left:auto;">Verifying</span>
-          </div>
-
-          <div class="verifying-list">
-            <div class="verifying-row">
-              <div class="verifying-icon" data-state="${dkimState}">${renderIcon(dkimState)}</div>
-              <div>
-                <div class="label">DKIM signing key</div>
-                <div class="desc">TXT record for <code style="font-family:var(--font-mono);font-size:11.5px;">_domainkey.${state.byo.subdomain}</code></div>
-              </div>
-              <span class="timestamp">${renderLabel(dkimState)}</span>
+      <div class="dns-section-body" style="padding: 0;">
+        <div class="verifying-list">
+          <div class="verifying-row">
+            <div class="verifying-icon" data-state="${dkimState}">${renderIcon(dkimState)}</div>
+            <div>
+              <div class="label">DKIM signing key</div>
+              <div class="verifying-row-meta">TXT record for <code style="font-family:var(--font-mono);font-size:11.5px;">_domainkey.${byo.subdomain}</code></div>
             </div>
-
-            <div class="verifying-row">
-              <div class="verifying-icon" data-state="${rpState}">${renderIcon(rpState)}</div>
-              <div>
-                <div class="label">Return-Path</div>
-                <div class="desc">CNAME for <code style="font-family:var(--font-mono);font-size:11.5px;">pm-bounces.${state.byo.subdomain}</code></div>
-              </div>
-              <span class="timestamp">${renderLabel(rpState)}</span>
+            <span class="timestamp">${renderLabel(dkimState)}</span>
+          </div>
+          <div class="verifying-row">
+            <div class="verifying-icon" data-state="${rpState}">${renderIcon(rpState)}</div>
+            <div>
+              <div class="label">Return-Path</div>
+              <div class="verifying-row-meta">CNAME for <code style="font-family:var(--font-mono);font-size:11.5px;">pm-bounces.${byo.subdomain}</code></div>
             </div>
-
-            ${state.byo.dmarcOn ? `
-            <div class="verifying-row">
-              <div class="verifying-icon" data-state="${dmarcState}">${renderIcon(dmarcState)}</div>
-              <div>
-                <div class="label">DMARC policy</div>
-                <div class="desc">TXT record for <code style="font-family:var(--font-mono);font-size:11.5px;">_dmarc.${state.byo.subdomain}</code></div>
-              </div>
-              <span class="timestamp">${renderLabel(dmarcState)}</span>
-            </div>` : ''}
+            <span class="timestamp">${renderLabel(rpState)}</span>
           </div>
-
-          <div class="verifying-foot">
-            ${p < 3 ? `<div class="spinner"></div><span>You can leave this page — we'll update once verification finishes.</span>` : `<span style="color:var(--success);font-weight:500;">All records verified. Returning to Email Channel…</span>`}
-          </div>
+          ${byo.dmarcOn ? `
+          <div class="verifying-row">
+            <div class="verifying-icon" data-state="${dmarcState}">${renderIcon(dmarcState)}</div>
+            <div>
+              <div class="label">DMARC policy</div>
+              <div class="verifying-row-meta">TXT record for <code style="font-family:var(--font-mono);font-size:11.5px;">_dmarc.${byo.subdomain}</code></div>
+            </div>
+            <span class="timestamp">${renderLabel(dmarcState)}</span>
+          </div>` : ''}
         </div>
+        ${p < 3 ? `
+          <div style="padding: 14px 24px; background: var(--bg-subtle); border-top: 1px solid var(--border); display: flex; align-items: center; gap: 12px; font-size: 12.5px; color: var(--text-muted);">
+            <div class="spinner"></div>
+            <span>You can continue to the next step — we'll update when verification finishes.</span>
+            <button class="btn-link" style="margin-left: auto;" onclick="state.byo.status='verified'; render();">Skip ahead</button>
+          </div>
+        ` : ''}
       </div>
-    </main>
-  `;
-}
-
-function emailWithBYOSubFlow() {
-  // Show the BYO sub-journey within the email step
-  const sub = state.byo.subStep;
-  let subContent;
-  if (sub === 'root') subContent = byoRootSubstep();
-  else if (sub === 'subdomain') subContent = byoSubdomainSubstep();
-  else if (sub === 'dmarc') subContent = byoDmarcSubstep();
-  else if (sub === 'connect') subContent = byoConnectSubstep();
-
-  // Connect sub-step has its own actions (Connect with Entri / Set up manually)
-  // so we hide the standard footer there
-  const hideFooterContinue = sub === 'connect';
-  const continueLabel = 'Continue';
-
-  return `
-    <div class="shell">
-      ${shellHeader()}
-      <div class="shell-body">
-        ${byoSidebarHTML()}
-        ${subContent}
-      </div>
-      <footer class="shell-footer">
-        <button class="btn btn-ghost" onclick="byoBack()">← Back</button>
-        ${hideFooterContinue
-          ? `<span style="font-size:12px; color:var(--text-muted);">Choose an option above to continue</span>`
-          : `<button class="btn btn-primary" onclick="byoNext()">${continueLabel}</button>`}
-      </footer>
     </div>
   `;
 }
 
-function emailWithVerifyingSubFlow() {
+/* Inline wizard — runs in place of the DNS section content */
+function renderDnsWizardVariant() {
+  const byo = state.byo;
+  const sub = byo.subStep;
+  const order = BYO_SUBSTEPS.map(s => s.key);
+  const currentIdx = order.indexOf(sub);
+
+  let body;
+  if (sub === 'root') body = renderInlineWizardRoot();
+  else if (sub === 'subdomain') body = renderInlineWizardSubdomain();
+  else if (sub === 'dmarc') body = renderInlineWizardDmarc();
+  else if (sub === 'connect') body = renderInlineWizardConnect();
+
+  const isConnect = sub === 'connect';
+
   return `
-    <div class="shell">
-      ${shellHeader()}
-      <div class="shell-body">
-        ${byoSidebarHTML().replace('data-state="active"', 'data-state="complete"').replace('Connect</li>', 'Connect</li><li data-state="active"><span class="shell-sidebar-substep-marker">5</span>Verifying</li>')}
-        ${byoVerifyingScreen()}
+    <div class="dns-section" data-state="wizard">
+      <div class="dns-section-header">
+        <span class="dns-section-icon" data-tone="info">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8s2-4 6-4 6 4 6 4-2 4-6 4-6-4-6-4z"/><circle cx="8" cy="8" r="2"/></svg>
+        </span>
+        <span class="dns-section-title">Connect DNS for ${byo.subdomain}.${byo.rootDomain}</span>
+        <button class="dns-section-cancel" onclick="exitBYOPaused()">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 3l8 8M11 3l-8 8"/></svg>
+          Cancel
+        </button>
       </div>
-      <footer class="shell-footer">
-        <span></span>
-        ${state.byo.verifyProgress === 3
-          ? `<button class="btn btn-primary" onclick="state.byo.subStep=null; render();">Back to Email Channel →</button>`
-          : `<button class="btn btn-secondary" onclick="exitBYOPaused()">Continue setup — verify in background</button>`}
-      </footer>
+      <div class="dns-wizard">
+        <aside class="dns-wizard-sidebar">
+          <div class="dns-wizard-sidebar-eyebrow">Connect DNS</div>
+          <ul>
+            ${BYO_SUBSTEPS.map((s, i) => {
+              const stateAttr = i < currentIdx ? 'complete' : (i === currentIdx ? 'active' : 'upcoming');
+              return `<li data-state="${stateAttr}">
+                <span class="marker">${stateAttr === 'complete' ? '' : (i + 1)}</span>
+                ${s.label}
+              </li>`;
+            }).join('')}
+          </ul>
+        </aside>
+        <div class="dns-wizard-content">
+          ${body}
+          <div class="dns-wizard-footer">
+            <button class="btn btn-ghost" onclick="byoBack()">← Back</button>
+            ${isConnect
+              ? '<span style="font-size:12px; color:var(--text-muted);">Choose an option above to continue</span>'
+              : '<button class="btn btn-primary" onclick="byoNext()">Continue</button>'}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* Inline wizard sub-step bodies (compact versions) */
+function renderInlineWizardRoot() {
+  return `
+    <h3>What's your root domain?</h3>
+    <p>This is the domain your customers know you by — usually the same as your website.</p>
+    <div class="dns-wizard-content-body">
+      <div class="form-group">
+        <label>Root domain</label>
+        <input class="form-input" type="text" value="${state.byo.rootDomain}" data-focus-key="byo.rootDomain"
+          oninput="state.byo.rootDomain=this.value;" />
+        <span class="helper">For example: ${state.brand.website}</span>
+      </div>
+    </div>
+  `;
+}
+
+function renderInlineWizardSubdomain() {
+  return `
+    <h3>Pick a sending subdomain</h3>
+    <p>This is where your emails will be sent from. Use a subdomain you're not already using elsewhere.</p>
+    <div class="dns-wizard-content-body">
+      <div class="preview-chip">
+        <svg width="14" height="14" style="color:var(--text-muted);" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="2.5"/><path d="M2 10s2.5-5 8-5 8 5 8 5-2.5 5-8 5-8-5-8-5z"/></svg>
+        <div>
+          <div class="preview-chip-label">Preview</div>
+          <div class="preview-chip-value">${state.byo.subdomain}.${state.byo.rootDomain}</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Sending subdomain</label>
+        <span class="helper">Common choices: <code>send</code>, <code>email</code>, <code>notifications</code></span>
+        <div class="subdomain-row">
+          <input class="form-input" type="text" value="${state.byo.subdomain}" data-focus-key="byo.subdomain"
+            oninput="state.byo.subdomain=this.value; render();" />
+          <span class="domain-suffix">.${state.byo.rootDomain}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderInlineWizardDmarc() {
+  return `
+    <h3>Add a DMARC record</h3>
+    <p>DMARC tells inbox providers how to handle mail that fails authentication. Required for senders at scale.</p>
+    <div class="dns-wizard-content-body">
+      <div class="dmarc-card">
+        <div class="dmarc-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
+        </div>
+        <div class="dmarc-content">
+          <h4>Add DMARC record <span class="recommended-pill">Recommended</span></h4>
+          <p>Protects your sending reputation and meets Gmail and Yahoo's bulk sender requirements.</p>
+        </div>
+        <button class="toggle" data-on="${state.byo.dmarcOn}" onclick="state.byo.dmarcOn=!state.byo.dmarcOn; render();"></button>
+      </div>
+    </div>
+  `;
+}
+
+function renderInlineWizardConnect() {
+  return `
+    <h3>Connect with Entri</h3>
+    <p>Entri logs into your DNS provider for you and adds the right records — no copy-paste, no mistakes.</p>
+    <div class="dns-wizard-content-body">
+      <ul style="list-style: none; margin: 0 0 18px; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 13.5px;">
+        <li style="display: flex; align-items: center; gap: 8px;"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M6.5 10l2.5 2.5 5-5"/></svg> Detects your DNS provider automatically</li>
+        <li style="display: flex; align-items: center; gap: 8px;"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M6.5 10l2.5 2.5 5-5"/></svg> Forward to your IT contact if you don't have access</li>
+        <li style="display: flex; align-items: center; gap: 8px;"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M6.5 10l2.5 2.5 5-5"/></svg> Records published in seconds</li>
+      </ul>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn btn-primary" onclick="state.showEntriModal=true; render();">Connect with Entri</button>
+        <button class="btn btn-secondary" onclick="alert('In production: would show manual DNS records to copy/paste')">Set up manually</button>
+      </div>
+      <p style="margin-top: 12px; font-size: 11.5px; color: var(--text-muted);">By selecting "Connect with Entri" you agree to Entri's Terms of Service and Privacy Policy.</p>
     </div>
   `;
 }
 
 function smsStep() {
-  return `
-    <div class="shell">
-      ${shellHeader()}
-      <div class="shell-body" data-no-sidebar="true">
-        <main class="shell-main">
-          <div class="shell-main-narrow" style="text-align:center; padding:20px 0;">
-            <div class="step-header" style="text-align:left;">
-              <h1>SMS Channel</h1>
-              <p>Set up your SMS provider to start sending personalized messages to your customers.</p>
-            </div>
-            <div class="sms-card">
-              <div class="icon-circle">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h10a2 2 0 012 2v8a2 2 0 01-2 2h-3l-3 2v-2H5a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg>
-              </div>
-              <h3>Request your SMS sending number</h3>
-              <p>Before you can send messages, we need to verify your business info with our SMS provider. Once approved, we'll assign you a phone number to send SMS campaigns.</p>
-              <p class="timing">This usually takes 3–7 business days.</p>
-              <button class="btn btn-secondary" onclick="alert('In production: this submits your Business Info to the SMS provider for approval')">Request approval</button>
-            </div>
-          </div>
-        </main>
+  const content = `
+    <div class="shell-main-narrow">
+      <div class="step-header">
+        <h1>SMS Channel</h1>
+        <p>Set up your SMS provider to start sending personalized messages to your customers.</p>
       </div>
-      ${shellFooter()}
+      <div class="sms-card">
+        <div class="icon-circle">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h10a2 2 0 012 2v8a2 2 0 01-2 2h-3l-3 2v-2H5a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg>
+        </div>
+        <h3>Request your SMS sending number</h3>
+        <p>Before you can send messages, we need to verify your business info with our SMS provider. Once approved, we'll assign you a phone number to send SMS campaigns.</p>
+        <p class="timing">This usually takes 3–7 business days.</p>
+        <button class="btn btn-secondary" onclick="alert('In production: this submits your Business Info to the SMS provider for approval')">Request approval</button>
+      </div>
     </div>
   `;
+  return shellWrap({ content });
 }
 
 function mergeStep() {
-  return `
-    <div class="shell">
-      ${shellHeader()}
-      <div class="shell-body" data-no-sidebar="true">
-        <main class="shell-main">
-          <div class="shell-main-narrow">
-            <div class="step-header">
-              <h1>Merge Fields</h1>
-              <p>Personalize your messages with dynamic content like the customer's first name.</p>
-            </div>
-
-            <div class="merge-explainer">
-              <h4>
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1v4M8 11v4M1 8h4M11 8h4M3 3l3 3M10 10l3 3M3 13l3-3M10 6l3-3"/></svg>
-                How personalization works
-              </h4>
-              <div class="merge-example-label">When we have customer data:</div>
-              <div class="merge-example">"Hey <strong>Sarah</strong>, happy birthday! Here's 20% off…"</div>
-              <div class="merge-example-label">When we don't:</div>
-              <div class="merge-example">"Hey <strong>${state.merge.firstName || 'there'}</strong>, happy birthday! Here's 20% off…"</div>
-            </div>
-
-            <div class="merge-field-row">
-              <div>
-                <h5>First Name <span class="recommended-pill">Recommended</span></h5>
-                <p>The customer's first name.</p>
-              </div>
-              <div class="form-group" style="margin:0;">
-                <label style="font-size:11.5px;">Backup text</label>
-                <input class="form-input" type="text" placeholder="there" value="${state.merge.firstName}" data-focus-key="merge.firstName"
-                  oninput="state.merge.firstName=this.value; render();" />
-              </div>
-            </div>
-
-            <div class="merge-field-row">
-              <div>
-                <h5>Last Name</h5>
-                <p>The customer's surname. Can be left blank.</p>
-              </div>
-              <div class="form-group" style="margin:0;">
-                <label style="font-size:11.5px;">Backup text</label>
-                <input class="form-input" type="text" placeholder="" value="${state.merge.lastName}" data-focus-key="merge.lastName"
-                  oninput="state.merge.lastName=this.value;" />
-              </div>
-            </div>
-          </div>
-        </main>
+  const content = `
+    <div class="shell-main-narrow">
+      <div class="step-header">
+        <h1>Merge Fields</h1>
+        <p>Personalize your messages with dynamic content like the customer's first name.</p>
       </div>
-      ${shellFooter()}
+
+      <div class="merge-explainer">
+        <h4>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1v4M8 11v4M1 8h4M11 8h4M3 3l3 3M10 10l3 3M3 13l3-3M10 6l3-3"/></svg>
+          How personalization works
+        </h4>
+        <div class="merge-example-label">When we have customer data:</div>
+        <div class="merge-example">"Hey <strong>Sarah</strong>, happy birthday! Here's 20% off…"</div>
+        <div class="merge-example-label">When we don't:</div>
+        <div class="merge-example">"Hey <strong>${state.merge.firstName || 'there'}</strong>, happy birthday! Here's 20% off…"</div>
+      </div>
+
+      <div class="merge-field-row">
+        <div>
+          <h5>First Name <span class="recommended-pill">Recommended</span></h5>
+          <p>The customer's first name.</p>
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label style="font-size:11.5px;">Backup text</label>
+          <input class="form-input" type="text" placeholder="there" value="${state.merge.firstName}" data-focus-key="merge.firstName"
+            oninput="state.merge.firstName=this.value; render();" />
+        </div>
+      </div>
+
+      <div class="merge-field-row">
+        <div>
+          <h5>Last Name</h5>
+          <p>The customer's surname. Can be left blank.</p>
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label style="font-size:11.5px;">Backup text</label>
+          <input class="form-input" type="text" placeholder="" value="${state.merge.lastName}" data-focus-key="merge.lastName"
+            oninput="state.merge.lastName=this.value;" />
+        </div>
+      </div>
     </div>
   `;
+  return shellWrap({ content });
 }
 
 function automationsStep() {
-  return `
-    <div class="shell">
-      ${shellHeader()}
-      <div class="shell-body" data-no-sidebar="true">
-        <main class="shell-main">
-          <div class="shell-main-narrow">
-            <div class="step-header">
-              <h1>Turn on automations</h1>
-              <p>Pick the automations you want active when you launch. Recommended ones are pre-selected — you can change them anytime.</p>
-            </div>
-
-            <div class="automation-list">
-              <div class="automation-list-item">
-                <div class="icon-circle"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l7 5 7-5"/><rect x="3" y="4" width="14" height="12" rx="1.5"/></svg></div>
-                <div><h5>Welcome series</h5><p>Sends 3 emails over the first week to new contacts.</p></div>
-                <button class="toggle" data-on="${state.automations.welcome}" onclick="state.automations.welcome=!state.automations.welcome; render();"></button>
-              </div>
-              <div class="automation-list-item">
-                <div class="icon-circle"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4v6l4 2"/><circle cx="10" cy="10" r="7"/></svg></div>
-                <div><h5>Birthday wishes</h5><p>Sends a birthday email when you have a birthdate on file.</p></div>
-                <button class="toggle" data-on="${state.automations.birthday}" onclick="state.automations.birthday=!state.automations.birthday; render();"></button>
-              </div>
-              <div class="automation-list-item">
-                <div class="icon-circle"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l4 4 10-10"/></svg></div>
-                <div><h5>Thank-you after purchase</h5><p>Triggers a thank-you message 24 hours after a transaction.</p></div>
-                <button class="toggle" data-on="${state.automations.thankyou}" onclick="state.automations.thankyou=!state.automations.thankyou; render();"></button>
-              </div>
-            </div>
-          </div>
-        </main>
+  const content = `
+    <div class="shell-main-narrow">
+      <div class="step-header">
+        <h1>Turn on automations</h1>
+        <p>Pick the automations you want active when you launch. Recommended ones are pre-selected — you can change them anytime.</p>
       </div>
-      ${shellFooter({ continueLabel: 'Save & go to dashboard →' })}
+
+      <div class="automation-list">
+        <div class="automation-list-item">
+          <div class="icon-circle"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l7 5 7-5"/><rect x="3" y="4" width="14" height="12" rx="1.5"/></svg></div>
+          <div><h5>Welcome series</h5><p>Sends 3 emails over the first week to new contacts.</p></div>
+          <button class="toggle" data-on="${state.automations.welcome}" onclick="state.automations.welcome=!state.automations.welcome; render();"></button>
+        </div>
+        <div class="automation-list-item">
+          <div class="icon-circle"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4v6l4 2"/><circle cx="10" cy="10" r="7"/></svg></div>
+          <div><h5>Birthday wishes</h5><p>Sends a birthday email when you have a birthdate on file.</p></div>
+          <button class="toggle" data-on="${state.automations.birthday}" onclick="state.automations.birthday=!state.automations.birthday; render();"></button>
+        </div>
+        <div class="automation-list-item">
+          <div class="icon-circle"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l4 4 10-10"/></svg></div>
+          <div><h5>Thank-you after purchase</h5><p>Triggers a thank-you message 24 hours after a transaction.</p></div>
+          <button class="toggle" data-on="${state.automations.thankyou}" onclick="state.automations.thankyou=!state.automations.thankyou; render();"></button>
+        </div>
+      </div>
     </div>
   `;
+  return shellWrap({ content, footerOpts: { continueLabel: 'Save & go to dashboard →' } });
 }
 
 function completionScreen() {
@@ -2186,15 +2280,7 @@ function render() {
   let content;
   if (state.step === 'brand') content = brandStep();
   else if (state.step === 'business') content = businessStep();
-  else if (state.step === 'email') {
-    if (state.byo.status === 'in-progress' && state.byo.subStep) {
-      content = emailWithBYOSubFlow();
-    } else if (state.byo.status === 'verifying') {
-      content = emailWithVerifyingSubFlow();
-    } else {
-      content = emailStep();
-    }
-  }
+  else if (state.step === 'email') content = emailStep();
   else if (state.step === 'sms') content = smsStep();
   else if (state.step === 'merge') content = mergeStep();
   else if (state.step === 'automations') content = automationsStep();
