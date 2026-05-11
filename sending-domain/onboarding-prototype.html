@@ -1498,14 +1498,14 @@ function entriSuccess() {
   state.byo.status = 'verifying';
   state.byo.subStep = null; // exits sub-flow display, but verifying screen takes over
   state.byo.verifyProgress = 0;
-  // Animate progression
+  // Animate progression. Stay in 'verifying' status when all 3 records are
+  // checked so the user sees the success state before the screen swaps —
+  // finishVerifying() (Continue button) flips status to 'verified' and routes
+  // back to the Email Channel page.
   setTimeout(() => { state.byo.verifyProgress = 1; render(); }, 1800);
   setTimeout(() => { state.byo.verifyProgress = 2; render(); }, 3600);
   setTimeout(() => {
     state.byo.verifyProgress = 3;
-    state.byo.status = 'verified';
-    state.byo.paused = false;
-    state.byo.pausedAt = null;
     render();
   }, 5400);
   render();
@@ -1545,11 +1545,20 @@ function emailRequiredFilled() {
    SHELL — settings-style sidebar with step circle markers
    ========================================================= */
 function shellHeader() {
-  // Compose a contextual subtitle so the topbar reads like the settings shell
+  // Compose a contextual subtitle so the topbar reads like the settings shell.
+  // During the Connect DNS sub-journey the subtitle reflects the sub-step.
   const stepIdx = STEPS.findIndex(s => s.key === state.step);
-  const subtitle = state.step === 'complete'
-    ? 'All set — your workspace is ready.'
-    : `Step ${stepIdx + 1} of ${STEPS.length} · ${STEPS[stepIdx]?.label ?? ''}`;
+  let subtitle;
+  if (state.step === 'complete') {
+    subtitle = 'All set — your workspace is ready.';
+  } else if (state.step === 'email' && state.byo.status === 'verifying') {
+    subtitle = `Email Channel › Connect DNS › Verifying`;
+  } else if (state.step === 'email' && state.byo.subStep) {
+    const subLabel = BYO_SUBSTEPS.find(s => s.key === state.byo.subStep)?.label ?? '';
+    subtitle = `Email Channel › Connect DNS › ${subLabel}`;
+  } else {
+    subtitle = `Step ${stepIdx + 1} of ${STEPS.length} · ${STEPS[stepIdx]?.label ?? ''}`;
+  }
   return `
     <header class="shell-topbar">
       <div class="shell-title">
@@ -1585,13 +1594,15 @@ function stepSidebar() {
   `;
 }
 
-function shellFooter({ canContinue = true, continueLabel = 'Continue', onContinue = 'continueStep()', onBack = 'backStep()', showBack = true } = {}) {
+function shellFooter({ canContinue = true, continueLabel = 'Continue', onContinue = 'continueStep()', onBack = 'backStep()', showBack = true, showContinue = true, continueHint = null } = {}) {
   return `
     <footer class="shell-footer">
       ${showBack
         ? `<button class="btn btn-ghost" onclick="${onBack}">← Previous</button>`
         : `<span></span>`}
-      <button class="btn btn-primary" ${canContinue ? '' : 'disabled'} onclick="${onContinue}">${continueLabel}</button>
+      ${showContinue
+        ? `<button class="btn btn-primary" ${canContinue ? '' : 'disabled'} onclick="${onContinue}">${continueLabel}</button>`
+        : (continueHint ? `<span style="font-size: 12px; color: var(--text-muted);">${continueHint}</span>` : '<span></span>')}
     </footer>
   `;
 }
@@ -1608,6 +1619,60 @@ function shellWrap({ content, footerOpts = {}, hideFooter = false }) {
       ${shellHeader()}
       <div class="shell-body">
         ${stepSidebar()}
+        <main class="shell-main">
+          ${content}
+        </main>
+      </div>
+      ${hideFooter ? '' : shellFooter(footerOpts)}
+    </div>
+  `;
+}
+
+/* Sub-journey sidebar: replaces the main step sidebar with a back-link
+   parent and the BYO sub-steps. Used by the Connect DNS sub-journey. */
+function subJourneySidebar({ activeKey, completedKeys = [], showVerifying = false }) {
+  const items = [...BYO_SUBSTEPS];
+  if (showVerifying) items.push({ key: 'verifying', label: 'Verifying' });
+  return `
+    <aside class="shell-sidebar">
+      <div class="shell-sidebar-eyebrow">Email setup</div>
+      <button class="step-item" data-state="parent" onclick="exitBYOPaused()" style="font-weight: 600; color: var(--text);">
+        <span style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; color: var(--text-muted);">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3L4 7l5 4"/></svg>
+        </span>
+        Email Channel
+      </button>
+      <ul style="list-style: none; margin: 4px 0 0; padding: 0 0 0 22px; border-left: 1px dashed var(--border-strong); margin-left: 22px; display: flex; flex-direction: column; gap: 2px;">
+        ${items.map((s, i) => {
+          const isActive = s.key === activeKey;
+          const isComplete = completedKeys.includes(s.key);
+          const stateAttr = isComplete ? 'complete' : (isActive ? 'active' : 'upcoming');
+          return `<li style="display: flex; align-items: center; gap: 10px; padding: 7px 12px; border-radius: var(--radius-sm); font-size: 13px;${
+            stateAttr === 'active' ? ' background: var(--bg-elevated); color: var(--text); font-weight: 500; box-shadow: var(--shadow-card);'
+            : stateAttr === 'complete' ? ' color: var(--text);'
+            : ' color: var(--text-muted);'
+          }">
+            <span style="width: 16px; height: 16px; border-radius: 999px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600;${
+              stateAttr === 'active' ? ' background: var(--primary); border: 1.5px solid var(--primary); color: white;'
+              : stateAttr === 'complete' ? ' background: var(--success); border: 1.5px solid var(--success); color: white;'
+              : ' background: var(--bg-elevated); border: 1.5px solid var(--border-strong); color: var(--text-faint);'
+            }">${stateAttr === 'complete' ? '✓' : (stateAttr === 'active' ? (i + 1) : (i + 1))}</span>
+            ${s.label}
+          </li>`;
+        }).join('')}
+      </ul>
+    </aside>
+  `;
+}
+
+/* Shell wrapper for the Connect DNS sub-journey. Replaces the main sidebar
+   with the sub-journey sidebar; footer Back/Continue map to sub-journey nav. */
+function shellWrapSubJourney({ content, activeKey, completedKeys = [], showVerifying = false, hideFooter = false, footerOpts = {} }) {
+  return `
+    <div class="shell">
+      ${shellHeader()}
+      <div class="shell-body">
+        ${subJourneySidebar({ activeKey, completedKeys, showVerifying })}
         <main class="shell-main">
           ${content}
         </main>
@@ -1778,25 +1843,84 @@ function emailStep() {
     </div>
   `;
 
-  // Hide the Continue/Previous footer while the inline DNS wizard is open or
-  // verifying — the section has its own controls. Resume/configured/splash all
-  // keep the footer so the user can advance to the next onboarding step.
-  const hideFooter = (byo.status === 'in-progress' && byo.subStep) || byo.status === 'verifying';
-  return shellWrap({ content, footerOpts: { canContinue: emailRequiredFilled() }, hideFooter });
+  return shellWrap({ content, footerOpts: { canContinue: emailRequiredFilled() } });
 }
 
 /* =========================================================
-   DNS CONNECTION SECTION (Voice-style, inline on Email step)
+   DNS CONNECTION SECTION on the Email step
+   ---------------------------------------------------------
+   Only three variants live here now: splash, paused, configured.
+   The wizard and verifying states are full-page sub-journey
+   renderings (emailSubJourneyPage) with their own sidebar.
    ========================================================= */
 function renderOnboardingDnsSection() {
   const byo = state.byo;
-
-  // Inline wizard takes precedence
-  if (byo.status === 'in-progress' && byo.subStep) return renderDnsWizardVariant();
-  if (byo.status === 'verifying') return renderDnsVerifyingVariant();
   if (byo.status === 'verified') return renderDnsConfiguredVariant();
   if (byo.paused) return renderDnsPausedVariant();
   return renderDnsSplashVariant();
+}
+
+/* =========================================================
+   CONNECT DNS SUB-JOURNEY (full-pane page within the Email step)
+   ---------------------------------------------------------
+   When byo.subStep is set or byo.status === 'verifying', the entire
+   right pane swaps to the sub-journey, the sidebar swaps to the
+   Connect DNS sub-step list with an Email Channel back link, and
+   the footer Back/Continue map to sub-journey navigation.
+   ========================================================= */
+function emailSubJourneyPage() {
+  const byo = state.byo;
+
+  // Verifying mode (after Entri success) — special sub-step
+  if (byo.status === 'verifying') {
+    const order = BYO_SUBSTEPS.map(s => s.key);
+    const completedKeys = order; // all 4 sub-steps complete by the time we verify
+    const verifyDone = byo.verifyProgress >= 3;
+    const footerOpts = verifyDone
+      ? { showBack: false, continueLabel: 'Continue setup →', onContinue: 'finishVerifying()' }
+      : { showBack: false, continueLabel: 'Continue while verifying →', onContinue: 'finishVerifying()' };
+    return shellWrapSubJourney({
+      content: renderSubJourneyVerifying(),
+      activeKey: 'verifying',
+      completedKeys,
+      showVerifying: true,
+      footerOpts,
+    });
+  }
+
+  // Wizard mode (sub-step set)
+  const order = BYO_SUBSTEPS.map(s => s.key);
+  const currentIdx = order.indexOf(byo.subStep);
+  const completedKeys = order.slice(0, currentIdx);
+
+  let content;
+  if (byo.subStep === 'root') content = renderSubJourneyRoot();
+  else if (byo.subStep === 'subdomain') content = renderSubJourneySubdomain();
+  else if (byo.subStep === 'dmarc') content = renderSubJourneyDmarc();
+  else if (byo.subStep === 'connect') content = renderSubJourneyConnect();
+
+  // The Connect sub-step has its own primary actions (Connect with Entri /
+  // Set up manually) in the content, so the footer hides Continue.
+  const isConnect = byo.subStep === 'connect';
+  const footerOpts = isConnect
+    ? { onBack: 'byoBack()', showBack: true, showContinue: false, continueHint: 'Choose an option above to continue' }
+    : { onBack: 'byoBack()', showBack: true, onContinue: 'byoNext()', continueLabel: 'Continue' };
+  return shellWrapSubJourney({
+    content,
+    activeKey: byo.subStep,
+    completedKeys,
+    showVerifying: false,
+    footerOpts,
+  });
+}
+
+/* After verification completes (or user clicks "Continue while verifying"),
+   exit the sub-journey, set status to verified, and let render() route back
+   to the Email Channel page where the DNS section shows the configured variant. */
+function finishVerifying() {
+  state.byo.status = 'verified';
+  state.byo.subStep = null;
+  render();
 }
 
 /* Splash — first-time state, BYO not started */
@@ -1872,145 +1996,40 @@ function renderDnsConfiguredVariant() {
   `;
 }
 
-/* Verifying — animated record-by-record progress, shown after Entri success */
-function renderDnsVerifyingVariant() {
-  const byo = state.byo;
-  const p = byo.verifyProgress;
-  const dkimState = p >= 1 ? 'ok' : (p === 0 ? 'working' : 'pending');
-  const rpState = p >= 2 ? 'ok' : (p === 1 ? 'working' : 'pending');
-  const dmarcState = p >= 3 ? 'ok' : (p === 2 ? 'working' : 'pending');
-
-  const renderIcon = (st) => {
-    if (st === 'ok') return `<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.5l2.5 2.5L10 3.5"/></svg>`;
-    if (st === 'working') return `<div class="spinner" style="border-top-color: var(--info);"></div>`;
-    return '';
-  };
-  const renderLabel = (st) => st === 'ok' ? 'verified just now' : (st === 'working' ? 'checking…' : 'pending');
-
+/* =========================================================
+   SUB-JOURNEY SCREENS — full right-pane renderings used by
+   emailSubJourneyPage. Each returns just the content area;
+   the surrounding shell + sidebar + footer come from
+   shellWrapSubJourney.
+   ========================================================= */
+function renderSubJourneyRoot() {
   return `
-    <div class="dns-section" data-state="pending">
-      <div class="dns-section-header">
-        <span class="dns-section-icon" data-tone="info">
-          <div class="spinner" style="width: 12px; height: 12px;"></div>
-        </span>
-        <span class="dns-section-title">Verifying DNS records for ${byo.subdomain}.${byo.rootDomain}</span>
-        <span style="margin-left: auto; font-size: 12px; color: var(--text-muted);">${p < 3 ? 'usually 1–5 minutes' : 'all records verified'}</span>
+    <div class="shell-main-narrow">
+      <div class="step-header">
+        <h1>What's your root domain?</h1>
+        <p>This is the domain your customers know you by — usually the same as your website.</p>
       </div>
-      <div class="dns-section-body" style="padding: 0;">
-        <div class="verifying-list">
-          <div class="verifying-row">
-            <div class="verifying-icon" data-state="${dkimState}">${renderIcon(dkimState)}</div>
-            <div>
-              <div class="label">DKIM signing key</div>
-              <div class="verifying-row-meta">TXT record for <code style="font-family:var(--font-mono);font-size:11.5px;">_domainkey.${byo.subdomain}</code></div>
-            </div>
-            <span class="timestamp">${renderLabel(dkimState)}</span>
-          </div>
-          <div class="verifying-row">
-            <div class="verifying-icon" data-state="${rpState}">${renderIcon(rpState)}</div>
-            <div>
-              <div class="label">Return-Path</div>
-              <div class="verifying-row-meta">CNAME for <code style="font-family:var(--font-mono);font-size:11.5px;">pm-bounces.${byo.subdomain}</code></div>
-            </div>
-            <span class="timestamp">${renderLabel(rpState)}</span>
-          </div>
-          ${byo.dmarcOn ? `
-          <div class="verifying-row">
-            <div class="verifying-icon" data-state="${dmarcState}">${renderIcon(dmarcState)}</div>
-            <div>
-              <div class="label">DMARC policy</div>
-              <div class="verifying-row-meta">TXT record for <code style="font-family:var(--font-mono);font-size:11.5px;">_dmarc.${byo.subdomain}</code></div>
-            </div>
-            <span class="timestamp">${renderLabel(dmarcState)}</span>
-          </div>` : ''}
-        </div>
-        ${p < 3 ? `
-          <div style="padding: 14px 24px; background: var(--bg-subtle); border-top: 1px solid var(--border); display: flex; align-items: center; gap: 12px; font-size: 12.5px; color: var(--text-muted);">
-            <div class="spinner"></div>
-            <span>You can continue to the next step — we'll update when verification finishes.</span>
-            <button class="btn-link" style="margin-left: auto;" onclick="state.byo.status='verified'; render();">Skip ahead</button>
-          </div>
-        ` : ''}
-      </div>
-    </div>
-  `;
-}
-
-/* Inline wizard — runs in place of the DNS section content */
-function renderDnsWizardVariant() {
-  const byo = state.byo;
-  const sub = byo.subStep;
-  const order = BYO_SUBSTEPS.map(s => s.key);
-  const currentIdx = order.indexOf(sub);
-
-  let body;
-  if (sub === 'root') body = renderInlineWizardRoot();
-  else if (sub === 'subdomain') body = renderInlineWizardSubdomain();
-  else if (sub === 'dmarc') body = renderInlineWizardDmarc();
-  else if (sub === 'connect') body = renderInlineWizardConnect();
-
-  const isConnect = sub === 'connect';
-
-  return `
-    <div class="dns-section" data-state="wizard">
-      <div class="dns-section-header">
-        <span class="dns-section-icon" data-tone="info">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8s2-4 6-4 6 4 6 4-2 4-6 4-6-4-6-4z"/><circle cx="8" cy="8" r="2"/></svg>
-        </span>
-        <span class="dns-section-title">Connect DNS for ${byo.subdomain}.${byo.rootDomain}</span>
-        <button class="dns-section-cancel" onclick="exitBYOPaused()">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 3l8 8M11 3l-8 8"/></svg>
-          Cancel
-        </button>
-      </div>
-      <div class="dns-wizard">
-        <aside class="dns-wizard-sidebar">
-          <div class="dns-wizard-sidebar-eyebrow">Connect DNS</div>
-          <ul>
-            ${BYO_SUBSTEPS.map((s, i) => {
-              const stateAttr = i < currentIdx ? 'complete' : (i === currentIdx ? 'active' : 'upcoming');
-              return `<li data-state="${stateAttr}">
-                <span class="marker">${stateAttr === 'complete' ? '' : (i + 1)}</span>
-                ${s.label}
-              </li>`;
-            }).join('')}
-          </ul>
-        </aside>
-        <div class="dns-wizard-content">
-          ${body}
-          <div class="dns-wizard-footer">
-            <button class="btn btn-ghost" onclick="byoBack()">← Back</button>
-            ${isConnect
-              ? '<span style="font-size:12px; color:var(--text-muted);">Choose an option above to continue</span>'
-              : '<button class="btn btn-primary" onclick="byoNext()">Continue</button>'}
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-/* Inline wizard sub-step bodies (compact versions) */
-function renderInlineWizardRoot() {
-  return `
-    <h3>What's your root domain?</h3>
-    <p>This is the domain your customers know you by — usually the same as your website.</p>
-    <div class="dns-wizard-content-body">
       <div class="form-group">
         <label>Root domain</label>
         <input class="form-input" type="text" value="${state.byo.rootDomain}" data-focus-key="byo.rootDomain"
           oninput="state.byo.rootDomain=this.value;" />
         <span class="helper">For example: ${state.brand.website}</span>
       </div>
+      <div class="info-banner" style="margin-top: 12px;">
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M10 6.5v4M10 13.5h.01"/></svg>
+        <div>We pulled this from your business website. Looks wrong? Edit above.</div>
+      </div>
     </div>
   `;
 }
 
-function renderInlineWizardSubdomain() {
+function renderSubJourneySubdomain() {
   return `
-    <h3>Pick a sending subdomain</h3>
-    <p>This is where your emails will be sent from. Use a subdomain you're not already using elsewhere.</p>
-    <div class="dns-wizard-content-body">
+    <div class="shell-main-narrow">
+      <div class="step-header">
+        <h1>Pick a sending subdomain</h1>
+        <p>This is where your emails will be sent from. Use a subdomain you're not already using elsewhere.</p>
+      </div>
       <div class="preview-chip">
         <svg width="14" height="14" style="color:var(--text-muted);" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="2.5"/><path d="M2 10s2.5-5 8-5 8 5 8 5-2.5 5-8 5-8-5-8-5z"/></svg>
         <div>
@@ -2027,18 +2046,21 @@ function renderInlineWizardSubdomain() {
           <span class="domain-suffix">.${state.byo.rootDomain}</span>
         </div>
       </div>
+      <p style="font-size: 12.5px; color: var(--text-muted); margin-top: 4px;">When you continue, we'll check whether your DNS provider supports automatic setup so we can route you to the smoothest path on the next step.</p>
     </div>
   `;
 }
 
-function renderInlineWizardDmarc() {
+function renderSubJourneyDmarc() {
   return `
-    <h3>Add a DMARC record</h3>
-    <p>DMARC tells inbox providers how to handle mail that fails authentication. Required for senders at scale.</p>
-    <div class="dns-wizard-content-body">
+    <div class="shell-main-narrow">
+      <div class="step-header">
+        <h1>Add a DMARC record</h1>
+        <p>DMARC tells inbox providers like Gmail what to do with mail that fails authentication. Required for senders at scale.</p>
+      </div>
       <div class="dmarc-card">
         <div class="dmarc-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
         </div>
         <div class="dmarc-content">
           <h4>Add DMARC record <span class="recommended-pill">Recommended</span></h4>
@@ -2050,21 +2072,103 @@ function renderInlineWizardDmarc() {
   `;
 }
 
-function renderInlineWizardConnect() {
+function renderSubJourneyConnect() {
   return `
-    <h3>Connect with Entri</h3>
-    <p>Entri logs into your DNS provider for you and adds the right records — no copy-paste, no mistakes.</p>
-    <div class="dns-wizard-content-body">
-      <ul style="list-style: none; margin: 0 0 18px; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 13.5px;">
-        <li style="display: flex; align-items: center; gap: 8px;"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M6.5 10l2.5 2.5 5-5"/></svg> Detects your DNS provider automatically</li>
-        <li style="display: flex; align-items: center; gap: 8px;"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M6.5 10l2.5 2.5 5-5"/></svg> Forward to your IT contact if you don't have access</li>
-        <li style="display: flex; align-items: center; gap: 8px;"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M6.5 10l2.5 2.5 5-5"/></svg> Records published in seconds</li>
-      </ul>
-      <div style="display: flex; gap: 10px;">
-        <button class="btn btn-primary" onclick="state.showEntriModal=true; render();">Connect with Entri</button>
-        <button class="btn btn-secondary" onclick="alert('In production: would show manual DNS records to copy/paste')">Set up manually</button>
+    <div class="connect-screen">
+      <div>
+        <h1 style="font-size:26px; font-weight:600; margin:0 0 8px; letter-spacing:-0.02em;">Connect with Entri</h1>
+        <p style="margin:0; color:var(--text-secondary); font-size:15px;">Entri logs into your DNS provider for you and adds the right records — no copy-paste, no mistakes.</p>
+        <ul>
+          <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M6.5 10l2.5 2.5 5-5"/></svg> Fast, secure setup</li>
+          <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M6.5 10l2.5 2.5 5-5"/></svg> Detects your DNS provider automatically</li>
+          <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M6.5 10l2.5 2.5 5-5"/></svg> Forward to your IT contact if you don't have access</li>
+        </ul>
+        <div class="connect-actions">
+          <button class="btn btn-primary btn-large" onclick="state.showEntriModal=true; render();">Connect with Entri</button>
+          <button class="btn btn-secondary btn-large" onclick="alert('In production: would show manual DNS records to copy/paste')">Set up manually</button>
+        </div>
+        <p class="connect-fineprint">By selecting "Connect with Entri" you agree to Entri's Terms of Service and Privacy Policy.</p>
       </div>
-      <p style="margin-top: 12px; font-size: 11.5px; color: var(--text-muted);">By selecting "Connect with Entri" you agree to Entri's Terms of Service and Privacy Policy.</p>
+      <div class="connect-art" aria-hidden="true">
+        <div class="connect-art-card secondary">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><path d="M10 10h20v20H10z" stroke="#9ca3af" stroke-width="2" stroke-dasharray="2 3"/></svg>
+        </div>
+        <div class="connect-art-card primary">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="14" fill="var(--text)"/><path d="M14 20l4 4 8-8" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderSubJourneyVerifying() {
+  const byo = state.byo;
+  const p = byo.verifyProgress;
+  const dkimState = p >= 1 ? 'ok' : (p === 0 ? 'working' : 'pending');
+  const rpState = p >= 2 ? 'ok' : (p === 1 ? 'working' : 'pending');
+  const dmarcState = p >= 3 ? 'ok' : (p === 2 ? 'working' : 'pending');
+
+  const renderIcon = (st) => {
+    if (st === 'ok') return `<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.5l2.5 2.5L10 3.5"/></svg>`;
+    if (st === 'working') return `<div class="spinner" style="border-top-color: var(--info);"></div>`;
+    return '';
+  };
+  const renderLabel = (st) => st === 'ok' ? 'verified just now' : (st === 'working' ? 'checking…' : 'pending');
+
+  return `
+    <div class="shell-main-narrow">
+      <div class="step-header">
+        <h1>${p < 3 ? 'Verifying your domain' : 'Domain verified'}</h1>
+        <p>${p < 3
+          ? `Entri is publishing your DNS records. We'll be notified the moment each one propagates worldwide. This usually takes 1–5 minutes.`
+          : `All records are live. Your branded sending domain is ready to use.`}</p>
+      </div>
+      <div class="dns-section" data-state="${p < 3 ? 'pending' : ''}">
+        <div class="dns-section-header">
+          <span class="dns-section-icon" data-tone="${p < 3 ? 'info' : 'success'}">
+            ${p < 3
+              ? '<div class="spinner" style="width: 12px; height: 12px;"></div>'
+              : '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3 3L13 4.5"/></svg>'}
+          </span>
+          <span class="dns-section-title">${byo.subdomain}.${byo.rootDomain}</span>
+          <span style="margin-left: auto; font-size: 12px; color: var(--text-muted);">${p < 3 ? 'usually 1–5 minutes' : 'all records verified'}</span>
+        </div>
+        <div class="dns-section-body" style="padding: 0;">
+          <div class="verifying-list">
+            <div class="verifying-row">
+              <div class="verifying-icon" data-state="${dkimState}">${renderIcon(dkimState)}</div>
+              <div>
+                <div class="label">DKIM signing key</div>
+                <div class="verifying-row-meta">TXT record for <code style="font-family:var(--font-mono);font-size:11.5px;">_domainkey.${byo.subdomain}</code></div>
+              </div>
+              <span class="timestamp">${renderLabel(dkimState)}</span>
+            </div>
+            <div class="verifying-row">
+              <div class="verifying-icon" data-state="${rpState}">${renderIcon(rpState)}</div>
+              <div>
+                <div class="label">Return-Path</div>
+                <div class="verifying-row-meta">CNAME for <code style="font-family:var(--font-mono);font-size:11.5px;">pm-bounces.${byo.subdomain}</code></div>
+              </div>
+              <span class="timestamp">${renderLabel(rpState)}</span>
+            </div>
+            ${byo.dmarcOn ? `
+            <div class="verifying-row">
+              <div class="verifying-icon" data-state="${dmarcState}">${renderIcon(dmarcState)}</div>
+              <div>
+                <div class="label">DMARC policy</div>
+                <div class="verifying-row-meta">TXT record for <code style="font-family:var(--font-mono);font-size:11.5px;">_dmarc.${byo.subdomain}</code></div>
+              </div>
+              <span class="timestamp">${renderLabel(dmarcState)}</span>
+            </div>` : ''}
+          </div>
+          ${p < 3 ? `
+            <div style="padding: 14px 24px; background: var(--bg-subtle); border-top: 1px solid var(--border); display: flex; align-items: center; gap: 12px; font-size: 12.5px; color: var(--text-muted);">
+              <div class="spinner"></div>
+              <span>You can continue setting up Engage — we'll update when verification finishes.</span>
+            </div>
+          ` : ''}
+        </div>
+      </div>
     </div>
   `;
 }
@@ -2280,7 +2384,11 @@ function render() {
   let content;
   if (state.step === 'brand') content = brandStep();
   else if (state.step === 'business') content = businessStep();
-  else if (state.step === 'email') content = emailStep();
+  else if (state.step === 'email') {
+    // Sub-journey mode: full-pane swap with the BYO sub-step sidebar
+    const inSubJourney = state.byo.subStep || state.byo.status === 'verifying';
+    content = inSubJourney ? emailSubJourneyPage() : emailStep();
+  }
   else if (state.step === 'sms') content = smsStep();
   else if (state.step === 'merge') content = mergeStep();
   else if (state.step === 'automations') content = automationsStep();
