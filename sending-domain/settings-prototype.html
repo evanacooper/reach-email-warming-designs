@@ -540,6 +540,27 @@
     font-size: 13.5px;
   }
   .domain-table tr:first-child td { border-top: 0; }
+  /* Clickable rows: hover background + chevron affordance */
+  .domain-table tbody tr {
+    transition: background-color 120ms ease;
+    position: relative;
+  }
+  .domain-table tbody tr:hover {
+    background: var(--bg-subtle);
+  }
+  .domain-table tbody tr:hover .row-chevron {
+    color: var(--text);
+    transform: translateX(2px);
+  }
+  .domain-table tbody tr[data-disconnected="true"]:hover {
+    background: #fde8e8;
+  }
+  .row-chevron {
+    display: inline-flex;
+    color: var(--text-faint);
+    margin-left: 8px;
+    transition: color 120ms ease, transform 120ms ease;
+  }
   .domain-table .domain-name-cell {
     display: flex;
     flex-direction: column;
@@ -2384,22 +2405,26 @@ function renderDomainRow(d) {
 
   // Quick actions live in the row; the row body itself navigates to the detail page.
   // Clicks on action buttons must not bubble up to the row click.
+  // A faint chevron at the row end + hover background change make
+  // "row is clickable" obvious without competing with the quick actions.
+  const chevron = `<span class="row-chevron" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg></span>`;
+
   let actions = '';
   if (d.isManaged) {
-    actions = `<span style="font-size:12px; color:var(--text-faint);">Always available</span>`;
+    actions = `<div class="actions"><span style="font-size:12px; color:var(--text-faint);">Always available</span>${chevron}</div>`;
   } else {
     const setDefaultBtn = !d.isDefault && d.status === 'verified'
       ? `<button class="icon-btn" onclick="event.stopPropagation(); setDefault('${d.id}')" title="Set as default"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1l2 5 5 .5-3.7 3.5L13 15l-5-2.5L3 15l1.7-4.5L1 6.5l5-.5z"/></svg></button>`
       : '';
     const removeBtn = `<button class="icon-btn" onclick="event.stopPropagation(); confirmRemove('${d.id}')" title="Remove" style="color:var(--danger);"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h10M6 4V2.5h4V4M5 4l1 9h4l1-9"/></svg></button>`;
-    actions = `<div class="actions">${setDefaultBtn}${removeBtn}</div>`;
+    actions = `<div class="actions">${setDefaultBtn}${removeBtn}${chevron}</div>`;
   }
 
   // Compose the per-row "from" line for hover/scan: prefix@fullDomain · displayName
   const senderSummary = `${d.prefix}@${d.fullDomain}`;
 
   return `
-    <tr style="${rowStyle}" onclick="openDomainDetail('${d.id}')">
+    <tr style="${rowStyle}" data-disconnected="${d.status === 'disconnected'}" onclick="openDomainDetail('${d.id}')">
       <td>
         <div class="domain-name-cell">
           <span class="name" style="${d.isManaged ? 'color: var(--text-muted);' : ''}">
