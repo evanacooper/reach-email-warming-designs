@@ -1439,6 +1439,12 @@ const state = {
     rootDomain: 'muskingumcofair.com',
     subdomain: 'send',
     dmarcOn: true,
+    // BYO-specific sender identity, collected in the Subdomain sub-step.
+    // Seeded from the managed domain on startAddDomain() and then editable
+    // before Entri launches. Mirrors onboarding's sub-journey behavior.
+    prefix: 'marketing',
+    displayName: '',
+    replyTo: '',
     paused: false,
     pausedAt: null,
     verifyProgress: 0,
@@ -1620,6 +1626,18 @@ function startAddDomain() {
   state.byo.subStep = 'root';
   state.byo.subdomain = state.domains.length === 1 ? 'send' : 'notifications';
   state.byo.paused = false;
+  // Seed BYO sender identity from the managed domain so the user starts
+  // from a sensible default. They can edit any of these on the Subdomain
+  // sub-step before Entri launches.
+  const managed = state.domains.find(d => d.isManaged);
+  if (managed) {
+    state.byo.prefix = managed.prefix;
+    state.byo.displayName = managed.displayName;
+    // Leave replyTo blank so the auto-suggest placeholder shows an address
+    // on the new BYO root domain rather than copying the managed reply-to.
+    state.byo.replyTo = '';
+  }
+  state.byo.dmarcOn = true;
   render();
 }
 
@@ -1818,23 +1836,26 @@ function entriSuccess() {
     return;
   }
 
-  // New domain being added — inherits sender identity from the managed domain
+  // New domain being added — uses the sender identity collected in the
+  // Subdomain sub-step. Reply-to falls back to the auto-suggest if blank.
   state.byo.isVerifying = true;
   state.byo.verifyProgress = 0;
   state.byo.subStep = null;
-  const managedDomain = state.domains.find(d => d.isManaged);
-  const inheritedIdentity = managedDomain
-    ? { prefix: managedDomain.prefix, displayName: managedDomain.displayName, replyTo: managedDomain.replyTo }
-    : { prefix: 'marketing', displayName: '', replyTo: '' };
+  const fullDomain = state.byo.subdomain + '.' + state.byo.rootDomain;
+  const collectedIdentity = {
+    prefix: state.byo.prefix || 'marketing',
+    displayName: state.byo.displayName || '',
+    replyTo: state.byo.replyTo || suggestedReplyTo(fullDomain),
+  };
   const newDomain = {
     id: state.byo.subdomain + '-' + Date.now(),
-    fullDomain: state.byo.subdomain + '.' + state.byo.rootDomain,
+    fullDomain,
     purpose: state.domains.filter(d => !d.isManaged).length === 0 ? 'Marketing' : 'Transactional',
     status: 'pending',
     lastVerified: null,
     isDefault: state.domains.filter(d => !d.isManaged).length === 0,
     isManaged: false,
-    ...inheritedIdentity,
+    ...collectedIdentity,
   };
   // Insert before managed
   const managedIdx = state.domains.findIndex(d => d.isManaged);
@@ -2578,30 +2599,84 @@ function byoRootSubstep() {
 }
 
 function byoSubdomainSubstep() {
+  const fullSendingDomain = `${state.byo.subdomain}.${state.byo.rootDomain}`;
+  const replyToPlaceholder = suggestedReplyTo(fullSendingDomain);
+  const replyToWarn = replyToCrossDomain(state.byo.replyTo, fullSendingDomain);
+
   return `
     <main class="shell-main">
       <div class="step-header">
-        <h2>Pick a sending subdomain</h2>
-        <p>This is where your emails will be sent from. Use a subdomain you're not already using for your website or work email.</p>
+        <h2>Configure your sending domain</h2>
+        <p>Pick a subdomain and set the sender details your customers will see in their inbox.</p>
       </div>
-      <div style="max-width: 540px;">
+      <div style="max-width: 580px;">
+
+        <!-- Subdomain picker -->
         <div class="preview-chip">
           <svg width="16" height="16" style="color:var(--text-muted);" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="2.5"/><path d="M2 10s2.5-5 8-5 8 5 8 5-2.5 5-8 5-8-5-8-5z"/></svg>
           <div>
-            <div class="preview-chip-label">Preview</div>
-            <div class="preview-chip-value">${state.byo.subdomain}.${state.byo.rootDomain}</div>
+            <div class="preview-chip-label">Sending domain preview</div>
+            <div class="preview-chip-value">${fullSendingDomain}</div>
           </div>
         </div>
+
         <div class="form-group">
           <label>Sending subdomain</label>
-          <span class="helper">Common choices: <code>send</code>, <code>email</code>, <code>notifications</code></span>
+          <span class="helper">Common choices: <code>send</code>, <code>email</code>, <code>notifications</code>. Use one you're not already using elsewhere.</span>
           <div class="subdomain-row">
             <input class="form-input" type="text" value="${state.byo.subdomain}" data-focus-key="byo.subdomain"
               oninput="state.byo.subdomain=this.value; render();" />
             <span class="domain-suffix">.${state.byo.rootDomain}</span>
           </div>
         </div>
-        <p style="font-size: 12.5px; color: var(--text-muted); margin-top: 4px;">When you continue, we'll check whether your DNS provider supports automatic setup so we can route you to the smoothest path on the next step.</p>
+
+        <!-- Sender identity for the new BYO domain (same shape as the
+             per-domain detail page in settings). -->
+        <div class="form-group" style="margin-top: 24px;">
+          <label>Sending email address</label>
+          <span class="helper">Edit the prefix to match your team — common choices: <code>marketing</code>, <code>hello</code>, <code>news</code>.</span>
+          <div class="sender-prefix-row">
+            <input class="form-input" type="text" value="${state.byo.prefix}" data-focus-key="byo.prefix"
+              oninput="state.byo.prefix=this.value; render();" />
+            <span class="at-sign">@</span>
+            <span class="domain-suffix">${fullSendingDomain}</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Display name<span class="req-asterisk">*</span></label>
+          <span class="helper">What customers see in their inbox before the email opens.</span>
+          <input class="form-input" type="text" value="${state.byo.displayName}" data-focus-key="byo.displayName"
+            oninput="state.byo.displayName=this.value; render();" />
+        </div>
+
+        <div class="form-group">
+          <label>Reply-to email</label>
+          <span class="helper">For best deliverability, use an address on the same root domain as your sending domain.</span>
+          <input class="form-input" type="email" placeholder="${replyToPlaceholder}" value="${state.byo.replyTo}" data-focus-key="byo.replyTo"
+            oninput="state.byo.replyTo=this.value; render();" />
+          ${replyToWarn ? `
+            <span class="deliverability-chip">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2L1 14h14L8 2z"/><path d="M8 6v3M8 11h.01"/></svg>
+              Reply-to on a different root domain can hurt deliverability
+            </span>
+          ` : ''}
+        </div>
+
+        <!-- Inbox preview -->
+        <div style="margin-top: 24px;">
+          <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:10px;">How it appears in inbox</div>
+          <div class="inbox-preview">
+            <div class="inbox-row">
+              <div class="inbox-avatar">${(state.byo.displayName || 'E').charAt(0).toUpperCase()}</div>
+              <div class="inbox-meta">
+                <div class="inbox-from">${state.byo.displayName || 'Your business'}</div>
+                <div class="inbox-subject">${state.byo.prefix || 'hello'}@${fullSendingDomain} · Get your tickets for the 2026 Fair</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
       <div style="margin-top: 32px; display: flex; justify-content: space-between; gap: 16px; padding-top: 24px; border-top: 1px solid var(--border);">
         <button class="btn btn-ghost" onclick="byoBack()">← Back</button>
