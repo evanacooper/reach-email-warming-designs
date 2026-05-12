@@ -607,6 +607,9 @@
     cursor: default;
   }
   .default-pill svg { color: #d97706; }
+  /* Action variant: hidden by default, fades in only when the
+     ancestor table row is hovered. Keeps the row scannable when
+     idle and offers the action when the user shows intent. */
   .default-pill--action {
     background: var(--bg-subtle);
     color: var(--text-muted);
@@ -615,7 +618,20 @@
     cursor: pointer;
     appearance: none;
     font-family: inherit;
-    transition: color 120ms ease, background 120ms ease, border-color 120ms ease;
+    opacity: 0;
+    pointer-events: none;
+    transition: color 120ms ease, background 120ms ease, border-color 120ms ease, opacity 120ms ease;
+  }
+  .domain-table tbody tr:hover .default-pill--action {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  /* Keep focus visibility for keyboard users even without row hover */
+  .default-pill--action:focus-visible {
+    opacity: 1;
+    pointer-events: auto;
+    outline: 2px solid var(--border-focus);
+    outline-offset: 2px;
   }
   .default-pill--action svg { color: var(--text-faint); transition: color 120ms ease; }
   .default-pill--action:hover {
