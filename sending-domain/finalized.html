@@ -1599,620 +1599,45 @@
 <div class="doc">
 
   <header class="doc-header">
-    <h1>Sending domain — Engage onboarding & settings</h1>
-    <p>Design exploration for ENG-2161 / ENG-2672 — Klaviyo-inspired BYO sending domain flow with managed-domain fallback. Lives inside the existing Engage wizard shell.</p>
+    <h1>Engage Email Channel & BYO Sending Domain — implementation reference</h1>
+    <p>This doc is the engineering reference for the Engage onboarding redesign and the bring-your-own sending domain feature (Linear ticket <code style="font-family:var(--font-mono);">ENG-2161</code>, sub-tasks <code style="font-family:var(--font-mono);">ENG-2670</code>–<code style="font-family:var(--font-mono);">ENG-2749</code>). The clickable prototypes are the source of visual truth — this doc captures the flow tables, integration contracts, and design rationale. Start with the prototypes, come here for the integration details and the "why."</p>
     <nav class="doc-toc">
-      <strong style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;font-weight:600;align-self:center;margin-right:4px;">Onboarding redesign:</strong>
-      <a href="#shell">New shell</a>
-      <a href="#step-business">Business Info</a>
-      <a href="#step-email">Email Channel</a>
-      <a href="#step-email-byo">Email · BYO sub-journey</a>
-      <a href="#step-email-resume">Email · resume state</a>
-      <a href="#step-rest">SMS / Merge / Automations</a>
-      <strong style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;font-weight:600;align-self:center;margin-right:4px;margin-left:8px;">Sending domain detail:</strong>
-      <a href="#flow">Flow reference</a>
-      <a href="#choice">Choice screen</a>
-      <a href="#root">Root domain</a>
-      <a href="#subdomain">Subdomain + provider check</a>
-      <a href="#entri">Connect with Entri / manual</a>
-      <a href="#dmarc">DMARC opt-in</a>
-      <a href="#verifying">Verifying state</a>
-      <a href="#settings-list">Settings list view</a>
-      <a href="#settings-empty">Settings empty state</a>
-      <a href="#disconnected">Disconnected banner</a>
+      <a href="onboarding-prototype.html" style="background: var(--text); color: white; border-color: var(--text);">▶ Onboarding prototype</a>
+      <a href="settings-prototype.html" style="background: var(--text); color: white; border-color: var(--text);">▶ Settings prototype</a>
+      <a href="#flow-onboarding">Onboarding flow</a>
+      <a href="#flow-settings">Settings flow</a>
+      <a href="#decisions">Key decisions</a>
+      <a href="#entri-integration">Entri integration</a>
+      <a href="#data-model">Data model</a>
+      <a href="#copy">Copy strings</a>
     </nav>
   </header>
 
   <!-- ============================================================ -->
-  <!-- ONBOARDING REDESIGN — preface                                 -->
+  <!-- 1 · OVERVIEW                                                  -->
   <!-- ============================================================ -->
-  <section class="section" id="redesign-preface" style="margin-top: 0;">
+  <section class="section" id="overview" style="margin-top: 0;">
     <div class="section-header">
-      <span class="num">R0</span>
-      <h2>Onboarding redesign · preface</h2>
-      <span class="note">Read this section before the sending-domain detail below</span>
+      <span class="num">01</span>
+      <h2>Overview · what's shipping</h2>
+      <span class="note">The 60-second version</span>
     </div>
+
     <div class="commentary" style="background: var(--bg-elevated); border: 1px solid var(--border); border-left: 3px solid var(--text); color: var(--text); padding: 16px 20px;">
-      <p style="margin: 0 0 10px;"><strong>What's changing:</strong> the entire Engage onboarding wizard gets a new shell and a new step order. The shell shifts from a left-only sidebar to a horizontal top stepper with a contextual sidebar that only appears for steps with sub-journeys. Step order becomes <strong>Brand → Business Info → Email Channel → SMS → Merge Fields → Automations</strong>.</p>
-      <p style="margin: 0 0 10px;"><strong>Where the sending domain flow lives now:</strong> the BYO sending-domain flow (sections 00–08 below, the second half of this doc) becomes a sub-journey of the Email Channel step. The Email Channel step always provisions a managed domain that works out of the box; the BYO flow is an optional opt-in that the user can defer indefinitely without blocking onboarding completion.</p>
-      <p style="margin: 0;"><strong>How to read this doc:</strong> sections R1–R7 are the new shell and the redesigned onboarding steps. Sections 00–08 are the detailed sending-domain flow (this is the BYO sub-journey reached from R3). For the engineer building this: shell + Business Info gate + Email Channel are net-new; SMS / Merge / Automations are existing components rendered inside the new shell.</p>
+      <p style="margin: 0 0 10px;"><strong>Problem.</strong> Tenants currently send Engage email from a platform-controlled sending domain. Recipients see "via mail.platform.com" in Gmail/Outlook headers, which hurts deliverability and conflicts with Google/Yahoo bulk sender rules (>5k/day to Gmail). Partner-side blocker for tenant adoption of Engage.</p>
+      <p style="margin: 0 0 10px;"><strong>Solution.</strong> Every Engage tenant gets a platform-managed sending domain provisioned automatically. Each tenant can optionally connect their own branded domain (e.g. <code style="font-family:var(--font-mono);">send.acmeinsurance.com</code>) via <strong>Entri</strong> for better deliverability. Multi-domain supported — tenants can split marketing and transactional onto different subdomains. Per-domain sender identity (prefix / display name / reply-to) so each domain has its own "from" line.</p>
+      <p style="margin: 0;"><strong>Two surfaces.</strong> <em>Onboarding</em> is a 6-step wizard (Brand → Business Info → Email Channel → SMS → Merge Fields → Automations). <em>Settings</em> is a permanent sidebar with the same five non-completion tabs. The Email Channel step + tab is where managed and BYO live side-by-side. The BYO sub-journey (Root → Subdomain → DMARC → Connect → Verifying) runs as a sidebar-swap sub-flow in both places.</p>
     </div>
   </section>
 
   <!-- ============================================================ -->
-  <!-- R1 — NEW SHELL OVERVIEW                                       -->
+  <!-- 2 · ONBOARDING FLOW                                           -->
   <!-- ============================================================ -->
-  <section class="section" id="shell">
+  <section class="section" id="flow-onboarding">
     <div class="section-header">
-      <span class="num">R1</span>
-      <h2>New shell · top horizontal stepper, contextual sidebar</h2>
-      <span class="note">The layout primitive that all onboarding steps live inside</span>
-    </div>
-
-    <div class="shell">
-      <header class="shell-topbar">
-        <div class="shell-title">
-          <h1>Engage Setup</h1>
-          <button class="close-btn" aria-label="Close">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l10 10M14 4L4 14"/></svg>
-          </button>
-        </div>
-        <div class="topstep">
-          <div class="topstep-item" data-state="complete"><span class="topstep-circle"><span class="num">1</span></span><span class="topstep-label">Brand</span></div>
-          <div class="topstep-item" data-state="active"><span class="topstep-circle"><span class="num">2</span></span><span class="topstep-label">Business Info</span></div>
-          <div class="topstep-item" data-state="upcoming"><span class="topstep-circle"><span class="num">3</span></span><span class="topstep-label">Email Channel</span></div>
-          <div class="topstep-item" data-state="upcoming"><span class="topstep-circle"><span class="num">4</span></span><span class="topstep-label">SMS</span></div>
-          <div class="topstep-item" data-state="upcoming"><span class="topstep-circle"><span class="num">5</span></span><span class="topstep-label">Merge Fields</span></div>
-          <div class="topstep-item" data-state="upcoming"><span class="topstep-circle"><span class="num">6</span></span><span class="topstep-label">Automations</span></div>
-        </div>
-      </header>
-
-      <div class="shell-body" data-no-sidebar="true">
-        <main class="shell-main">
-          <div class="shell-main-narrow">
-            <div style="border: 2px dashed var(--border-strong); border-radius: var(--radius-lg); padding: 60px 32px; text-align: center; color: var(--text-muted); background: var(--bg-subtle);">
-              <p style="margin: 0 0 6px; font-size: 14px; font-weight: 500;">Step content lives here</p>
-              <p style="margin: 0; font-size: 12.5px;">Right pane is full-width when there's no sub-journey.<br>Sidebar appears only when entering Email Channel's BYO flow (R4).</p>
-            </div>
-          </div>
-        </main>
-      </div>
-
-      <footer class="shell-footer">
-        <button class="btn btn-ghost">← Previous</button>
-        <button class="btn btn-primary">Continue</button>
-      </footer>
-    </div>
-
-    <div class="commentary">
-      <strong>Shell rules:</strong> the top stepper shows all 6 steps with state (complete ✓ / active filled / upcoming outlined). Brand and Business Info show as complete here because we're on Step 2 in this example. The left sidebar is hidden for steps without sub-journeys (Brand, Business, SMS, Merge, Automations) — the right pane goes full-width and the form max-widths handle readability. The sidebar only appears when the user is mid-BYO inside Email Channel (see R4).
-    </div>
-  </section>
-
-  <!-- ============================================================ -->
-  <!-- R2 — BUSINESS INFORMATION (mandatory gate)                    -->
-  <!-- ============================================================ -->
-  <section class="section" id="step-business">
-    <div class="section-header">
-      <span class="num">R2</span>
-      <h2>Business Information · step 2 (mandatory gate)</h2>
-      <span class="note">Continue is disabled until all required fields are filled</span>
-    </div>
-
-    <div class="shell">
-      <header class="shell-topbar">
-        <div class="shell-title">
-          <h1>Engage Setup</h1>
-          <button class="close-btn" aria-label="Close">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l10 10M14 4L4 14"/></svg>
-          </button>
-        </div>
-        <div class="topstep">
-          <div class="topstep-item" data-state="complete"><span class="topstep-circle"><span class="num">1</span></span><span class="topstep-label">Brand</span></div>
-          <div class="topstep-item" data-state="active"><span class="topstep-circle"><span class="num">2</span></span><span class="topstep-label">Business Info</span></div>
-          <div class="topstep-item" data-state="upcoming"><span class="topstep-circle"><span class="num">3</span></span><span class="topstep-label">Email Channel</span></div>
-          <div class="topstep-item" data-state="upcoming"><span class="topstep-circle"><span class="num">4</span></span><span class="topstep-label">SMS</span></div>
-          <div class="topstep-item" data-state="upcoming"><span class="topstep-circle"><span class="num">5</span></span><span class="topstep-label">Merge Fields</span></div>
-          <div class="topstep-item" data-state="upcoming"><span class="topstep-circle"><span class="num">6</span></span><span class="topstep-label">Automations</span></div>
-        </div>
-      </header>
-
-      <div class="shell-body" data-no-sidebar="true">
-        <main class="shell-main">
-          <div class="shell-main-narrow">
-            <div class="wizard-step-header">
-              <h1>Business Information</h1>
-              <p>This is required before you can send marketing email or SMS — it's a legal compliance requirement, not a Reach choice.</p>
-            </div>
-
-            <div class="why-explainer">
-              <svg class="icon-sm" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M10 6.5v4M10 13.5h.01"/></svg>
-              <div>
-                <strong>Why this is required:</strong> CAN-SPAM (US) and similar laws require every marketing email to include a physical postal address. SMS providers also require business verification before they'll assign you a sending number. This information appears in your email footers and on your SMS application — accuracy matters.
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>DBA legal name<span class="req-asterisk">*</span></label>
-              <input class="form-input" type="text" value="Muskingum County Fair" />
-            </div>
-
-            <div class="form-group">
-              <label>Business address<span class="req-asterisk">*</span></label>
-              <input class="form-input" type="text" placeholder="Street address" />
-            </div>
-
-            <div class="form-group">
-              <label>Address line 2</label>
-              <input class="form-input" type="text" placeholder="Apartment, suite, unit (optional)" />
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label>City<span class="req-asterisk">*</span></label>
-                <input class="form-input" type="text" placeholder="City" />
-              </div>
-              <div class="form-group">
-                <label>State / Province<span class="req-asterisk">*</span></label>
-                <input class="form-input" type="text" placeholder="State / Province" />
-              </div>
-              <div class="form-group">
-                <label>ZIP / Postal code<span class="req-asterisk">*</span></label>
-                <input class="form-input" type="text" placeholder="ZIP code" />
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>Country<span class="req-asterisk">*</span></label>
-              <select class="form-input">
-                <option>United States</option>
-              </select>
-            </div>
-          </div>
-        </main>
-      </div>
-
-      <footer class="shell-footer">
-        <button class="btn btn-ghost">← Previous</button>
-        <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;">Continue</button>
-      </footer>
-    </div>
-
-    <div class="commentary">
-      <strong>Hard gate:</strong> Continue is disabled (visually muted, not just inert) until DBA + address + city + state + ZIP + country are all populated. Address line 2 is optional. The "Why this is required" explainer is shown by default — not collapsed — because this is the first time we're asking for it and the friction needs to feel earned. <br><br>
-      <strong>Required-field convention:</strong> red asterisk in the label, no asterisk on optional fields. We don't use placeholder-only labels because they fail accessibility for screen readers and disappear once the user starts typing. <br><br>
-      <strong>Implementation note:</strong> the existing Business Information modal screenshot shows this same form — the redesign mostly relocates it from a settings modal into the onboarding wizard as step 2 and adds the gate. Field schema is unchanged.
-    </div>
-  </section>
-
-  <!-- ============================================================ -->
-  <!-- R3 — EMAIL CHANNEL (managed always, BYO encouragement)        -->
-  <!-- ============================================================ -->
-  <section class="section" id="step-email">
-    <div class="section-header">
-      <span class="num">R3</span>
-      <h2>Email Channel · step 3 (managed always, soft BYO nudge)</h2>
-      <span class="note">Single screen, two stacked sections</span>
-    </div>
-
-    <div class="shell">
-      <header class="shell-topbar">
-        <div class="shell-title">
-          <h1>Engage Setup</h1>
-          <button class="close-btn" aria-label="Close">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l10 10M14 4L4 14"/></svg>
-          </button>
-        </div>
-        <div class="topstep">
-          <div class="topstep-item" data-state="complete"><span class="topstep-circle"><span class="num">1</span></span><span class="topstep-label">Brand</span></div>
-          <div class="topstep-item" data-state="complete"><span class="topstep-circle"><span class="num">2</span></span><span class="topstep-label">Business Info</span></div>
-          <div class="topstep-item" data-state="active"><span class="topstep-circle"><span class="num">3</span></span><span class="topstep-label">Email Channel</span></div>
-          <div class="topstep-item" data-state="upcoming"><span class="topstep-circle"><span class="num">4</span></span><span class="topstep-label">SMS</span></div>
-          <div class="topstep-item" data-state="upcoming"><span class="topstep-circle"><span class="num">5</span></span><span class="topstep-label">Merge Fields</span></div>
-          <div class="topstep-item" data-state="upcoming"><span class="topstep-circle"><span class="num">6</span></span><span class="topstep-label">Automations</span></div>
-        </div>
-      </header>
-
-      <div class="shell-body" data-no-sidebar="true">
-        <main class="shell-main">
-          <div class="shell-main-narrow">
-            <div class="wizard-step-header">
-              <h1>Email Channel</h1>
-              <p>We've already provisioned a sending address for you. You can start sending right away — or connect your own domain for better deliverability.</p>
-            </div>
-
-            <!-- Section 1: Managed sender config -->
-            <div class="step-section">
-              <div class="step-section-title">Your sending email</div>
-
-              <div class="form-group">
-                <label>Sending email address</label>
-                <span class="helper">Edit the prefix to match your team — common choices: <code>marketing</code>, <code>hello</code>, <code>news</code></span>
-                <div class="sender-prefix-row">
-                  <input class="form-input" type="text" value="marketing" />
-                  <span class="at-sign">@</span>
-                  <span class="domain-suffix">muskingum-county-fair.fairs-mail.com</span>
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label>Display name<span class="req-asterisk">*</span></label>
-                <span class="helper">What customers see in their inbox before the email opens</span>
-                <input class="form-input" type="text" value="Muskingum County Fair" />
-              </div>
-
-              <div class="form-group">
-                <label>Reply-to email</label>
-                <span class="helper">When customers reply, their response goes here. If left blank, replies go to a no-reply address.</span>
-                <input class="form-input" type="email" placeholder="info@muskingumcofair.com" value="info@muskingumcofair.com" />
-              </div>
-
-              <!-- Inbox preview -->
-              <div style="margin-top: 20px;">
-                <div class="step-section-title" style="margin-bottom: 10px;">How it appears in inbox</div>
-                <div class="inbox-compare">
-                  <div class="inbox-row">
-                    <div class="inbox-avatar">M</div>
-                    <div class="inbox-meta">
-                      <div class="inbox-from">Muskingum County Fair <span class="inbox-via">&lt;marketing@muskingum-county-fair.fairs-mail.com&gt;</span></div>
-                      <div class="inbox-subject">Get your tickets for the 2026 Fair — early bird pricing ends Friday</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Section 2: BYO nudge -->
-            <div class="step-section">
-              <div class="byo-nudge">
-                <div class="byo-nudge-icon">
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l7-4 7 4-7 4-7-4z"/><path d="M3 8v6l7 4 7-4V8"/></svg>
-                </div>
-                <div class="byo-nudge-content">
-                  <h4>Send from your own domain</h4>
-                  <p>Improves inbox placement on Gmail and Outlook, and removes the platform tag from your sender line. Takes about 5 minutes.</p>
-                  <span class="reassurance">You can do this anytime — skip for now and come back from settings whenever you're ready.</span>
-                </div>
-                <button class="btn btn-secondary">Connect your domain →</button>
-              </div>
-            </div>
-          </div>
-        </main>
-      </div>
-
-      <footer class="shell-footer">
-        <button class="btn btn-ghost">← Previous</button>
-        <button class="btn btn-primary">Continue</button>
-      </footer>
-    </div>
-
-    <div class="commentary">
-      <strong>Two-section structure on one screen:</strong> the managed sender config takes the top, the BYO nudge sits at the bottom. Both are part of step 3; the user can fill the managed fields, ignore the BYO card, and Continue. The wizard never blocks on BYO. <br><br>
-      <strong>Inline-editable prefix:</strong> the prefix input sits to the left of a static "@" separator and a readonly mono-styled domain suffix. Changing the prefix updates the inbox preview live. The suffix is the platform-managed domain — not editable here (would require BYO). <br><br>
-      <strong>BYO nudge tone:</strong> calm card, single CTA, explicit "you can do this anytime" reassurance. We don't use the "Recommended" pill or red urgency styling — that would conflict with the message that the managed domain is a legitimate path. The CTA is secondary-styled, not primary, so it doesn't compete with the wizard's main Continue. <br><br>
-      <strong>Clicking "Connect your domain →":</strong> enters the BYO sub-journey (R4). The wizard does not advance to step 4; instead, the sidebar appears with the BYO sub-steps and the user works through them. On exit (success or cancel) they return to this screen.
-    </div>
-  </section>
-
-  <!-- ============================================================ -->
-  <!-- R4 — EMAIL CHANNEL · BYO SUB-JOURNEY (sidebar appears)        -->
-  <!-- ============================================================ -->
-  <section class="section" id="step-email-byo">
-    <div class="section-header">
-      <span class="num">R4</span>
-      <h2>Email Channel · BYO sub-journey (sidebar appears)</h2>
-      <span class="note">Top stepper still shows step 3 active; sidebar shows the sub-flow</span>
-    </div>
-
-    <div class="shell">
-      <header class="shell-topbar">
-        <div class="shell-title">
-          <h1>Engage Setup</h1>
-          <button class="close-btn" aria-label="Close">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l10 10M14 4L4 14"/></svg>
-          </button>
-        </div>
-        <div class="topstep">
-          <div class="topstep-item" data-state="complete"><span class="topstep-circle"><span class="num">1</span></span><span class="topstep-label">Brand</span></div>
-          <div class="topstep-item" data-state="complete"><span class="topstep-circle"><span class="num">2</span></span><span class="topstep-label">Business Info</span></div>
-          <div class="topstep-item" data-state="active"><span class="topstep-circle"><span class="num">3</span></span><span class="topstep-label">Email Channel</span></div>
-          <div class="topstep-item" data-state="upcoming"><span class="topstep-circle"><span class="num">4</span></span><span class="topstep-label">SMS</span></div>
-          <div class="topstep-item" data-state="upcoming"><span class="topstep-circle"><span class="num">5</span></span><span class="topstep-label">Merge Fields</span></div>
-          <div class="topstep-item" data-state="upcoming"><span class="topstep-circle"><span class="num">6</span></span><span class="topstep-label">Automations</span></div>
-        </div>
-      </header>
-
-      <div class="shell-body">
-        <aside class="shell-sidebar">
-          <div class="shell-sidebar-eyebrow">Email setup</div>
-          <button class="shell-sidebar-parent" aria-label="Back to managed email setup">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3L4 7l5 4"/></svg>
-            Email Channel
-          </button>
-          <ul class="shell-sidebar-substeps">
-            <li data-state="complete"><span class="shell-sidebar-substep-marker"></span> Root domain</li>
-            <li data-state="active"><span class="shell-sidebar-substep-marker">2</span> Subdomain</li>
-            <li data-state="upcoming"><span class="shell-sidebar-substep-marker">3</span> DMARC</li>
-            <li data-state="upcoming"><span class="shell-sidebar-substep-marker">4</span> Connect</li>
-          </ul>
-        </aside>
-
-        <main class="shell-main">
-          <div class="wizard-step-header">
-            <h1>Pick a sending subdomain</h1>
-            <p>This is where your emails will be sent from. Use a subdomain you're not already using for your website or work email.</p>
-          </div>
-
-          <div style="max-width: 540px;">
-            <div class="preview-chip">
-              <svg class="icon-sm" style="color: var(--text-muted);" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="2.5"/><path d="M2 10s2.5-5 8-5 8 5 8 5-2.5 5-8 5-8-5-8-5z"/></svg>
-              <div>
-                <div class="preview-chip-label">Preview</div>
-                <div class="preview-chip-value">send.muskingumcofair.com</div>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>Sending subdomain</label>
-              <span class="helper">Common choices: <code>send</code>, <code>email</code>, <code>notifications</code></span>
-              <div style="display: flex; align-items: center;">
-                <input class="form-input" type="text" value="send" style="border-top-right-radius: 0; border-bottom-right-radius: 0; border-right: 0; max-width: 180px;" />
-                <span style="display: inline-flex; align-items: center; padding: 9px 12px; background: var(--bg-subtle); border: 1px solid var(--border-strong); border-top-left-radius: 0; border-bottom-left-radius: 0; font-family: var(--font-mono); font-size: 14px; color: var(--text-muted);">.muskingumcofair.com</span>
-              </div>
-            </div>
-
-            <p style="font-size: 12.5px; color: var(--text-muted); margin-top: 4px;">When you continue, we'll check whether your DNS provider supports automatic setup so we can route you to the smoothest path on the next step.</p>
-          </div>
-        </main>
-      </div>
-
-      <footer class="shell-footer">
-        <button class="btn btn-ghost">← Back</button>
-        <button class="btn btn-primary">Continue</button>
-      </footer>
-    </div>
-
-    <div class="commentary">
-      <strong>Sidebar behavior in the sub-journey:</strong> the top stepper still shows "Email Channel" as the active step — we haven't left it. The sidebar appears with "Email Channel" at the top as a clickable parent (it has a back-arrow icon and acts like a breadcrumb). Below it, the 4 BYO sub-steps appear with the standard active/complete/upcoming states. Clicking the parent returns the user to the managed-config view (R3) without losing the partial BYO state. <br><br>
-      <strong>What I changed vs the original BYO flow (sections 03–06):</strong> the right-pane content is identical to what we already designed. The chrome around it is what's different — left sidebar replaces the inline sub-step dots, and the shell's top stepper replaces the old "Step 2 of 6" footer text. The 4 sub-screens (Root → Subdomain → DMARC → Connect) all use this same shell; only the right-pane content swaps. <br><br>
-      <strong>Resume state on exit:</strong> if the user clicks the close button or the "Email Channel" parent before finishing, their partial BYO state is saved silently. They return to R3 with a "Resume connecting your domain" chip on the Email Channel step (see R5).
-    </div>
-  </section>
-
-  <!-- ============================================================ -->
-  <!-- R5 — EMAIL CHANNEL · RESUME STATE                             -->
-  <!-- ============================================================ -->
-  <section class="section" id="step-email-resume">
-    <div class="section-header">
-      <span class="num">R5</span>
-      <h2>Email Channel · resume state (returning after partial BYO)</h2>
-      <span class="note">User exited the BYO sub-flow mid-way and came back</span>
-    </div>
-
-    <div class="shell">
-      <header class="shell-topbar">
-        <div class="shell-title">
-          <h1>Engage Setup</h1>
-          <button class="close-btn" aria-label="Close">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l10 10M14 4L4 14"/></svg>
-          </button>
-        </div>
-        <div class="topstep">
-          <div class="topstep-item" data-state="complete"><span class="topstep-circle"><span class="num">1</span></span><span class="topstep-label">Brand</span></div>
-          <div class="topstep-item" data-state="complete"><span class="topstep-circle"><span class="num">2</span></span><span class="topstep-label">Business Info</span></div>
-          <div class="topstep-item" data-state="active"><span class="topstep-circle"><span class="num">3</span></span><span class="topstep-label">Email Channel</span></div>
-          <div class="topstep-item" data-state="upcoming"><span class="topstep-circle"><span class="num">4</span></span><span class="topstep-label">SMS</span></div>
-          <div class="topstep-item" data-state="upcoming"><span class="topstep-circle"><span class="num">5</span></span><span class="topstep-label">Merge Fields</span></div>
-          <div class="topstep-item" data-state="upcoming"><span class="topstep-circle"><span class="num">6</span></span><span class="topstep-label">Automations</span></div>
-        </div>
-      </header>
-
-      <div class="shell-body" data-no-sidebar="true">
-        <main class="shell-main">
-          <div class="shell-main-narrow">
-            <div class="wizard-step-header">
-              <h1>Email Channel</h1>
-              <p>We've already provisioned a sending address for you. You can start sending right away — or connect your own domain for better deliverability.</p>
-
-              <div class="resume-chip">
-                <svg class="icon-sm" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M10 6v4l2.5 2.5"/></svg>
-                <div>
-                  <strong>Domain setup paused.</strong> You started connecting <code style="font-family:var(--font-mono);font-size:12px;">send.muskingumcofair.com</code> — pick up where you left off, or skip for now.
-                </div>
-                <button class="resume-cta">Resume →</button>
-              </div>
-            </div>
-
-            <div class="step-section">
-              <div class="step-section-title">Your sending email</div>
-              <p style="font-size:13px;color:var(--text-secondary);margin:0 0 14px;">Same managed-sender config as R3 — values are preserved when the user returns. Form fields render the same way regardless of whether BYO is in progress.</p>
-            </div>
-
-            <div class="step-section">
-              <div class="byo-nudge" style="background: var(--bg-subtle); border-style: dashed;">
-                <div class="byo-nudge-icon">
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l7-4 7 4-7 4-7-4z"/><path d="M3 8v6l7 4 7-4V8"/></svg>
-                </div>
-                <div class="byo-nudge-content">
-                  <h4>send.muskingumcofair.com · setup paused</h4>
-                  <p>Your DMARC and subdomain choices are saved. Continue connecting whenever you're ready, or remove this in-progress domain to start fresh.</p>
-                  <span class="reassurance">Last activity: 2 minutes ago · Step 2 of 4 (Subdomain)</span>
-                </div>
-                <button class="btn btn-secondary">Resume setup →</button>
-              </div>
-            </div>
-          </div>
-        </main>
-      </div>
-
-      <footer class="shell-footer">
-        <button class="btn btn-ghost">← Previous</button>
-        <button class="btn btn-primary">Continue</button>
-      </footer>
-    </div>
-
-    <div class="commentary">
-      <strong>Two surfaces signal the resume state:</strong> a yellow chip in the step header (high-visibility, dismissable in a future iteration) and the BYO nudge card swaps into a "paused" variant — dashed border, subdued background, shows the in-progress domain name plus where the user left off. Clicking either Resume button re-enters the BYO sub-journey at the exact sub-step the user was on (R4). <br><br>
-      <strong>State that persists:</strong> root domain, subdomain choice, DMARC opt-in. We do not call Postmark or mint an Entri JWT until the user reaches the final Connect step in the sub-journey, so there's nothing server-side to clean up if the user abandons. The "remove this in-progress domain" option in the card body is a soft action that just clears the saved choices. <br><br>
-      <strong>Continue is still enabled:</strong> the resume chip is informational, not a gate. The user can ignore it and proceed with the managed setup forever.
-    </div>
-  </section>
-
-  <!-- ============================================================ -->
-  <!-- R6/R7 — Existing steps in new shell (compact rendering)       -->
-  <!-- ============================================================ -->
-  <section class="section" id="step-rest">
-    <div class="section-header">
-      <span class="num">R6</span>
-      <h2>Remaining steps in the new shell</h2>
-      <span class="note">SMS Channel · Merge Fields · Automations — existing components, new chrome</span>
-    </div>
-
-    <!-- SMS Channel -->
-    <div class="shell" style="margin-bottom: 20px;">
-      <header class="shell-topbar">
-        <div class="shell-title">
-          <h1>Engage Setup</h1>
-          <button class="close-btn" aria-label="Close">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l10 10M14 4L4 14"/></svg>
-          </button>
-        </div>
-        <div class="topstep">
-          <div class="topstep-item" data-state="complete"><span class="topstep-circle"><span class="num">1</span></span><span class="topstep-label">Brand</span></div>
-          <div class="topstep-item" data-state="complete"><span class="topstep-circle"><span class="num">2</span></span><span class="topstep-label">Business Info</span></div>
-          <div class="topstep-item" data-state="complete"><span class="topstep-circle"><span class="num">3</span></span><span class="topstep-label">Email Channel</span></div>
-          <div class="topstep-item" data-state="active"><span class="topstep-circle"><span class="num">4</span></span><span class="topstep-label">SMS</span></div>
-          <div class="topstep-item" data-state="upcoming"><span class="topstep-circle"><span class="num">5</span></span><span class="topstep-label">Merge Fields</span></div>
-          <div class="topstep-item" data-state="upcoming"><span class="topstep-circle"><span class="num">6</span></span><span class="topstep-label">Automations</span></div>
-        </div>
-      </header>
-      <div class="shell-body" data-no-sidebar="true">
-        <main class="shell-main">
-          <div class="shell-main-narrow" style="text-align: center; padding: 40px 0;">
-            <div class="wizard-step-header" style="text-align: left;">
-              <h1>SMS Channel</h1>
-              <p>Set up your SMS provider to start sending personalized messages to your customers.</p>
-            </div>
-            <div style="background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 40px 32px; margin-top: 24px;">
-              <div style="width: 44px; height: 44px; border-radius: 999px; background: var(--bg-subtle); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 14px;">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-secondary);"><path d="M5 4h10a2 2 0 012 2v8a2 2 0 01-2 2h-3l-3 2v-2H5a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg>
-              </div>
-              <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 6px;">Request your SMS sending number</h3>
-              <p style="font-size: 13px; color: var(--text-secondary); margin: 0 0 4px; max-width: 420px; margin-inline: auto;">Before you can send messages, we need to verify your business info with our SMS provider. Once approved, we'll assign you a phone number to send SMS campaigns.</p>
-              <p style="font-size: 12.5px; color: var(--text-muted); margin: 0 0 18px;">This usually takes 3–7 business days.</p>
-              <button class="btn btn-secondary">Request approval</button>
-            </div>
-          </div>
-        </main>
-      </div>
-      <footer class="shell-footer">
-        <button class="btn btn-ghost">← Previous</button>
-        <button class="btn btn-primary">Continue</button>
-      </footer>
-    </div>
-
-    <div class="commentary" style="margin-bottom: 24px;">
-      <strong>SMS Channel:</strong> existing component, unchanged content, rendered inside the new shell. Note: SMS request approval depends on Business Information being filled (which is now a hard gate at step 2), so this should always succeed for users who got this far.
-    </div>
-
-    <!-- Merge Fields (compact) -->
-    <div class="shell" style="margin-bottom: 20px;">
-      <header class="shell-topbar">
-        <div class="shell-title">
-          <h1>Engage Setup</h1>
-          <button class="close-btn" aria-label="Close"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l10 10M14 4L4 14"/></svg></button>
-        </div>
-        <div class="topstep">
-          <div class="topstep-item" data-state="complete"><span class="topstep-circle"><span class="num">1</span></span><span class="topstep-label">Brand</span></div>
-          <div class="topstep-item" data-state="complete"><span class="topstep-circle"><span class="num">2</span></span><span class="topstep-label">Business Info</span></div>
-          <div class="topstep-item" data-state="complete"><span class="topstep-circle"><span class="num">3</span></span><span class="topstep-label">Email Channel</span></div>
-          <div class="topstep-item" data-state="complete"><span class="topstep-circle"><span class="num">4</span></span><span class="topstep-label">SMS</span></div>
-          <div class="topstep-item" data-state="active"><span class="topstep-circle"><span class="num">5</span></span><span class="topstep-label">Merge Fields</span></div>
-          <div class="topstep-item" data-state="upcoming"><span class="topstep-circle"><span class="num">6</span></span><span class="topstep-label">Automations</span></div>
-        </div>
-      </header>
-      <div class="shell-body" data-no-sidebar="true">
-        <main class="shell-main">
-          <div class="shell-main-narrow">
-            <div class="wizard-step-header">
-              <h1>Merge Fields</h1>
-              <p>Manage merge fields for personalizing your communications with dynamic content.</p>
-            </div>
-            <p style="font-size:13px;color:var(--text-secondary);margin:0;">Existing component (<code>MergeFieldSettings</code>) renders here unchanged. The "How personalization works" explainer panel and First Name / Last Name fields stay as they are today — the only change is the surrounding shell.</p>
-          </div>
-        </main>
-      </div>
-      <footer class="shell-footer">
-        <button class="btn btn-ghost">← Previous</button>
-        <button class="btn btn-primary">Continue</button>
-      </footer>
-    </div>
-
-    <!-- Automations -->
-    <div class="shell">
-      <header class="shell-topbar">
-        <div class="shell-title">
-          <h1>Engage Setup</h1>
-          <button class="close-btn" aria-label="Close"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l10 10M14 4L4 14"/></svg></button>
-        </div>
-        <div class="topstep">
-          <div class="topstep-item" data-state="complete"><span class="topstep-circle"><span class="num">1</span></span><span class="topstep-label">Brand</span></div>
-          <div class="topstep-item" data-state="complete"><span class="topstep-circle"><span class="num">2</span></span><span class="topstep-label">Business Info</span></div>
-          <div class="topstep-item" data-state="complete"><span class="topstep-circle"><span class="num">3</span></span><span class="topstep-label">Email Channel</span></div>
-          <div class="topstep-item" data-state="complete"><span class="topstep-circle"><span class="num">4</span></span><span class="topstep-label">SMS</span></div>
-          <div class="topstep-item" data-state="complete"><span class="topstep-circle"><span class="num">5</span></span><span class="topstep-label">Merge Fields</span></div>
-          <div class="topstep-item" data-state="active"><span class="topstep-circle"><span class="num">6</span></span><span class="topstep-label">Automations</span></div>
-        </div>
-      </header>
-      <div class="shell-body" data-no-sidebar="true">
-        <main class="shell-main">
-          <div class="shell-main-narrow">
-            <div class="wizard-step-header">
-              <h1>Turn on automations</h1>
-              <p>Pick the automations you want active when you launch. Recommended ones are pre-selected — you can change them anytime.</p>
-            </div>
-            <p style="font-size:13px;color:var(--text-secondary);margin:0 0 18px;">Existing <code>OnboardingAutomationList</code> component renders here. Sketch below is a placeholder — actual content is whatever the existing component shows today.</p>
-
-            <div class="automation-list">
-              <div class="automation-list-item">
-                <div class="icon-circle"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l7 5 7-5"/><rect x="3" y="4" width="14" height="12" rx="1.5"/></svg></div>
-                <div><h5>Welcome series</h5><p>Sends 3 emails over the first week to new contacts.</p></div>
-                <div class="toggle" data-on="true"></div>
-              </div>
-              <div class="automation-list-item">
-                <div class="icon-circle"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4v6l4 2"/><circle cx="10" cy="10" r="7"/></svg></div>
-                <div><h5>Birthday wishes</h5><p>Sends a birthday email when you have a birthdate on file.</p></div>
-                <div class="toggle" data-on="true"></div>
-              </div>
-              <div class="automation-list-item">
-                <div class="icon-circle"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l4 4 10-10"/></svg></div>
-                <div><h5>Thank-you after purchase</h5><p>Triggers a thank-you message 24 hours after a transaction.</p></div>
-                <div class="toggle" data-on="false"></div>
-              </div>
-            </div>
-          </div>
-        </main>
-      </div>
-      <footer class="shell-footer">
-        <button class="btn btn-ghost">← Previous</button>
-        <button class="btn btn-primary">Save & go to dashboard →</button>
-      </footer>
-    </div>
-
-    <div class="commentary">
-      <strong>Automations is the new last step:</strong> renames "Save & Go to dashboard" to make the destination clear (existing copy in <code>EngageOnboarding</code> already does this on the Merge Fields step — moves to here in the new flow). The list-of-toggles UI shown above is illustrative only — the existing <code>OnboardingAutomationList</code> component renders whatever it shows today; this section is just to show how it sits inside the new shell. <br><br>
-      <strong>Step order recap:</strong> Brand → Business Info (gate) → Email Channel (managed always + soft BYO) → SMS → Merge Fields → Automations → Dashboard. The redesign touches the shell, the step order, the Business Info gate, and the Email Channel page; SMS / Merge / Automations keep their existing content.
-    </div>
-  </section>
-
-  <!-- ============================================== -->
-  <!-- FLOW REFERENCE TABLE                            -->
-  <!-- ============================================== -->
-  <section class="section" id="flow" style="margin-top: 0;">
-    <div class="section-header">
-      <span class="num">00</span>
-      <h2>Flow reference · what each screen is for and how it feeds Entri</h2>
-      <span class="note">Read this first — implementation reference for the engineer building it</span>
+      <span class="num">02</span>
+      <h2>Onboarding flow reference</h2>
+      <span class="note">6 steps · Brand → Business Info → Email Channel → SMS → Merge → Automations</span>
     </div>
 
     <div class="flow-table-wrap">
@@ -2224,121 +1649,153 @@
             <th class="col-why">Why it exists</th>
             <th class="col-user">What the user does</th>
             <th class="col-collect">What we collect / show</th>
-            <th class="col-entri">How it feeds Entri (or our backend)</th>
+            <th class="col-entri">Backend / Entri behavior</th>
           </tr>
         </thead>
         <tbody>
 
           <tr>
             <td><span class="step-num">01</span></td>
-            <td>
-              <div class="screen-name">Choice — BYO vs managed</div>
-            </td>
-            <td>The fork in the road. Most tenants don't know there's a choice; this screen makes the trade-off visible (deliverability + brand) and lets the ones who can't connect a domain skip without dropping out of onboarding entirely.</td>
-            <td>Picks one of two cards: "Use my own domain" (BYO) or "Use a managed domain".</td>
-            <td>Nothing yet — just a routing decision. We log the choice for analytics (drop-off where).</td>
-            <td><strong>No Entri call yet.</strong> If they pick managed → skip the next 4 screens entirely, mark Engage with a <code>useManagedDomain</code> flag, advance to Email step. If BYO → go to screen 02.</td>
+            <td><div class="screen-name">Brand Settings</div></td>
+            <td>Captures the business name and website. The website seeds the BYO root domain on the Email step's sub-journey — never asks the user to retype it.</td>
+            <td>Confirms business name and website. (Production also collects logo, brand colors, tone — the prototype shows a stripped-down version.)</td>
+            <td>Brand name, website. The website value propagates to <code>state.byo.rootDomain</code>.</td>
+            <td>No external calls.</td>
           </tr>
 
           <tr>
             <td><span class="step-num">02</span></td>
             <td>
-              <div class="screen-name">Root domain</div>
+              <div class="screen-name">Business Information</div>
+              <span class="screen-tag">Hard gate</span>
             </td>
-            <td>We need the apex domain (<code>acmeinsurance.com</code>) before we can build any DNS records. Pre-filled from the business website to remove typing and reduce typos that would silently break verification.</td>
-            <td>Confirms or edits the prefilled root domain.</td>
-            <td>Root domain string.</td>
-            <td><strong>No Entri call yet.</strong> Stored on our side. We do basic format validation (is it a real-looking FQDN?) but no DNS lookup.</td>
+            <td>CAN-SPAM (US) and equivalent laws require a physical postal address in marketing email. SMS carriers require business verification before they'll assign a sending number. Both are upstream blockers — must be filled before Engage can send at all.</td>
+            <td>Fills in DBA, address line 1, city, state, ZIP, country. Address line 2 optional.</td>
+            <td>All required fields. Continue button is disabled until DBA + address + city + state + ZIP are populated.</td>
+            <td>Stored in our DB. Used in email footers (CAN-SPAM compliance) and submitted to SMS provider on the SMS step.</td>
           </tr>
 
           <tr>
             <td><span class="step-num">03</span></td>
             <td>
-              <div class="screen-name">Subdomain</div>
+              <div class="screen-name">Email Channel · managed card</div>
+              <span class="screen-tag">Always set up</span>
             </td>
-            <td>Sets the subdomain prefix (<code>send</code>) so the full sending domain becomes <code>send.acmeinsurance.com</code>. Postmark/SES need the full subdomain to mint DNS records. Per product policy, we never let tenants send from the apex domain — we don't trust untrained customers not to damage email reputation on a domain they also use for personal mail.</td>
-            <td>Enters subdomain prefix (default: <code>send</code>). Sees a live preview chip showing the full domain. Clicks Continue.</td>
-            <td>Subdomain string. We then call <code>entri.checkDomain</code> on Continue (gating).</td>
-            <td><strong>First Entri call: <code>entri.checkDomain(fullDomain, config)</code> — fires when the user clicks Continue, before advancing.</strong> Returns <code>{ provider, setupType: "Automatic" | "Manual", NSSupport }</code>. We use it to gate: if the provider is supported we advance; if unsupported we still advance but route the user toward "Set up manually" on the next screen and surface a heads-up. This is a paid add-on not included in the base startup plan — Entri is providing one-off pricing.</td>
+            <td>Every tenant gets a managed domain provisioned automatically so they can send mail immediately. The managed card collects the sender identity (prefix, display name, reply-to) and shows an inbox preview.</td>
+            <td>Confirms or edits prefix (e.g. <code>marketing</code>), display name (e.g. "Acme Insurance"), reply-to (e.g. <code>info@acmeinsurance.com</code>). Inbox preview updates live.</td>
+            <td>Prefix, display name, reply-to. Display name is required. Reply-to has an auto-suggest derived from the sending root domain and a warning chip if the user enters a cross-root reply-to (deliverability nudge).</td>
+            <td>Managed domain is provisioned at tenant-create time, before onboarding. ESP (Postmark or SES per partner) already has DKIM/Return-Path live for the managed domain.</td>
           </tr>
 
           <tr>
-            <td><span class="step-num">04</span></td>
+            <td><span class="step-num">03a</span></td>
             <td>
-              <div class="screen-name">DMARC opt-in</div>
+              <div class="screen-name">Email Channel · BYO card</div>
+              <span class="screen-tag">Optional, recommended</span>
             </td>
-            <td>DMARC isn't strictly required by Postmark, but Gmail/Yahoo bulk-sender rules effectively require it for any tenant sending &gt;5k/day. Splitting it as its own screen with a default-on toggle gives tenants visibility (so they don't get a surprise DNS record they didn't approve) and a way to opt out if they already manage DMARC themselves. <strong>Now placed before the Entri/manual screen so the full DNS payload is committed before we launch the modal — Entri runs once with all records (per Felipe at Entri).</strong></td>
-            <td>Confirms DMARC is on (default) or toggles off.</td>
-            <td>Boolean: include DMARC record?</td>
-            <td><strong>No Entri call yet.</strong> The choice gets stashed locally; we'll append the DMARC record to the <code>dnsRecords[]</code> array on the next screen if the toggle is on. Format: <code>_dmarc.send TXT "v=DMARC1; p=none; rua=mailto:dmarc@..."</code>. Because we're always writing to a fresh subdomain, we don't need Entri's "Validate DMARC" feature (would only matter if we were ever overwriting an existing DMARC record on the apex).</td>
-          </tr>
-
-          <tr>
-            <td><span class="step-num">05</span></td>
-            <td>
-              <div class="screen-name">Connect with Entri / Set up manually</div>
-            </td>
-            <td>The "are you ready to give us write access to your DNS?" moment. Gives the tenant a beat to opt out, see the legal terms, and choose manual fallback if they don't trust auto-setup or their provider wasn't detected. The submit button on this screen is what actually launches the Entri modal.</td>
-            <td>Picks "Connect with Entri" (most users) or "Set up manually" (power users / unsupported providers / IT pushback).</td>
-            <td>Choice of automatic vs manual path.</td>
-            <td><strong>Backend + Entri both kick off here.</strong> We call our <code>POST /api/sending-domain</code> endpoint, which: (1) calls Postmark <code>POST /domains</code> to register the sending domain and gets back the DKIM TXT + Return-Path CNAME records, (2) translates them into Entri's <code>dnsRecords[]</code> shape, (3) appends the DMARC record from screen 04 if opted in, (4) mints a 60-min Entri JWT via <code>POST https://api.goentri.com/token</code>, (5) returns the JWT + records to the browser. The browser then calls <code>entri.showEntri({ applicationId, token, userId, prefilledDomain, dnsRecords })</code> to open the modal with the full payload at once.</td>
+            <td>Better deliverability + brand trust. Visually framed as a parallel path under the managed card so users see they have a choice but don't feel forced. "Connect your domain" is the only action on this card; everything else lives in the sub-journey.</td>
+            <td>Clicks "Connect your domain" if they want BYO. Otherwise skips and continues.</td>
+            <td>No data collected on this card itself.</td>
+            <td>No external calls until they enter the sub-journey.</td>
           </tr>
 
           <tr class="entri-row">
-            <td><span class="step-num">05.5</span></td>
+            <td><span class="step-num">03b</span></td>
+            <td>
+              <div class="screen-name">BYO sub-journey · Root domain</div>
+              <span class="screen-tag">Sub-step 1 of 4</span>
+            </td>
+            <td>We need the apex domain (<code>acmeinsurance.com</code>) before we can build any DNS records. Pre-filled from the Brand step's website so the user just confirms.</td>
+            <td>Confirms or edits the prefilled root domain.</td>
+            <td>Root domain string.</td>
+            <td><strong>No Entri call yet.</strong> Stored on our side. Basic FQDN format validation only.</td>
+          </tr>
+
+          <tr class="entri-row">
+            <td><span class="step-num">03c</span></td>
+            <td>
+              <div class="screen-name">BYO sub-journey · Configure sending domain</div>
+              <span class="screen-tag">Sub-step 2 of 4</span>
+            </td>
+            <td>Collects everything we need to know about the BYO domain in one screen: the subdomain prefix AND the per-domain sender identity. Mirrors the managed-card form so the user sees they're configuring the same kind of thing, just under their own domain. Critically: identity is per-domain — the BYO domain doesn't inherit silently from managed.</td>
+            <td>Enters subdomain (default <code>send</code>). Edits prefix, display name, reply-to. Sees a live preview chip with the full sending domain and an inbox preview.</td>
+            <td>Subdomain, prefix, display name, reply-to. BYO identity seeds from the managed identity on first entry — user can edit any field. Reply-to auto-suggests <code>info@&lt;byo-root-domain&gt;</code>.</td>
+            <td><strong>First Entri call (gated on plan):</strong> <code>entri.checkDomain(fullDomain, config)</code> if we have it enabled. Returns <code>{ provider, setupType, NSSupport }</code>. Used informationally on the next screen — not a hard gate.</td>
+          </tr>
+
+          <tr class="entri-row">
+            <td><span class="step-num">03d</span></td>
+            <td>
+              <div class="screen-name">BYO sub-journey · DMARC</div>
+              <span class="screen-tag">Sub-step 3 of 4</span>
+            </td>
+            <td>DMARC isn't strictly required by Postmark but Gmail/Yahoo bulk-sender rules effectively require it for any tenant sending >5k/day. Default-on toggle gives visibility (so users don't get a surprise DNS record) and an opt-out for tenants who manage DMARC externally.</td>
+            <td>Confirms DMARC on (default) or toggles off.</td>
+            <td>Boolean: include DMARC record.</td>
+            <td><strong>We append a DMARC record to <code>dnsRecords[]</code></strong> before launching Entri if the toggle is on. Format: <code>_dmarc.&lt;subdomain&gt; TXT "v=DMARC1; p=none; rua=mailto:dmarc@..."</code>. If off, skip it.</td>
+          </tr>
+
+          <tr class="entri-row">
+            <td><span class="step-num">03e</span></td>
+            <td>
+              <div class="screen-name">BYO sub-journey · Connect</div>
+              <span class="screen-tag">Sub-step 4 of 4</span>
+            </td>
+            <td>The "give us write access to your DNS?" moment. Gives the tenant a beat to opt out, see legal terms, or pick the manual fallback for unsupported providers.</td>
+            <td>Picks "Connect with Entri" (most users) or "Set up manually."</td>
+            <td>Choice of automatic vs manual.</td>
+            <td><strong>Backend kicks off here.</strong> <code>POST /api/sending-domain</code>: (1) calls Postmark <code>POST /domains</code> to register the sending domain, gets back DKIM TXT + Return-Path CNAME; (2) translates into Entri's <code>dnsRecords[]</code>; (3) appends DMARC record if toggled on; (4) mints a 60-min Entri JWT via <code>POST https://api.goentri.com/token</code>; (5) returns JWT + records to the browser. Browser launches <code>entri.showEntri({ applicationId, token, userId: "tenant_&lt;id&gt;", prefilledDomain, dnsRecords })</code>.</td>
+          </tr>
+
+          <tr class="entri-row">
+            <td><span class="step-num">03f</span></td>
             <td>
               <div class="screen-name">Entri modal</div>
               <span class="screen-tag">Not our UI</span>
             </td>
-            <td>The actual DNS-write moment. Entri owns this UI; we just hand it the JWT and records, and listen for callbacks. Inside the modal: tenant logs into their DNS provider via OAuth (or copies records manually), and Entri writes the records on their behalf.</td>
-            <td>Logs into DNS provider (Cloudflare, GoDaddy, etc.) inside the Entri modal. Or copies records manually. Or hands off to IT via Entri's "forward login" feature.</td>
-            <td>DNS records get written.</td>
-            <td><strong>Not our screen — Entri's iframe modal.</strong> We launch with <code>entri.showEntri({ applicationId, token, userId: "tenant_&lt;id&gt;", prefilledDomain, dnsRecords })</code>. We listen for <code>onSuccess</code> (records written client-side) and <code>onEntriClose</code> (modal closed, returns <code>{ success, setupType, provider, lastStatus }</code>). We persist <code>setupType</code> and <code>provider</code> for ops debugging.</td>
+            <td>The actual DNS-write moment. Entri owns this UI.</td>
+            <td>Logs into DNS provider via OAuth inside the Entri modal. Or copies records manually. Or hands off to IT via Entri's "forward login" feature.</td>
+            <td>DNS records get written by Entri.</td>
+            <td>We listen for <code>onSuccess</code> and <code>onEntriClose</code> on the browser side. Server-side we listen for Entri webhooks (see §4). We persist <code>setupType</code> and <code>provider</code> from the close callback for ops debugging.</td>
+          </tr>
+
+          <tr class="entri-row">
+            <td><span class="step-num">03g</span></td>
+            <td>
+              <div class="screen-name">BYO sub-journey · Verifying</div>
+              <span class="screen-tag">Sub-step 5 (auto)</span>
+            </td>
+            <td>Entri saying "records are written" ≠ Postmark saying "I can DKIM-sign for this domain." Propagation takes 1–5 minutes typically. Per-record progress UI keeps the user oriented.</td>
+            <td>Watches the animated per-record progress. Can click "Continue while verifying →" to advance to SMS without waiting; verification keeps polling in the background and the user gets notified when it lands.</td>
+            <td>Postmark verification status per record (DKIM, Return-Path, DMARC).</td>
+            <td><strong>No more Entri calls.</strong> Backend polls Postmark <code>PUT /domains/{id}/verifyDkim</code> + <code>PUT /domains/{id}/verifyReturnPath</code> on backoff: every 30s for 5 min, then every 2 min for 30 min, etc. Frontend polls our status endpoint. Also receives Entri <code>domain.added</code> webhooks server-side as a fast signal to trigger immediate Postmark verify. When both Postmark calls return verified, domain flips to <code>Verified</code>.</td>
+          </tr>
+
+          <tr>
+            <td><span class="step-num">04</span></td>
+            <td><div class="screen-name">SMS Channel</div></td>
+            <td>Submits Business Info to the SMS provider for verification. Provider assigns a sending number once approved (3–7 business days).</td>
+            <td>Clicks "Request approval." Continues.</td>
+            <td>Submission of existing Business Info — no new fields.</td>
+            <td>API call to SMS provider. Out of scope for Entri integration.</td>
+          </tr>
+
+          <tr>
+            <td><span class="step-num">05</span></td>
+            <td><div class="screen-name">Merge Fields</div></td>
+            <td>Personalization defaults (First Name, Last Name) with fallback strings for when we don't have the customer data.</td>
+            <td>Sets backup text. Skippable.</td>
+            <td>Merge field definitions.</td>
+            <td>Stored in our DB. No Entri interaction.</td>
           </tr>
 
           <tr>
             <td><span class="step-num">06</span></td>
-            <td>
-              <div class="screen-name">Verifying</div>
-            </td>
-            <td>After the Entri modal closes successfully, DNS records have been written but propagation isn't instant (1–5 min typical). This screen shows per-record progress and crucially says "you can leave this page" so users don't bounce while watching a spinner.</td>
-            <td>Sees per-record status (DKIM, Return-Path, DMARC). Can re-check now, or click "continue setup" and verify in background.</td>
-            <td>Per-record propagation status, driven by Entri webhooks.</td>
-            <td><strong>No more outbound Entri calls — we listen for webhooks.</strong> Per Felipe at Entri: "at that point you're going to only listen to the webhook and the record propagation." We need a webhook handler at e.g. <code>POST /api/webhooks/entri</code> that receives <code>domain.added</code> with <code>propagation_status: "pending" | "success" | "failed"</code> for each record, plus <code>domain.flow.completed</code>. Webhook signing uses <code>Entri-Signature-V2</code> + <code>Entri-Timestamp</code> headers (SHA-256 over <code>webhook_id + timestamp + client_secret</code>). All production webhook traffic comes from a fixed Entri IP — IP-allowlist at the edge. Once all expected records report <code>success</code>, we flip the domain to Verified and the tenant can send.</td>
-          </tr>
-
-          <tr>
-            <td><span class="step-num">07</span></td>
-            <td>
-              <div class="screen-name">Settings — list view</div>
-            </td>
-            <td>The post-onboarding home for sending domains. Tenants need to (a) see what's connected, (b) add a second domain (transactional + marketing pattern), (c) re-verify or remove existing ones, (d) pick a default. Always shown alongside the managed-domain row as a fallback that's never deletable.</td>
-            <td>Views status per domain. Adds a new domain (re-enters the flow at screen 01). Re-verifies, sets default, removes.</td>
-            <td>Existing domains, status, last-verified timestamp, default flag.</td>
-            <td><strong>Re-enters the same flow</strong> when "Add domain" is clicked. Re-verify is a user-initiated check (we don't have streaming webhooks for an idle domain) — backend does a fresh DNS lookup against Postmark's verify endpoints and updates our record. Remove calls Postmark <code>DELETE /domains/{id}</code> <em>and</em> deletes our row.</td>
-          </tr>
-
-          <tr>
-            <td><span class="step-num">07b</span></td>
-            <td>
-              <div class="screen-name">Settings — empty state</div>
-            </td>
-            <td>A tenant who skipped BYO during onboarding. The framing matters: "you have no domains" is technically true but doesn't communicate the real state ("you're sending from a managed domain, here's what you're missing").</td>
-            <td>Reads the framing, decides to upgrade.</td>
-            <td>Nothing — just a CTA.</td>
-            <td>Re-enters the flow at screen 01 (or skips straight to 02 since the choice is implicit).</td>
-          </tr>
-
-          <tr>
-            <td><span class="step-num">08</span></td>
-            <td>
-              <div class="screen-name">Disconnected — banner + table state</div>
-              <span class="screen-tag">Post-MVP</span>
-            </td>
-            <td>A previously verified domain stopped resolving — IT changed providers, someone deleted the record, an SPF record got overwritten by another tool, etc. Per-domain because in multi-domain setups one can fail while others stay healthy. <strong>Deferred from MVP.</strong> Detection requires Entri Monitor ($50/mo for up to 600 domains on the startup plan). The Entri team flagged the most likely real-world failure as customers using a second email tool that overwrites SPF instead of merging — worth revisiting once we see actual disconnect rates in production.</td>
-            <td>Sees the banner, clicks "Reconnect" (re-launches Entri with the same records) or "Forward fix to IT".</td>
-            <td>The specific record that's missing (DKIM / Return-Path / DMARC) and what the value should be.</td>
-            <td><strong>When we add this:</strong> subscribe to Entri Monitor and listen for <code>domain.record_missing</code> and <code>domain.record_restored</code> webhooks. Reconnect re-launches <code>entri.showEntri()</code> with the original record set; no need to re-mint or re-create the Postmark domain. Until then, tenants who silently disconnect will surface only via deliverability complaints.</td>
+            <td><div class="screen-name">Automations</div></td>
+            <td>Activates recommended automations (welcome series, birthday, thank-you). Existing <code style="font-family:var(--font-mono);">OnboardingAutomationList</code> component.</td>
+            <td>Toggles automations on/off. Clicks "Save & go to dashboard →".</td>
+            <td>Per-automation enabled boolean.</td>
+            <td>No Entri interaction.</td>
           </tr>
 
         </tbody>
@@ -2346,793 +1803,370 @@
     </div>
 
     <div class="flow-rules">
-      <h3>Flow rules worth calling out</h3>
+      <h3>Onboarding-specific rules</h3>
       <ul>
-        <li><strong>Steps 02–05 collapse into one onboarding wizard step</strong> in the existing left sidebar (<code>Brand → Sending domain → Email → Business → SMS → Merge fields</code>). The 4-of-4 sub-stepper at the top of the right pane handles internal progression.</li>
-        <li><strong>Entri runs once, with the full DNS payload at once.</strong> This is why DMARC opt-in (04) comes before the Entri/manual screen (05): we want DKIM + Return-Path + DMARC all decided before we open the modal so the user goes through the OAuth dance only one time. Confirmed by Felipe at Entri.</li>
-        <li><strong>The Entri modal (05.5) is the only non-platform UI in the flow.</strong> Everything else is ours to design and own.</li>
-        <li><strong>Webhooks are the verification mechanism, not polling.</strong> After <code>entri.showEntri</code> resolves, we don't poll — we listen. Entri pushes <code>domain.added</code> events with per-record propagation status, plus <code>domain.flow.completed</code>. Build the webhook handler with HMAC verification (<code>Entri-Signature-V2</code> over <code>webhook_id + timestamp + client_secret</code>, SHA-256, hex), idempotency on <code>webhook_id</code>, and an IP allowlist for Entri's fixed origin IP. This is the load-bearing integration boundary on our side.</li>
-        <li><strong><code>checkDomain</code> is a paid one-off add-on.</strong> Not on the base startup plan; Entri is providing per-feature pricing. Treat it as a Continue-time gate from the subdomain step (screen 03), not an inline blur hint. The result decides whether the next screen leans toward "Connect with Entri" or "Set up manually".</li>
-        <li><strong>Apex-domain sending is disallowed.</strong> Product policy: tenants can only send from a subdomain we provision (<code>send.acme.com</code>, never <code>acme.com</code>). Untrained customers shouldn't be able to torch the reputation of the domain that also hosts their personal email.</li>
-        <li><strong>Managed domain is always present in the background</strong>, even for BYO tenants. The managed row in screen 07 is informational and not removable. Future state: if a BYO domain disconnects, we automatically fall back to the managed one so sends keep going.</li>
-        <li><strong>SPF, Entri Monitor, and Validate-DMARC are out of scope for MVP.</strong> SPF: Postmark doesn't require it for DKIM-aligned auth, and we're writing to a fresh subdomain. Entri Monitor (screen 08): $50/mo for 600 domains on the startup plan, deferred until we see real-world disconnect rates. Validate-DMARC and Advanced DMARC options: only matter if we ever overwrite an existing DMARC on the apex, which we don't.</li>
+        <li><strong>The BYO sub-journey is a sidebar swap.</strong> When the user clicks "Connect your domain" on the Email step, the left sidebar (Brand · Business · Email · SMS · Merge · Automations) replaces with "← Email Channel" parent button + 4 indented BYO sub-steps. Right pane swaps to the current sub-step's content. Footer Previous/Continue map to sub-journey navigation.</li>
+        <li><strong>Continue while verifying.</strong> The Verifying screen exists in the sub-journey, not as a blocking step. Users can click "Continue while verifying →" to advance to SMS while the DNS records finish propagating. Verification continues in the background; the user gets notified (and the DNS section flips to Configured) when it lands.</li>
+        <li><strong>Bailing out preserves partial state.</strong> If the user closes the sub-journey before finishing, the BYO sub-step they were on is saved as <code>state.byo.pausedAt</code>. When they return to the Email step, the DNS section shows the paused variant with a Resume button — no data lost.</li>
+        <li><strong>BYO identity seeds from managed.</strong> On first entry to the BYO sub-journey, <code>state.byo.{prefix,displayName}</code> are seeded from the managed-domain values (the user already filled these in). <code>replyTo</code> stays blank so the auto-suggest placeholder shows <code>info@&lt;byo-root&gt;</code> instead of carrying over the managed reply-to.</li>
+        <li><strong>Reply-to deliverability nudge.</strong> Every reply-to field auto-suggests <code>info@&lt;sending-root-domain&gt;</code> as a placeholder. If the user types a reply-to whose root domain differs from the sending domain's root, show the soft warning chip. Doesn't block — just signals the deliverability risk.</li>
       </ul>
     </div>
   </section>
 
-  <!-- ============================================== -->
-  <!-- CHOICE SCREEN                                   -->
-  <!-- ============================================== -->
-  <section class="section" id="choice">
-    <div class="section-header">
-      <span class="num">01</span>
-      <h2>Choice screen · Two cards, BYO weighted heavier</h2>
-      <span class="note">In Engage onboarding wizard, "Sending domain" step</span>
-    </div>
-
-    <div class="wizard">
-      <aside class="wizard-sidebar">
-        <div class="wizard-sidebar-title">Engage setup</div>
-        <ol>
-          <li data-state="complete"><span class="step-marker"></span> Brand</li>
-          <li data-state="active"><span class="step-marker">2</span> Sending domain</li>
-          <li data-state="upcoming"><span class="step-marker">3</span> Email</li>
-          <li data-state="upcoming"><span class="step-marker">4</span> Business</li>
-          <li data-state="upcoming"><span class="step-marker">5</span> SMS</li>
-          <li data-state="upcoming"><span class="step-marker">6</span> Merge fields</li>
-        </ol>
-      </aside>
-
-      <main class="wizard-main">
-        <div class="wizard-content">
-          <div class="wizard-step-header">
-            <h1>Where will Acme Insurance send from?</h1>
-            <p>How your emails will be sent — and what your customers see in their inbox. You can change this later.</p>
-          </div>
-
-          <div class="choice-grid">
-            <!-- BYO card (primary) -->
-            <article class="choice-card" data-tone="primary">
-              <span class="choice-card-tag">Recommended</span>
-              <div>
-                <h3>Use your own domain</h3>
-                <p class="lede">Send from <strong>send.acmeinsurance.com</strong>. Better deliverability and your brand on every email.</p>
-              </div>
-
-              <div class="inbox-compare">
-                <div class="inbox-compare-label">Here's the difference</div>
-
-                <div class="inbox-row" data-tone="muted">
-                  <div class="inbox-avatar">A</div>
-                  <div class="inbox-meta">
-                    <div class="inbox-from">Acme Insurance <span class="inbox-via">via <strong>mail.example-platform.com</strong></span></div>
-                    <div class="inbox-subject">Your March policy update is ready</div>
-                  </div>
-                </div>
-
-                <div class="inbox-arrow">↓</div>
-
-                <div class="inbox-row">
-                  <div class="inbox-avatar">A</div>
-                  <div class="inbox-meta">
-                    <div class="inbox-from">Acme Insurance</div>
-                    <div class="inbox-subject">Your March policy update is ready</div>
-                  </div>
-                </div>
-              </div>
-
-              <ul>
-                <li>
-                  <svg class="checkmark-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg>
-                  Higher inbox placement on Gmail and Outlook
-                </li>
-                <li>
-                  <svg class="checkmark-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg>
-                  Recipients see your business, not "via" the platform domain
-                </li>
-                <li>
-                  <svg class="checkmark-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg>
-                  ~5 minutes — we set up DNS automatically
-                </li>
-              </ul>
-
-              <div class="choice-card-cta">
-                <button class="btn btn-primary btn-large btn-block">Use my own domain →</button>
-              </div>
-            </article>
-
-            <!-- Managed card (secondary) -->
-            <article class="choice-card">
-              <div>
-                <h3>Use a managed domain</h3>
-                <p class="lede">Send from <span style="font-family: var(--font-mono); font-size: 12.5px;">acme-insurance.mail.example-platform.com</span>. No DNS setup. You can switch to your own domain later.</p>
-              </div>
-
-              <ul>
-                <li>
-                  <svg class="checkmark-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg>
-                  Quickest to start sending today
-                </li>
-                <li>
-                  <svg class="checkmark-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg>
-                  No DNS access needed
-                </li>
-              </ul>
-
-              <p class="meta">Recommended for testing or if you don't have access to your DNS provider.</p>
-
-              <div class="choice-card-cta">
-                <button class="btn btn-secondary btn-large btn-block">Use a managed domain</button>
-              </div>
-            </article>
-          </div>
-
-          <div class="it-handoff">
-            <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
-            <div>
-              <strong>Don't have DNS access?</strong> You can forward setup instructions to your IT contact during the next step — no code changes on their end.
-            </div>
-          </div>
-        </div>
-
-        <footer class="wizard-footer">
-          <button class="btn btn-ghost">← Back</button>
-          <span style="font-size: 12px; color: var(--text-muted);">Step 2 of 6</span>
-        </footer>
-      </main>
-    </div>
-
-    <div class="commentary">
-      <strong>Why this works:</strong> Klaviyo-faithful. Inbox preview lives inside the BYO card so the value is felt immediately. The "Recommended" tag plus the heavier border do the encouragement work — the managed option is right there for tenants who genuinely need it (no DNS access, just testing) without burying it. The "Forward to IT" callout below acknowledges the most common drop-off cause and routes around it.
-    </div>
-  </section>
-
-  <!-- ============================================== -->
-  <!-- ROOT DOMAIN                                     -->
-  <!-- ============================================== -->
-  <section class="section" id="root">
-    <div class="section-header">
-      <span class="num">02</span>
-      <h2>Root domain entry · prefilled from tenant website</h2>
-      <span class="note">Sub-step 1 of 4 inside "Sending domain" step</span>
-    </div>
-
-    <div class="wizard">
-      <aside class="wizard-sidebar">
-        <div class="wizard-sidebar-title">Engage setup</div>
-        <ol>
-          <li data-state="complete"><span class="step-marker"></span> Brand</li>
-          <li data-state="active"><span class="step-marker">2</span> Sending domain</li>
-          <li data-state="upcoming"><span class="step-marker">3</span> Email</li>
-          <li data-state="upcoming"><span class="step-marker">4</span> Business</li>
-          <li data-state="upcoming"><span class="step-marker">5</span> SMS</li>
-          <li data-state="upcoming"><span class="step-marker">6</span> Merge fields</li>
-        </ol>
-      </aside>
-
-      <main class="wizard-main">
-        <div class="wizard-content">
-          <div class="substep-bar">
-            <span>Connect a domain</span>
-            <div class="dots">
-              <div class="dot" data-state="active"></div>
-              <div class="dot"></div>
-              <div class="dot"></div>
-              <div class="dot"></div>
-            </div>
-            <span style="margin-left: auto;">1 of 4</span>
-          </div>
-
-          <div class="wizard-step-header">
-            <h1>What's your root domain?</h1>
-            <p>This is the domain your customers know you by — usually the same as your website and your email address.</p>
-          </div>
-
-          <div style="max-width: 480px;">
-            <div class="form-group">
-              <label for="root-domain">Root domain</label>
-              <span class="helper">For example: acmeinsurance.com</span>
-              <input id="root-domain" class="form-input" type="text" value="acmeinsurance.com" />
-            </div>
-
-            <div class="info-banner">
-              <svg class="icon-sm" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M10 6.5v4M10 13.5h.01"/></svg>
-              <div>We pulled this from your business website on the Brand step. <a href="#">Looks wrong?</a></div>
-            </div>
-          </div>
-        </div>
-
-        <footer class="wizard-footer">
-          <button class="btn btn-ghost">← Back</button>
-          <button class="btn btn-primary">Continue</button>
-        </footer>
-      </main>
-    </div>
-  </section>
-
-  <!-- ============================================== -->
-  <!-- SUBDOMAIN + PROVIDER CHECK                      -->
-  <!-- ============================================== -->
-  <section class="section" id="subdomain">
+  <!-- ============================================================ -->
+  <!-- 3 · SETTINGS FLOW                                             -->
+  <!-- ============================================================ -->
+  <section class="section" id="flow-settings">
     <div class="section-header">
       <span class="num">03</span>
-      <h2>Subdomain entry · gates on entri.checkDomain</h2>
-      <span class="note">Sub-step 2 of 4 — calls entri.checkDomain on Continue, before advancing</span>
+      <h2>Settings flow reference</h2>
+      <span class="note">5 tabs · Brand · Business · Email Channel · SMS · Merge</span>
     </div>
 
-    <div class="wizard">
-      <aside class="wizard-sidebar">
-        <div class="wizard-sidebar-title">Engage setup</div>
-        <ol>
-          <li data-state="complete"><span class="step-marker"></span> Brand</li>
-          <li data-state="active"><span class="step-marker">2</span> Sending domain</li>
-          <li data-state="upcoming"><span class="step-marker">3</span> Email</li>
-          <li data-state="upcoming"><span class="step-marker">4</span> Business</li>
-          <li data-state="upcoming"><span class="step-marker">5</span> SMS</li>
-          <li data-state="upcoming"><span class="step-marker">6</span> Merge fields</li>
-        </ol>
-      </aside>
+    <div class="flow-table-wrap">
+      <table class="flow-table">
+        <thead>
+          <tr>
+            <th class="col-step">#</th>
+            <th class="col-screen">Screen</th>
+            <th class="col-why">Why it exists</th>
+            <th class="col-user">What the user does</th>
+            <th class="col-collect">What we collect / show</th>
+            <th class="col-entri">Backend / Entri behavior</th>
+          </tr>
+        </thead>
+        <tbody>
 
-      <main class="wizard-main">
-        <div class="wizard-content">
-          <div class="substep-bar">
-            <span>Connect a domain</span>
-            <div class="dots">
-              <div class="dot" data-state="complete"></div>
-              <div class="dot" data-state="active"></div>
-              <div class="dot"></div>
-              <div class="dot"></div>
-            </div>
-            <span style="margin-left: auto;">2 of 4</span>
-          </div>
+          <tr>
+            <td><span class="step-num">01</span></td>
+            <td>
+              <div class="screen-name">Email Channel · list view</div>
+              <span class="screen-tag">Default tab view</span>
+            </td>
+            <td>Single home for all email-sending domains. Each row is a clickable card showing domain, status pill, sender summary (<code>prefix@fullDomain</code>), purpose label, last verified time, and a Default pill. Clicking a row opens that domain's detail page.</td>
+            <td>Scans the table. Clicks a row to configure. Clicks "+ Add domain" to enter the BYO sub-journey for a new domain.</td>
+            <td>List of domains with status (verified / pending / disconnected / managed) and metadata.</td>
+            <td>Reads from our DB. No live ESP calls on render; the status pill reflects the last-known state from our reconciliation jobs.</td>
+          </tr>
 
-          <div class="wizard-step-header">
-            <h1>Pick a sending subdomain</h1>
-            <p>This is where your emails will be sent from. Use a subdomain you're not already using for your website or work email.</p>
-          </div>
+          <tr>
+            <td><span class="step-num">02</span></td>
+            <td>
+              <div class="screen-name">Email Channel · domain detail</div>
+              <span class="screen-tag">Master → detail</span>
+            </td>
+            <td>Per-domain configuration page. Two sections: Sender identity (prefix, display name, reply-to, inbox preview) and DNS connection (Voice-style status card with five variants). Plus a Danger zone with Remove for non-managed domains.</td>
+            <td>Edits sender identity fields (per-domain save bar appears on dirty). Manages DNS via the DNS section. Removes the domain via Danger zone.</td>
+            <td>Per-domain prefix, display name, reply-to. DNS status for the DNS section.</td>
+            <td>Save calls <code>PATCH /api/sending-domain/{id}/identity</code>. Sender identity is per-domain, not account-global.</td>
+          </tr>
 
-          <div style="max-width: 540px;">
-            <div class="preview-chip">
-              <svg class="icon-sm" style="color: var(--text-muted);" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="2.5"/><path d="M2 10s2.5-5 8-5 8 5 8 5-2.5 5-8 5-8-5-8-5z"/></svg>
-              <div>
-                <div class="preview-chip-label">Preview</div>
-                <div class="preview-chip-value">send.acmeinsurance.com</div>
-              </div>
-            </div>
+          <tr>
+            <td><span class="step-num">02a</span></td>
+            <td>
+              <div class="screen-name">DNS section · Managed variant</div>
+              <span class="screen-tag">Managed-domain row</span>
+            </td>
+            <td>The managed domain is always platform-managed. DNS is signed automatically — nothing for the tenant to configure here.</td>
+            <td>Reads the explanatory copy. No actions.</td>
+            <td>—</td>
+            <td>No DNS state to surface; we own this.</td>
+          </tr>
 
-            <div class="form-group">
-              <label for="subdomain">Sending subdomain</label>
-              <span class="helper">Common choices: <code>send</code>, <code>email</code>, <code>notifications</code></span>
-              <div style="display: flex; align-items: center;">
-                <input id="subdomain" class="form-input" type="text" value="send" style="border-top-right-radius: 0; border-bottom-right-radius: 0; border-right: 0; max-width: 180px;" />
-                <span style="display: inline-flex; align-items: center; padding: 9px 12px; background: var(--bg-subtle); border: 1px solid var(--border-strong); border-top-left-radius: 0; border-bottom-left-radius: 0; font-family: var(--font-mono); font-size: 14px; color: var(--text-muted);">.acmeinsurance.com</span>
-              </div>
-            </div>
+          <tr>
+            <td><span class="step-num">02b</span></td>
+            <td>
+              <div class="screen-name">DNS section · Configured variant</div>
+              <span class="screen-tag">Verified BYO</span>
+            </td>
+            <td>BYO domain is verified and signing mail. Shows DKIM/Return-Path/DMARC summary, last-verified timestamp, and the "How to disconnect" explanation (the user removes the DKIM TXT record from their DNS provider — we don't have a one-click disconnect).</td>
+            <td>Clicks Re-verify DNS or Reconfigure if needed.</td>
+            <td>Reads the persisted DNS record metadata.</td>
+            <td>Re-verify hits Postmark verify endpoints. Reconfigure launches the inline DNS wizard within this section (same Entri JWT-mint + <code>showEntri</code> flow as onboarding).</td>
+          </tr>
 
-            <p style="font-size: 12.5px; color: var(--text-muted); margin-top: 4px;">When you continue, we'll check whether your DNS provider supports automatic setup so we can route you to the smoothest path on the next step.</p>
-          </div>
-        </div>
+          <tr>
+            <td><span class="step-num">02c</span></td>
+            <td>
+              <div class="screen-name">DNS section · Disconnected variant</div>
+              <span class="screen-tag">Recovery</span>
+            </td>
+            <td>BYO domain was verified but a record (typically DKIM) has gone missing from DNS. Red banner with Reconnect and Forward fix to IT actions. Mail falls back to the managed domain in the background so sends keep going.</td>
+            <td>Clicks Reconnect to re-launch Entri with the original record set, or Forward fix to IT to send a shareable link to their DNS admin.</td>
+            <td>Specific record that's missing + intended value.</td>
+            <td><strong>Detection source.</strong> Either Entri's <code>domain.record_missing</code> webhook (Entri Monitor — paid, recommended) or our own reconciler job re-hitting Postmark verify on a 6h cycle. Reconnect re-launches <code>entri.showEntri()</code> with the original record set — no new Postmark domain created.</td>
+          </tr>
 
-        <footer class="wizard-footer">
-          <button class="btn btn-ghost">← Back</button>
-          <button class="btn btn-primary">Continue</button>
-        </footer>
-      </main>
+          <tr>
+            <td><span class="step-num">02d</span></td>
+            <td>
+              <div class="screen-name">DNS section · Verifying variant</div>
+              <span class="screen-tag">Pending verification</span>
+            </td>
+            <td>BYO domain has records in DNS but Postmark hasn't verified them yet. Per-record progress (DKIM / Return-Path / DMARC).</td>
+            <td>Waits, or leaves the page (verification continues in background).</td>
+            <td>Postmark verification status per record.</td>
+            <td>Same polling as onboarding §02 row 03g.</td>
+          </tr>
+
+          <tr>
+            <td><span class="step-num">02e</span></td>
+            <td>
+              <div class="screen-name">DNS section · Wizard variant (inline)</div>
+              <span class="screen-tag">In-place reconfigure</span>
+            </td>
+            <td>When the user clicks Reconnect (from Disconnected) or Reconfigure (from Configured), the DNS section swaps in place to the BYO wizard with its own mini sidebar. Sender identity above stays visible the whole time. Matches Voice's forwarding-rules pattern.</td>
+            <td>Steps through Root → Subdomain → DMARC → Connect inside the DNS section.</td>
+            <td>Same fields as the onboarding sub-journey.</td>
+            <td>Same backend behavior as onboarding §02 row 03e.</td>
+          </tr>
+
+          <tr>
+            <td><span class="step-num">03</span></td>
+            <td>
+              <div class="screen-name">Set as default</div>
+              <span class="screen-tag">Row hover</span>
+            </td>
+            <td>The default domain is used for all Engage broadcasts unless overridden on a specific automation or campaign. Star + "Default" pill in the row name cell signals the current default; a "Set as default" pill fades in on hover for non-default verified rows.</td>
+            <td>Hovers a row, clicks "Set as default."</td>
+            <td>Domain ID to set as default.</td>
+            <td><code>PATCH /api/sending-domain/{id}/set-default</code>. Toast confirms.</td>
+          </tr>
+
+          <tr>
+            <td><span class="step-num">04</span></td>
+            <td>
+              <div class="screen-name">Add domain</div>
+              <span class="screen-tag">Re-enters BYO sub-journey</span>
+            </td>
+            <td>"+ Add domain" button at the top of the table. Enters the same 4-sub-step BYO sub-journey as onboarding (Root → Subdomain → DMARC → Connect). Identity seeded from the managed domain on entry.</td>
+            <td>Steps through the sub-journey. On success, the new domain appears in the table (with the verifying state pill, animating to verified).</td>
+            <td>Same as onboarding BYO sub-journey.</td>
+            <td>Same as onboarding §02 rows 03b–03g.</td>
+          </tr>
+
+          <tr>
+            <td><span class="step-num">05</span></td>
+            <td>
+              <div class="screen-name">Remove domain</div>
+              <span class="screen-tag">Danger zone</span>
+            </td>
+            <td>Only available for non-managed domains. Confirmation modal, then deletes the domain from our DB and the ESP. If the removed domain was the default, another domain auto-promotes to default.</td>
+            <td>Clicks Remove in Danger zone → confirms in modal.</td>
+            <td>Domain ID.</td>
+            <td><code>DELETE /api/sending-domain/{id}</code>. Backend calls Postmark <code>DELETE /domains/{id}</code> and deletes our row. (Disconnecting from DNS is a separate, manual process — see §02b explanation.)</td>
+          </tr>
+
+        </tbody>
+      </table>
     </div>
 
-    <div class="commentary">
-      <strong>How the domain check actually works (per Felipe at Entri):</strong> <code>entri.checkDomain(fullDomain, config)</code> fires when the user clicks Continue, <em>before</em> the next screen renders — not on blur of the subdomain input. The result (<code>{ provider, setupType: "Automatic" | "Manual", NSSupport }</code>) decides what we show on screen 05: if a supported provider is detected, the "Connect with Entri" CTA stays primary; if the provider is unknown or unsupported, we keep both options visible but lead with a heads-up that they'll likely need the manual path. We don't block the user — we just route. <br><br>
-      <strong>Plan note:</strong> <code>checkDomain</code> isn't on the base Entri startup plan. The Entri team is providing one-off pricing per the kickoff call.
+    <div class="flow-rules">
+      <h3>Settings-specific rules</h3>
+      <ul>
+        <li><strong>Managed domain is always present.</strong> Every Engage account has the managed domain as a row in the table, regardless of how many BYO domains they have. It can't be removed. When BYO domains disconnect, mail falls back to managed automatically.</li>
+        <li><strong>Per-domain sender identity.</strong> Each domain owns its own <code>prefix</code> / <code>displayName</code> / <code>replyTo</code>. Editing the managed row's identity doesn't change BYO rows' identities and vice versa. The save bar in the detail page is scoped to the domain currently being edited.</li>
+        <li><strong>Default badge ↔ Star pill.</strong> The Default pill in the row name cell is a single component: filled gold star + "Default" text for the current default, dashed-outline "Set as default" pill (hidden by default, shown on row hover) for non-default verified rows. Keyboard-accessible via <code>focus-visible</code>.</li>
+        <li><strong>Disconnecting is manual.</strong> We don't have a one-click "disconnect DNS" button. The configured DNS card explains: to take a domain offline, remove the DKIM TXT record from your DNS provider. Once removed, our reconciler will catch it and the domain row will move to the Disconnected state.</li>
+        <li><strong>Reconfigure vs Re-verify.</strong> Re-verify just re-polls Postmark — useful if the user just published records and wants to skip the polling backoff. Reconfigure re-launches the inline wizard from sub-step 1 (Root domain) so the user can change subdomain / DMARC / re-publish records.</li>
+      </ul>
     </div>
   </section>
 
-  <!-- ============================================== -->
-  <!-- DMARC OPT-IN                                    -->
-  <!-- ============================================== -->
-  <section class="section" id="dmarc">
+  <!-- ============================================================ -->
+  <!-- 4 · KEY DECISIONS                                             -->
+  <!-- ============================================================ -->
+  <section class="section" id="decisions">
     <div class="section-header">
       <span class="num">04</span>
-      <h2>DMARC opt-in · single toggle</h2>
-      <span class="note">Sub-step 3 of 4 — comes BEFORE Entri so the full DNS payload is committed up front</span>
+      <h2>Key design decisions · the "why"</h2>
+      <span class="note">Captured for future-Moshe (and future-Evan)</span>
     </div>
 
-    <div class="wizard">
-      <aside class="wizard-sidebar">
-        <div class="wizard-sidebar-title">Engage setup</div>
-        <ol>
-          <li data-state="complete"><span class="step-marker"></span> Brand</li>
-          <li data-state="active"><span class="step-marker">2</span> Sending domain</li>
-          <li data-state="upcoming"><span class="step-marker">3</span> Email</li>
-          <li data-state="upcoming"><span class="step-marker">4</span> Business</li>
-          <li data-state="upcoming"><span class="step-marker">5</span> SMS</li>
-          <li data-state="upcoming"><span class="step-marker">6</span> Merge fields</li>
-        </ol>
-      </aside>
-
-      <main class="wizard-main">
-        <div class="wizard-content">
-          <div class="substep-bar">
-            <span>Connect a domain</span>
-            <div class="dots">
-              <div class="dot" data-state="complete"></div>
-              <div class="dot" data-state="complete"></div>
-              <div class="dot" data-state="active"></div>
-              <div class="dot"></div>
-            </div>
-            <span style="margin-left: auto;">3 of 4</span>
-          </div>
-
-          <div class="wizard-step-header">
-            <h1>Add a DMARC record</h1>
-            <p>DMARC tells inbox providers like Gmail what to do with mail that fails authentication. Required for senders at scale.</p>
-          </div>
-
-          <div style="max-width: 600px;">
-            <div class="dmarc-card">
-              <div class="dmarc-icon">
-                <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
-              </div>
-              <div class="dmarc-content">
-                <h4>Add DMARC record <span class="recommended-pill">Recommended</span></h4>
-                <p>Protects your sending reputation and meets Gmail and Yahoo's bulk sender requirements. <a href="#" style="color: var(--info);">Learn more about DMARC →</a></p>
-              </div>
-              <div class="toggle" data-on="true"></div>
-            </div>
-          </div>
-        </div>
-
-        <footer class="wizard-footer">
-          <button class="btn btn-ghost">← Back</button>
-          <button class="btn btn-primary">Continue</button>
-        </footer>
-      </main>
+    <div class="commentary" style="background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text); padding: 16px 20px; margin-bottom: 16px;">
+      <p style="margin: 0 0 6px;"><strong>Managed-always, BYO-optional.</strong></p>
+      <p style="margin: 0;">Klaviyo treats BYO as a choice up-front. We considered that and rejected it. SMBs hitting Engage for the first time aren't ready to think about DNS — but they also don't want to be blocked from sending. Auto-provisioning a managed domain gets them sending today; BYO becomes a clear opt-in upgrade for better deliverability rather than a setup hurdle. The two-card Email step makes the upgrade path visible without forcing it.</p>
     </div>
 
-    <div class="commentary">
-      <strong>Why this comes before the Entri screen:</strong> Per Felipe at Entri, the modal should run once with the complete DNS payload. We commit the DMARC choice here so on the next screen we already know whether the <code>dnsRecords[]</code> array we hand to Entri includes a DMARC TXT or not. Because we always write to a fresh subdomain, we don't need Entri's "Validate DMARC" feature (paid, growth plan) — there's no existing DMARC record to compare against.
+    <div class="commentary" style="background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text); padding: 16px 20px; margin-bottom: 16px;">
+      <p style="margin: 0 0 6px;"><strong>Voice-style DNS connection section.</strong></p>
+      <p style="margin: 0;">The per-domain detail page splits into two sections: Sender identity (flat form) + DNS connection (stateful card with 5 variants — managed, configured, disconnected, verifying, inline wizard). Mirrors how the existing Voice/Assist product handles call forwarding setup. Gives the DNS state its own visible surface instead of burying it in a status pill, and means "Reconnect" has a natural home rather than living as a banner button. Voice-style consistency means engineers reading both products see the same pattern twice.</p>
+    </div>
+
+    <div class="commentary" style="background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text); padding: 16px 20px; margin-bottom: 16px;">
+      <p style="margin: 0 0 6px;"><strong>Sub-journey is a sidebar swap, not an inline wizard.</strong></p>
+      <p style="margin: 0;">In the onboarding Email step, we briefly experimented with rendering the BYO wizard inline inside the DNS section. Too crowded — sender identity above + wizard sidebar + wizard content + wizard footer all competing in the same right pane. Replaced with a proper sub-journey: clicking Connect swaps the left sidebar entirely (parent button + sub-steps with circle markers), right pane gets the full canvas, footer Back/Continue map to sub-journey navigation. Inside settings, the DNS section's wizard variant works because it's already inside a master→detail descent — we're not stacking shells.</p>
+    </div>
+
+    <div class="commentary" style="background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text); padding: 16px 20px; margin-bottom: 16px;">
+      <p style="margin: 0 0 6px;"><strong>Per-domain sender identity.</strong></p>
+      <p style="margin: 0;">Each domain owns its own <code>prefix</code> / <code>displayName</code> / <code>replyTo</code> — not a global Engage-account setting. Matches how Klaviyo, Postmark, and Customer.io think about multi-domain accounts. Lets a tenant send marketing from "Acme Insurance &lt;marketing@send.acme.com&gt;" and transactional from "Acme Insurance Tickets &lt;noreply@notifications.acme.com&gt;" with separate identities. We collect identity in the Subdomain sub-step (not at the end of the wizard, not silently inherited) so users see the BYO identity is its own thing from the start. Seeded from managed on first entry as a sensible default.</p>
+    </div>
+
+    <div class="commentary" style="background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text); padding: 16px 20px; margin-bottom: 16px;">
+      <p style="margin: 0 0 6px;"><strong>Reply-to deliverability nudge, not hard validation.</strong></p>
+      <p style="margin: 0;">Best practice: reply-to address on the same root domain as the sending domain. We auto-suggest <code>info@&lt;sending-root&gt;</code> as the placeholder and show a soft warning chip if the user types a cross-root reply-to. We don't block — there are legitimate cases (third-party ticketing systems, IT-managed inbox routing) where a cross-root reply-to is correct. The warning chip is there to make the implicit deliverability risk explicit.</p>
+    </div>
+
+    <div class="commentary" style="background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text); padding: 16px 20px; margin-bottom: 16px;">
+      <p style="margin: 0 0 6px;"><strong>No one-click disconnect.</strong></p>
+      <p style="margin: 0;">We don't expose a "Disconnect DNS" button. To disconnect, the tenant removes the DKIM TXT record from their DNS provider; our reconciler catches it and moves the domain to Disconnected state. Reasoning: disconnect is a real, in-DNS act that we don't have OAuth-write back into. If we shipped a button that just flipped a flag in our DB, mail would keep working (DKIM records would still be live) but our UI would lie about it. Better to instruct than to mislead.</p>
+    </div>
+
+    <div class="commentary" style="background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text); padding: 16px 20px;">
+      <p style="margin: 0 0 6px;"><strong>"Continue while verifying" instead of a blocking spinner.</strong></p>
+      <p style="margin: 0;">DNS propagation can take 1–5 minutes typically, up to 48h in pathological cases. Trapping the user on a spinner during onboarding kills the flow. The Verifying screen exists, shows per-record progress, but offers a "Continue while verifying →" button that advances to SMS while polling continues in the background. When verification lands, we notify them and the Email Channel's DNS section flips to Configured. Avoids the worst case where a tenant abandons setup because their DNS provider is slow.</p>
     </div>
   </section>
 
-  <!-- ============================================== -->
-  <!-- ENTRI vs MANUAL                                 -->
-  <!-- ============================================== -->
-  <section class="section" id="entri">
+  <!-- ============================================================ -->
+  <!-- 5 · ENTRI INTEGRATION                                         -->
+  <!-- ============================================================ -->
+  <section class="section" id="entri-integration">
     <div class="section-header">
       <span class="num">05</span>
-      <h2>Connect with Entri or set up manually</h2>
-      <span class="note">Sub-step 4 of 4 — the button on this screen launches the Entri modal</span>
+      <h2>Entri integration · technical contract</h2>
+      <span class="note">From the May 6 review call with Matt & Felipe</span>
     </div>
 
-    <div class="wizard">
-      <aside class="wizard-sidebar">
-        <div class="wizard-sidebar-title">Engage setup</div>
-        <ol>
-          <li data-state="complete"><span class="step-marker"></span> Brand</li>
-          <li data-state="active"><span class="step-marker">2</span> Sending domain</li>
-          <li data-state="upcoming"><span class="step-marker">3</span> Email</li>
-          <li data-state="upcoming"><span class="step-marker">4</span> Business</li>
-          <li data-state="upcoming"><span class="step-marker">5</span> SMS</li>
-          <li data-state="upcoming"><span class="step-marker">6</span> Merge fields</li>
-        </ol>
-      </aside>
-
-      <main class="wizard-main">
-        <div class="wizard-content">
-          <div class="substep-bar">
-            <span>Connect a domain</span>
-            <div class="dots">
-              <div class="dot" data-state="complete"></div>
-              <div class="dot" data-state="complete"></div>
-              <div class="dot" data-state="complete"></div>
-              <div class="dot" data-state="active"></div>
-            </div>
-            <span style="margin-left: auto;">4 of 4</span>
-          </div>
-
-          <div class="entri-screen">
-            <div>
-              <h1 style="font-size: 26px; font-weight: 600; margin: 0 0 8px; letter-spacing: -0.02em;">Connect with Entri</h1>
-              <p style="margin: 0; color: var(--text-secondary); font-size: 15px;">Entri logs into your DNS provider for you and adds the right records — no copy-paste, no mistakes.</p>
-
-              <ul>
-                <li>
-                  <svg class="icon-sm" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M6.5 10l2.5 2.5 5-5"/></svg>
-                  Fast, secure setup
-                </li>
-                <li>
-                  <svg class="icon-sm" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M6.5 10l2.5 2.5 5-5"/></svg>
-                  Detects your DNS provider automatically
-                </li>
-                <li>
-                  <svg class="icon-sm" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M6.5 10l2.5 2.5 5-5"/></svg>
-                  Forward to your IT contact if you don't have access
-                </li>
-              </ul>
-
-              <div class="entri-actions">
-                <button class="btn btn-primary btn-large">Connect with Entri</button>
-                <button class="btn btn-secondary btn-large">Set up manually</button>
-              </div>
-
-              <p class="entri-fineprint">By selecting "Connect with Entri" you agree to Entri's <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</p>
-            </div>
-
-            <div class="entri-art" aria-hidden="true">
-              <div class="entri-art-dots"></div>
-              <div class="entri-art-card secondary">
-                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                  <path d="M10 10h20v20H10z" stroke="#9ca3af" stroke-width="2" stroke-dasharray="2 3"/>
-                </svg>
-              </div>
-              <div class="entri-art-card primary">
-                <!-- Platform mark -->
-                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                  <circle cx="20" cy="20" r="14" fill="var(--text)"/>
-                  <path d="M14 20l4 4 8-8" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <footer class="wizard-footer">
-          <button class="btn btn-ghost">← Back</button>
-          <span style="font-size: 12px; color: var(--text-muted);">Step 2 of 6</span>
-        </footer>
-      </main>
+    <div class="flow-rules">
+      <h3>SDK install + setup</h3>
+      <ul>
+        <li><strong>Plan: Startup ($249/mo).</strong> 600 domain connections/year covers current volume. We'll upgrade to Growth ($749/mo) when we approach the cap or add multi-domain-in-one-flow.</li>
+        <li><strong>One Entri application per environment</strong> (dev / staging / prod). Per-partner branding deferred — the modal will show the platform mark, not partner marks, in v1.</li>
+        <li><strong>checkDomain.</strong> Available on Growth plan only — Matt is checking with Joel about a one-off add-on. We'd call it on Subdomain sub-step blur to set expectations ("Cloudflare detected — automatic setup") but it's not gating. Skip in v1 if pricing doesn't work.</li>
+      </ul>
     </div>
 
-    <div class="commentary">
-      <strong>What happens when "Connect with Entri" is clicked:</strong> backend calls Postmark <code>POST /domains</code>, translates the returned DKIM TXT and Return-Path CNAME into Entri's <code>dnsRecords[]</code> shape, appends the DMARC TXT from screen 04 if opted in, mints a 60-min Entri JWT, and the browser launches <code>entri.showEntri({ applicationId, token, userId, prefilledDomain, dnsRecords })</code>. From here we don't make any more outbound calls to Entri — we listen for webhooks (see screen 06).
+    <div class="flow-rules">
+      <h3>The Entri JS handoff</h3>
+      <ul>
+        <li><strong>Server mints the JWT, never the browser.</strong> <code>POST https://api.goentri.com/token</code> with <code>{ applicationId, secret }</code>. Returns <code>{ auth_token }</code> valid 60 min. Backend wraps this as <code>POST /api/sending-domain/entri-token</code>.</li>
+        <li><strong>dnsRecords array shape.</strong> We translate Postmark's response (DKIMPendingHost / DKIMPendingTextValue / ReturnPathDomain / ReturnPathDomainCNAMEValue) into Entri's <code>{ type, host, value, ttl }</code> shape. <code>host</code> is relative to the root domain — strip the root suffix.</li>
+        <li><strong>showEntri call.</strong> <code>entri.showEntri({ applicationId, token, userId: "tenant_&lt;id&gt;", prefilledDomain, dnsRecords, onSuccess, onEntriClose })</code>. <code>userId</code> is how we correlate webhooks back to the tenant.</li>
+        <li><strong>DMARC.</strong> Send the DMARC record as part of the <code>dnsRecords</code> payload. Advanced DMARC validation/append is a premium-plan feature we don't need yet.</li>
+      </ul>
+    </div>
+
+    <div class="flow-rules">
+      <h3>Webhook handling</h3>
+      <ul>
+        <li><strong>Events we care about:</strong> <code>domain.flow.completed</code> (analytics), <code>domain.added</code> with <code>propagation_status: "success"</code> (fast-track Postmark verify), <code>domain.propagation.timeout</code> (mark Failed, notify admin), <code>domain.record_missing</code> + <code>domain.record_restored</code> (Entri Monitor — paid, used for disconnect detection).</li>
+        <li><strong>Signature verification.</strong> SHA-256 over <code>webhook_id + timestamp + client_secret</code> (Entri's docs call this "HMAC" but the actual scheme is secret-suffix SHA-256 — match the code, not the prose). 5-min freshness window on <code>Entri-Timestamp</code>. Constant-time compare.</li>
+        <li><strong>Source IP:</strong> <code>3.14.77.245</code> in production. Allow-list at the edge before webhook handler.</li>
+        <li><strong>Idempotency.</strong> Webhooks retry on non-2xx. Store <code>webhook_id</code> and 200 on replay.</li>
+      </ul>
+    </div>
+
+    <div class="flow-rules">
+      <h3>Postmark is the source of truth</h3>
+      <ul>
+        <li>Entri's <code>domain.added · propagation_status: success</code> means DNS records are live in public resolvers. That's necessary but not sufficient — Postmark has to independently verify DKIM before we'll DKIM-sign mail.</li>
+        <li>We poll <code>PUT /domains/{id}/verifyDkim</code> and <code>PUT /domains/{id}/verifyReturnPath</code> on backoff. Only when both return <code>verified: true</code> do we flip the domain to Verified state.</li>
+        <li>Same polling drives the Verifying state in both onboarding and settings.</li>
+      </ul>
     </div>
   </section>
 
-  <!-- ============================================== -->
-  <!-- VERIFYING / PENDING                             -->
-  <!-- ============================================== -->
-  <section class="section" id="verifying">
+  <!-- ============================================================ -->
+  <!-- 6 · DATA MODEL                                                -->
+  <!-- ============================================================ -->
+  <section class="section" id="data-model">
     <div class="section-header">
       <span class="num">06</span>
-      <h2>Verifying state · per-record progress</h2>
-      <span class="note">After Entri modal closes — we listen for webhook events, no polling</span>
+      <h2>Data model</h2>
+      <span class="note">Per-domain identity is the load-bearing shape</span>
     </div>
 
-    <div class="wizard">
-      <aside class="wizard-sidebar">
-        <div class="wizard-sidebar-title">Engage setup</div>
-        <ol>
-          <li data-state="complete"><span class="step-marker"></span> Brand</li>
-          <li data-state="active"><span class="step-marker">2</span> Sending domain</li>
-          <li data-state="upcoming"><span class="step-marker">3</span> Email</li>
-          <li data-state="upcoming"><span class="step-marker">4</span> Business</li>
-          <li data-state="upcoming"><span class="step-marker">5</span> SMS</li>
-          <li data-state="upcoming"><span class="step-marker">6</span> Merge fields</li>
-        </ol>
-      </aside>
-
-      <main class="wizard-main">
-        <div class="wizard-content">
-          <div class="wizard-step-header">
-            <h1>Verifying your domain</h1>
-            <p>Entri is publishing your DNS records. We'll be notified the moment each one propagates worldwide. This usually takes 1–5 minutes.</p>
-          </div>
-
-          <div style="max-width: 640px;">
-            <div class="verifying-card">
-              <div class="verifying-header">
-                <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><path d="M12 2v6m0 8v6M2 12h6m8 0h6M5 5l4 4m6 6l4 4M5 19l4-4m6-6l4-4"/></svg>
-                <span class="domain-name">send.acmeinsurance.com</span>
-                <span class="status-pill status-pending">Verifying</span>
-              </div>
-
-              <div class="verifying-list">
-                <div class="verifying-row">
-                  <div class="verifying-icon" data-state="ok">
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.5l2.5 2.5L10 3.5"/></svg>
-                  </div>
-                  <div>
-                    <div class="label">DKIM signing key</div>
-                    <div class="desc">TXT record for <code style="font-family: var(--font-mono); font-size: 11.5px;">20260430pm._domainkey.send</code></div>
-                  </div>
-                  <span class="timestamp">verified 2s ago</span>
-                </div>
-
-                <div class="verifying-row">
-                  <div class="verifying-icon" data-state="working">
-                    <div class="spinner" style="border-top-color: var(--info);"></div>
-                  </div>
-                  <div>
-                    <div class="label">Return-Path</div>
-                    <div class="desc">CNAME for <code style="font-family: var(--font-mono); font-size: 11.5px;">pm-bounces.send → pm.mtasv.net</code></div>
-                  </div>
-                  <span class="timestamp">checking…</span>
-                </div>
-
-                <div class="verifying-row">
-                  <div class="verifying-icon" data-state="pending"></div>
-                  <div>
-                    <div class="label">DMARC policy</div>
-                    <div class="desc">TXT record for <code style="font-family: var(--font-mono); font-size: 11.5px;">_dmarc.send</code></div>
-                  </div>
-                  <span class="timestamp">pending</span>
-                </div>
-              </div>
-
-              <div class="verifying-foot">
-                <div class="spinner"></div>
-                <span>You can leave this page — we'll email you when verification is complete.</span>
-                <button class="btn-link" style="margin-left: auto;">Re-check now</button>
-              </div>
-            </div>
-
-            <p style="margin-top: 16px; font-size: 13px; color: var(--text-muted);">Verification usually completes in under 5 minutes. If it's been more than 30 minutes, <a href="#" style="color: var(--info);">contact your DNS admin</a> or <a href="#" style="color: var(--info);">reach out to support</a>.</p>
-          </div>
-        </div>
-
-        <footer class="wizard-footer">
-          <button class="btn btn-ghost">← Back</button>
-          <button class="btn btn-secondary">Continue setup — verify in background</button>
-        </footer>
-      </main>
+    <div class="commentary" style="background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text); padding: 16px 20px; margin-bottom: 12px;">
+      <p style="margin: 0 0 8px;"><strong>One <code>sending_domain</code> row per domain</strong>, scoped by <code>business_id</code> (multi-tenant). Each row owns its own sender identity.</p>
+      <pre style="margin: 0; font-family: var(--font-mono); font-size: 12px; background: var(--bg-subtle); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; overflow-x: auto; color: var(--text);">sending_domain
+├── id                  uuid
+├── business_id         uuid          ── multi-tenant scope
+├── full_domain         text          ── e.g. "send.acmeinsurance.com"
+├── root_domain         text          ── e.g. "acmeinsurance.com"
+├── subdomain           text          ── e.g. "send"
+├── is_managed          bool          ── true for the platform-managed row
+├── is_default          bool          ── exactly one per business is true
+├── status              enum          ── pending | verified | disconnected | managed
+├── purpose             text          ── informational: "Marketing" / "Transactional"
+│
+├── prefix              text          ── per-domain sender identity
+├── display_name        text          ── ↳ each domain has its own "from" line
+├── reply_to            text          ── ↳ scoped per-domain, not account-wide
+│
+├── dmarc_enabled       bool          ── whether DMARC was included in BYO setup
+├── postmark_domain_id  bigint        ── FK into Postmark's domains API
+├── last_verified_at    timestamptz
+└── created_at          timestamptz</pre>
     </div>
 
-    <div class="commentary">
-      <strong>How this state is driven (per Felipe at Entri):</strong> after <code>entri.showEntri</code> resolves we don't poll Postmark — we listen. Entri pushes <code>domain.added</code> webhooks with <code>propagation_status</code> per record, plus a <code>domain.flow.completed</code> when everything's resolved. We need a webhook handler at <code>POST /api/webhooks/entri</code> with HMAC verification on the <code>Entri-Signature-V2</code> header (SHA-256 over <code>webhook_id + timestamp + client_secret</code>), idempotency on <code>webhook_id</code>, and an IP allowlist for Entri's fixed origin IP. The frontend either polls our own status endpoint or subscribes via websocket; the source of truth lives in our DB, populated by the webhook handler.<br><br>
-      <strong>Tone:</strong> "You can leave this page" matters a lot — DNS propagation can take minutes. If we trap users on a spinner they'll bounce. We surface the final result via the existing notifications system once <code>domain.flow.completed</code> arrives.
+    <div class="flow-rules">
+      <h3>Invariants</h3>
+      <ul>
+        <li><strong>Exactly one row per business has <code>is_managed = true</code>.</strong> It's provisioned at tenant-create time, never deleted. If all BYO domains disconnect, mail falls back to this row.</li>
+        <li><strong>Exactly one row per business has <code>is_default = true</code>.</strong> Removing the default auto-promotes another verified non-managed row (or the managed row if no BYO exists).</li>
+        <li><strong>The managed row's identity is editable.</strong> Even though we own the DNS for the managed domain, the tenant still controls prefix / display name / reply-to.</li>
+        <li><strong>Per-row identity, no inheritance at runtime.</strong> Adding a new BYO domain seeds identity from the managed row at create time as a UX default — but once saved, the new row's identity is independent. Editing the managed row later doesn't change BYO rows.</li>
+      </ul>
     </div>
   </section>
 
-  <!-- ============================================== -->
-  <!-- SETTINGS LIST VIEW                              -->
-  <!-- ============================================== -->
-  <section class="section" id="settings-list">
+  <!-- ============================================================ -->
+  <!-- 7 · COPY                                                      -->
+  <!-- ============================================================ -->
+  <section class="section" id="copy">
     <div class="section-header">
-      <span class="num">07a</span>
-      <h2>Settings · Sending Domains list view</h2>
-      <span class="note">Returning tenant — multi-domain management</span>
+      <span class="num">07</span>
+      <h2>Copy strings worth standardizing</h2>
+      <span class="note">Lifted from the prototypes — match these exactly</span>
     </div>
 
-    <div class="settings-shell">
-      <aside class="wizard-sidebar">
-        <div class="wizard-sidebar-title">Engage settings</div>
-        <ol>
-          <li data-state="complete"><span class="step-marker"></span> Brand</li>
-          <li data-state="complete"><span class="step-marker"></span> Business</li>
-          <li data-state="complete"><span class="step-marker"></span> Email</li>
-          <li data-state="active"><span class="step-marker"></span> Sending domains</li>
-          <li data-state="complete"><span class="step-marker"></span> SMS</li>
-          <li data-state="complete"><span class="step-marker"></span> Merge fields</li>
-        </ol>
-      </aside>
-
-      <main class="settings-page">
-        <div class="settings-page-header">
-          <div>
-            <h2>Sending domains</h2>
-            <p>Domains used to send Engage email. Connecting your own improves deliverability and removes the "via" platform tag.</p>
-          </div>
-          <button class="btn btn-primary">+ Add domain</button>
-        </div>
-
-        <table class="domain-table">
-          <thead>
-            <tr>
-              <th>Domain</th>
-              <th>Status</th>
-              <th>Last verified</th>
-              <th style="text-align: right;">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>
-                <div class="domain-name">
-                  <span class="name">send.acmeinsurance.com <span class="default-badge">Default</span></span>
-                  <span class="purpose">Marketing</span>
-                </div>
-              </td>
-              <td><span class="status-pill status-verified">Verified</span></td>
-              <td style="color: var(--text-muted); font-family: var(--font-mono); font-size: 12px;">2 min ago</td>
-              <td>
-                <div class="actions">
-                  <button class="icon-btn" aria-label="Re-verify">
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8a6 6 0 1110 4.5"/><path d="M12 13.5l-1-1 1-1"/></svg>
-                  </button>
-                  <button class="icon-btn" aria-label="More">
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><circle cx="3" cy="8" r="1.2"/><circle cx="8" cy="8" r="1.2"/><circle cx="13" cy="8" r="1.2"/></svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
-
-            <tr>
-              <td>
-                <div class="domain-name">
-                  <span class="name">notifications.acmeinsurance.com</span>
-                  <span class="purpose">Transactional</span>
-                </div>
-              </td>
-              <td><span class="status-pill status-pending">Verifying · 2 of 3 records</span></td>
-              <td style="color: var(--text-muted); font-family: var(--font-mono); font-size: 12px;">checking…</td>
-              <td>
-                <div class="actions">
-                  <button class="icon-btn"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8a6 6 0 1110 4.5"/><path d="M12 13.5l-1-1 1-1"/></svg></button>
-                  <button class="icon-btn"><svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><circle cx="3" cy="8" r="1.2"/><circle cx="8" cy="8" r="1.2"/><circle cx="13" cy="8" r="1.2"/></svg></button>
-                </div>
-              </td>
-            </tr>
-
-            <tr>
-              <td>
-                <div class="domain-name">
-                  <span class="name" style="color: var(--text-muted);">acme-insurance.mail.example-platform.com</span>
-                  <span class="purpose">Managed domain · used as fallback</span>
-                </div>
-              </td>
-              <td><span class="status-pill status-managed">Managed</span></td>
-              <td style="color: var(--text-faint); font-family: var(--font-mono); font-size: 12px;">—</td>
-              <td>
-                <div class="actions">
-                  <span style="font-size: 12px; color: var(--text-faint);">No actions</span>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <p style="margin-top: 20px; font-size: 12.5px; color: var(--text-muted);">The default domain is used for all Engage broadcasts unless you override it on a specific automation or campaign.</p>
-      </main>
+    <div class="commentary" style="background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text); padding: 16px 20px; margin-bottom: 12px;">
+      <p style="margin: 0 0 8px; font-weight: 600;">Reply-to helper text (all surfaces)</p>
+      <p style="margin: 0; font-family: var(--font-mono); font-size: 12px; background: var(--bg-subtle); padding: 8px 12px; border-radius: var(--radius-sm);">For best deliverability, use an address on the same root domain as your sending domain.</p>
     </div>
 
-    <div class="commentary">
-      <strong>Multi-domain pattern:</strong> ENG-2672 explicitly asks for multi-domain support (e.g. send + notifications). Default badge on the row that's used by default. The managed-domain row is shown last with a soft "managed" pill — it always exists as a fallback so we never have a tenant who can't send. Purpose label (Marketing / Transactional) is informational; backend channel routing can use it later.
+    <div class="commentary" style="background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text); padding: 16px 20px; margin-bottom: 12px;">
+      <p style="margin: 0 0 8px; font-weight: 600;">Cross-root reply-to warning chip</p>
+      <p style="margin: 0; font-family: var(--font-mono); font-size: 12px; background: var(--bg-subtle); padding: 8px 12px; border-radius: var(--radius-sm);">Reply-to on a different root domain can hurt deliverability</p>
+    </div>
+
+    <div class="commentary" style="background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text); padding: 16px 20px; margin-bottom: 12px;">
+      <p style="margin: 0 0 8px; font-weight: 600;">"How to disconnect" copy (DNS configured card)</p>
+      <p style="margin: 0; font-family: var(--font-mono); font-size: 12px; background: var(--bg-subtle); padding: 8px 12px; border-radius: var(--radius-sm);">Need to disconnect? To take this domain offline, remove the DKIM TXT record from your DNS provider. Once it's removed, this domain will move to a Disconnected state here and outbound mail will fall back to the managed domain.</p>
+    </div>
+
+    <div class="commentary" style="background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text); padding: 16px 20px; margin-bottom: 12px;">
+      <p style="margin: 0 0 8px; font-weight: 600;">Business Info CAN-SPAM explainer</p>
+      <p style="margin: 0; font-family: var(--font-mono); font-size: 12px; background: var(--bg-subtle); padding: 8px 12px; border-radius: var(--radius-sm);">Why this is required: CAN-SPAM (US) and similar laws require every marketing email to include a physical postal address. SMS providers also require business verification before they'll assign you a sending number.</p>
+    </div>
+
+    <div class="commentary" style="background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text); padding: 16px 20px;">
+      <p style="margin: 0 0 8px; font-weight: 600;">Email Channel managed card framing</p>
+      <p style="margin: 0; font-family: var(--font-mono); font-size: 12px; background: var(--bg-subtle); padding: 8px 12px; border-radius: var(--radius-sm);">Send right now — using a managed domain. Already set up. Configure the sender details below and you're ready to send your first email.</p>
     </div>
   </section>
 
-  <!-- ============================================== -->
-  <!-- SETTINGS EMPTY STATE                            -->
-  <!-- ============================================== -->
-  <section class="section" id="settings-empty">
-    <div class="section-header">
-      <span class="num">07b</span>
-      <h2>Settings · empty state</h2>
-      <span class="note">Tenant who skipped BYO during onboarding</span>
-    </div>
-
-    <div class="settings-shell">
-      <aside class="wizard-sidebar">
-        <div class="wizard-sidebar-title">Engage settings</div>
-        <ol>
-          <li data-state="complete"><span class="step-marker"></span> Brand</li>
-          <li data-state="complete"><span class="step-marker"></span> Business</li>
-          <li data-state="complete"><span class="step-marker"></span> Email</li>
-          <li data-state="active"><span class="step-marker"></span> Sending domains</li>
-          <li data-state="complete"><span class="step-marker"></span> SMS</li>
-          <li data-state="complete"><span class="step-marker"></span> Merge fields</li>
-        </ol>
-      </aside>
-
-      <main class="settings-page">
-        <div class="settings-page-header">
-          <div>
-            <h2>Sending domains</h2>
-            <p>Domains used to send Engage email. Connecting your own improves deliverability and removes the "via" platform tag.</p>
-          </div>
-        </div>
-
-        <div class="empty-state">
-          <div class="icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l9-5 9 5-9 5-9-5z"/><path d="M3 8v8l9 5 9-5V8"/></svg>
-          </div>
-          <h3>You're sending from a managed domain</h3>
-          <p>Right now your emails go from <code style="font-family: var(--font-mono); font-size: 12.5px; background: var(--bg-subtle); padding: 1px 6px; border-radius: 4px;">acme-insurance.mail.example-platform.com</code>. Connect your own domain to improve deliverability and brand trust.</p>
-          <button class="btn btn-primary btn-large" style="margin-top: 8px;">Connect your own domain →</button>
-          <button class="btn-link" style="font-size: 12.5px; color: var(--text-muted);">Why does this matter?</button>
-        </div>
-      </main>
-    </div>
-
-    <div class="commentary">
-      <strong>Empty state strategy:</strong> rather than showing "no domains" (which is true but not what the tenant feels), reframe as "you're using a managed domain" — a complete state we want them to upgrade away from. The "Why does this matter?" link could open a small explainer with the same inbox preview from the onboarding choice screen.
-    </div>
-  </section>
-
-  <!-- ============================================== -->
-  <!-- DISCONNECTED                                    -->
-  <!-- ============================================== -->
-  <section class="section" id="disconnected">
+  <!-- ============================================================ -->
+  <!-- 8 · PROTOTYPES                                                -->
+  <!-- ============================================================ -->
+  <section class="section" id="prototypes">
     <div class="section-header">
       <span class="num">08</span>
-      <h2>Disconnected state · banner + recovery</h2>
-      <span class="note">ENG-2673 · POST-MVP — requires Entri Monitor subscription</span>
+      <h2>Prototypes · the source of visual truth</h2>
+      <span class="note">Click through to see flows end-to-end</span>
     </div>
 
-    <div class="settings-shell">
-      <aside class="wizard-sidebar">
-        <div class="wizard-sidebar-title">Engage settings</div>
-        <ol>
-          <li data-state="complete"><span class="step-marker"></span> Brand</li>
-          <li data-state="complete"><span class="step-marker"></span> Business</li>
-          <li data-state="complete"><span class="step-marker"></span> Email</li>
-          <li data-state="active"><span class="step-marker"></span> Sending domains</li>
-          <li data-state="complete"><span class="step-marker"></span> SMS</li>
-          <li data-state="complete"><span class="step-marker"></span> Merge fields</li>
-        </ol>
-      </aside>
-
-      <main class="settings-page">
-        <div class="settings-page-header">
-          <div>
-            <h2>Sending domains</h2>
-            <p>Domains used to send Engage email.</p>
-          </div>
-          <button class="btn btn-primary">+ Add domain</button>
-        </div>
-
-        <div class="disconnect-banner">
-          <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 22h20L12 2z"/><path d="M12 9v5M12 18h.01"/></svg>
-          <div style="flex: 1;">
-            <h4>send.acmeinsurance.com is no longer verified</h4>
-            <p>The DKIM record is missing from your DNS. Your campaigns are temporarily falling back to <code>acme-insurance.mail.example-platform.com</code> — deliverability may drop.</p>
-            <div class="actions">
-              <button class="btn btn-primary" style="background: var(--danger); padding: 7px 12px; font-size: 13px;">Reconnect domain</button>
-              <button class="btn btn-secondary" style="padding: 7px 12px; font-size: 13px;">Forward fix to IT</button>
-              <button class="btn-link" style="color: var(--danger);">What changed?</button>
-            </div>
-          </div>
-        </div>
-
-        <table class="domain-table">
-          <thead>
-            <tr>
-              <th>Domain</th>
-              <th>Status</th>
-              <th>Last verified</th>
-              <th style="text-align: right;">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr style="background: var(--danger-bg);">
-              <td>
-                <div class="domain-name">
-                  <span class="name">send.acmeinsurance.com <span class="default-badge">Default</span></span>
-                  <span class="purpose">Marketing · DKIM record missing</span>
-                </div>
-              </td>
-              <td><span class="status-pill status-disconnected">Disconnected</span></td>
-              <td style="color: var(--text-muted); font-family: var(--font-mono); font-size: 12px;">3 days ago</td>
-              <td>
-                <div class="actions">
-                  <button class="icon-btn"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8a6 6 0 1110 4.5"/><path d="M12 13.5l-1-1 1-1"/></svg></button>
-                  <button class="icon-btn"><svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><circle cx="3" cy="8" r="1.2"/><circle cx="8" cy="8" r="1.2"/><circle cx="13" cy="8" r="1.2"/></svg></button>
-                </div>
-              </td>
-            </tr>
-
-            <tr>
-              <td>
-                <div class="domain-name">
-                  <span class="name">notifications.acmeinsurance.com</span>
-                  <span class="purpose">Transactional</span>
-                </div>
-              </td>
-              <td><span class="status-pill status-verified">Verified</span></td>
-              <td style="color: var(--text-muted); font-family: var(--font-mono); font-size: 12px;">2h ago</td>
-              <td>
-                <div class="actions">
-                  <button class="icon-btn"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8a6 6 0 1110 4.5"/><path d="M12 13.5l-1-1 1-1"/></svg></button>
-                  <button class="icon-btn"><svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><circle cx="3" cy="8" r="1.2"/><circle cx="8" cy="8" r="1.2"/><circle cx="13" cy="8" r="1.2"/></svg></button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </main>
+    <div class="commentary" style="background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text); padding: 16px 20px; margin-bottom: 12px;">
+      <p style="margin: 0 0 8px;"><strong>▶ <a href="onboarding-prototype.html" style="color: var(--text); font-weight: 600;">Onboarding prototype</a></strong></p>
+      <p style="margin: 0;">Full 6-step wizard. Brand → Business Info (gated) → Email Channel (two cards: managed + BYO sub-journey) → SMS → Merge Fields → Automations → completion summary. Inputs propagate live across screens. BYO sub-journey + fake Entri modal + animated verifying state + resume flow all work end-to-end.</p>
     </div>
 
-    <div class="commentary">
-      <strong>This screen is post-MVP.</strong> Detection requires <strong>Entri Monitor</strong>, a separate add-on ($50/mo for up to 600 domains on the startup plan). The Entri team flagged the most likely real-world failure as <em>customers running a second email tool (e.g. a newsletter platform) that overwrites the SPF record instead of merging it</em> — emails silently stop sending, and we'd never know without active monitoring. We're deferring this until we see actual disconnect rates in production. For MVP, tenants who silently disconnect surface only via deliverability complaints — acceptable for the partner mix at our current scale.<br><br>
-      <strong>When we add it:</strong> subscribe to Entri Monitor, listen for <code>domain.record_missing</code> and <code>domain.record_restored</code> webhooks. Per-domain because in multi-domain setups one can fail while others stay healthy. The banner is per-domain, the table row tints red, and we automatically fall back to the managed domain so sends keep going (with a deliverability warning). "Forward fix to IT" reuses the shareable-link pattern from onboarding — important because the person seeing the banner often isn't the person who controls DNS. Reconnect re-launches <code>entri.showEntri()</code> with the original record set; no re-mint needed.
+    <div class="commentary" style="background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text); padding: 16px 20px;">
+      <p style="margin: 0 0 8px;"><strong>▶ <a href="settings-prototype.html" style="color: var(--text); font-weight: 600;">Settings prototype</a></strong></p>
+      <p style="margin: 0;">Post-onboarding Email Channel settings. Multi-domain table with default pill, row-hover affordances, per-domain master→detail navigation, sender identity form, Voice-style DNS section with 5 variants, inline reconnect wizard, sticky save bar, demo-state switcher (bottom right) for verified / verifying / disconnected / managed-only scenarios. "+ Add domain" enters the same BYO sub-journey as onboarding.</p>
     </div>
   </section>
 
