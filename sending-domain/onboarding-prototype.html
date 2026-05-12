@@ -436,6 +436,108 @@
   .verifying-row-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 
   /* ============================================== */
+  /* PATH CARDS (Email step: managed vs BYO)        */
+  /* ============================================== */
+  .path-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--bg-elevated);
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .path-card-header {
+    padding: 18px 22px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-subtle);
+  }
+  .path-card-header h2 {
+    margin: 0 0 4px;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+  .path-card-header p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+  .path-card-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+  }
+  .path-card[data-tone="primary"] {
+    border-color: var(--text);
+    box-shadow: 0 0 0 1px var(--text);
+  }
+  .path-card[data-tone="primary"] .path-card-header {
+    background: var(--text);
+    color: white;
+  }
+  .path-card[data-tone="primary"] .path-card-header h2,
+  .path-card[data-tone="primary"] .path-card-header p {
+    color: white;
+  }
+  .path-card[data-tone="primary"] .path-card-header p { color: rgba(255,255,255,0.78); }
+  .path-card[data-tone="primary"] .path-card-icon {
+    background: rgba(255,255,255,0.12);
+    border-color: rgba(255,255,255,0.2);
+    color: white;
+  }
+  .path-card-status-pill {
+    margin-left: auto;
+    background: var(--success-pill-bg);
+    color: #166534;
+    border: 1px solid var(--success-border);
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .path-card-status-pill::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: currentColor;
+  }
+  .path-card[data-tone="primary"] .path-card-status-pill {
+    background: rgba(34, 197, 94, 0.18);
+    color: #86efac;
+    border-color: rgba(34, 197, 94, 0.3);
+  }
+  .path-card-body { padding: 20px 22px; }
+
+  /* Soft warning chip used for deliverability nudges */
+  .deliverability-chip {
+    margin-top: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--warning);
+    background: var(--warning-bg);
+    border: 1px solid var(--warning-border);
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* ============================================== */
   /* COMMON                                         */
   /* ============================================== */
   .step-header h1 {
@@ -1364,6 +1466,12 @@ const state = {
     rootDomain: 'muskingumcofair.com',
     subdomain: 'send',
     dmarcOn: true,
+    // BYO-specific sender identity. Each connected domain owns its own
+    // prefix/displayName/replyTo. We seed these from the managed config
+    // when entering the sub-journey so users start from a sensible default.
+    prefix: 'marketing',
+    displayName: 'Muskingum County Fair',
+    replyTo: '',
     // If user backs out mid-flow, this becomes true
     paused: false,
     pausedAt: null, // sub-step name when paused
@@ -1448,9 +1556,17 @@ function backStep() {
    BYO SUB-JOURNEY
    ========================================================= */
 function enterBYO() {
+  // First-time entry seeds the BYO identity from the managed config so users
+  // start from a sensible default. Resume preserves any edits made earlier.
+  const isFirstEntry = state.byo.pausedAt === null && !state.byo.paused;
+  if (isFirstEntry) {
+    if (!state.byo.displayName) state.byo.displayName = state.email.displayName;
+    if (!state.byo.prefix) state.byo.prefix = state.email.prefix;
+    // Reply-to is left blank by default so the auto-suggest placeholder shows
+    // an address on the BYO root domain rather than copying from managed.
+  }
   state.byo.status = 'in-progress';
   state.byo.paused = false;
-  // If we have a paused sub-step, resume there; else start at root
   state.byo.subStep = state.byo.pausedAt || 'root';
   state.byo.pausedAt = null;
   render();
@@ -1536,6 +1652,29 @@ function businessRequiredFilled() {
 
 function emailRequiredFilled() {
   return state.email.displayName.trim().length > 0;
+}
+
+/* Extract the root domain from a hostname (last two labels). */
+function rootDomainOf(host) {
+  if (!host) return '';
+  const parts = host.split('.').filter(Boolean);
+  return parts.length >= 2 ? parts.slice(-2).join('.') : host;
+}
+
+/* Suggest a reply-to address based on a sending domain.
+   Used as a placeholder in the input so the user sees what's expected. */
+function suggestedReplyTo(sendingDomain) {
+  const root = rootDomainOf(sendingDomain);
+  return root ? `info@${root}` : '';
+}
+
+/* Detect a cross-root-domain reply-to for the deliverability nudge.
+   Returns true if the user typed a reply-to whose root domain
+   doesn't match the sending domain's root. */
+function replyToCrossDomain(replyTo, sendingDomain) {
+  if (!replyTo || !replyTo.includes('@') || !sendingDomain) return false;
+  const replyHost = replyTo.split('@')[1] || '';
+  return rootDomainOf(replyHost) !== rootDomainOf(sendingDomain);
 }
 
 /* =========================================================
@@ -1782,64 +1921,83 @@ function businessStep() {
 
 function emailStep() {
   const byo = state.byo;
-  // Choose what domain to show in the inbox preview
+  // Sender preview uses the BYO domain once verified; otherwise the managed domain
   const senderDomain = byo.status === 'verified' ? `${byo.subdomain}.${byo.rootDomain}` : state.email.managedDomain;
   const showVia = byo.status !== 'verified';
+  const replyToPlaceholder = suggestedReplyTo(senderDomain);
+  const replyToWarn = replyToCrossDomain(state.email.replyTo, senderDomain);
 
   const content = `
     <div class="shell-main-narrow">
       <div class="step-header">
-        <h1>Email Channel</h1>
-        <p>We've already provisioned a sending address for you. You can start sending right away — or connect your own domain for better deliverability.</p>
+        <h1>Set up your email channel</h1>
+        <p>You have two options for sending email. We've already set up a managed domain so you can start sending immediately. You can also connect your own domain for better deliverability and brand trust.</p>
       </div>
 
-      <!-- Sender identity -->
-      <div class="form-group">
-        <label>Sending email address</label>
-        <span class="helper">Edit the prefix to match your team — common choices: <code>marketing</code>, <code>hello</code>, <code>news</code></span>
-        <div class="sender-prefix-row">
-          <input class="form-input" type="text" value="${state.email.prefix}" data-focus-key="email.prefix"
-            oninput="state.email.prefix=this.value; render();" />
-          <span class="at-sign">@</span>
-          <span class="domain-suffix">${senderDomain}</span>
+      <!-- Path 1: Managed domain (primary, set up automatically) -->
+      <div class="path-card" data-tone="primary">
+        <div class="path-card-header">
+          <span class="path-card-icon">
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l8 5 8-5"/><rect x="2" y="4" width="16" height="13" rx="2"/></svg>
+          </span>
+          <div>
+            <h2>Send right now — using a managed domain</h2>
+            <p>Already set up. Configure the sender details below and you're ready to send your first email.</p>
+          </div>
+          <span class="path-card-status-pill">Ready to send</span>
         </div>
-      </div>
+        <div class="path-card-body">
+          <div class="form-group">
+            <label>Sending email address</label>
+            <span class="helper">Edit the prefix to match your team — common choices: <code>marketing</code>, <code>hello</code>, <code>news</code></span>
+            <div class="sender-prefix-row">
+              <input class="form-input" type="text" value="${state.email.prefix}" data-focus-key="email.prefix"
+                oninput="state.email.prefix=this.value; render();" />
+              <span class="at-sign">@</span>
+              <span class="domain-suffix">${state.email.managedDomain}</span>
+            </div>
+          </div>
 
-      <div class="form-group">
-        <label>Display name<span class="req-asterisk">*</span></label>
-        <span class="helper">What customers see in their inbox before the email opens.</span>
-        <input class="form-input" type="text" value="${state.email.displayName}" data-focus-key="email.displayName"
-          oninput="state.email.displayName=this.value; render();" />
-      </div>
+          <div class="form-group">
+            <label>Display name<span class="req-asterisk">*</span></label>
+            <span class="helper">What customers see in their inbox before the email opens.</span>
+            <input class="form-input" type="text" value="${state.email.displayName}" data-focus-key="email.displayName"
+              oninput="state.email.displayName=this.value; render();" />
+          </div>
 
-      <div class="form-group">
-        <label>Reply-to email</label>
-        <span class="helper">When customers reply, their response goes here. If left blank, replies go to a no-reply address.</span>
-        <input class="form-input" type="email" placeholder="info@${state.brand.website}" value="${state.email.replyTo}" data-focus-key="email.replyTo"
-          oninput="state.email.replyTo=this.value;" />
-      </div>
+          <div class="form-group">
+            <label>Reply-to email</label>
+            <span class="helper">For best deliverability, use an address on the same root domain as your sending domain.</span>
+            <input class="form-input" type="email" placeholder="${replyToPlaceholder}" value="${state.email.replyTo}" data-focus-key="email.replyTo"
+              oninput="state.email.replyTo=this.value; render();" />
+            ${replyToWarn ? `
+              <span class="deliverability-chip">
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2L1 14h14L8 2z"/><path d="M8 6v3M8 11h.01"/></svg>
+                Reply-to on a different root domain can hurt deliverability
+              </span>
+            ` : ''}
+          </div>
 
-      <div style="margin-top: 24px;">
-        <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:10px;">How it appears in inbox</div>
-        <div class="inbox-preview">
-          <div class="inbox-row">
-            <div class="inbox-avatar">${(state.email.displayName || 'E').charAt(0).toUpperCase()}</div>
-            <div class="inbox-meta">
-              <div class="inbox-from">
-                ${state.email.displayName || 'Your business'}
-                ${showVia ? `<span class="inbox-via">via <strong style="color:var(--warning);">${state.email.managedDomain}</strong></span>` : ''}
+          <div style="margin-top: 24px;">
+            <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:10px;">How it appears in inbox</div>
+            <div class="inbox-preview">
+              <div class="inbox-row">
+                <div class="inbox-avatar">${(state.email.displayName || 'E').charAt(0).toUpperCase()}</div>
+                <div class="inbox-meta">
+                  <div class="inbox-from">
+                    ${state.email.displayName || 'Your business'}
+                    ${showVia ? `<span class="inbox-via">via <strong style="color:var(--warning);">${state.email.managedDomain}</strong></span>` : ''}
+                  </div>
+                  <div class="inbox-subject">${state.email.prefix || 'hello'}@${senderDomain} · Get your tickets for the 2026 Fair</div>
+                </div>
               </div>
-              <div class="inbox-subject">${state.email.prefix || 'hello'}@${senderDomain} · Get your tickets for the 2026 Fair</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- DNS connection (Voice-style) -->
-      <div style="margin-top: 32px;">
-        <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:10px;">DNS connection</div>
-        ${renderOnboardingDnsSection()}
-      </div>
+      <!-- Path 2: Bring your own domain (optional, better deliverability) -->
+      ${renderOnboardingDnsSection()}
     </div>
   `;
 
@@ -1926,25 +2084,24 @@ function finishVerifying() {
 /* Splash — first-time state, BYO not started */
 function renderDnsSplashVariant() {
   return `
-    <div class="dns-section">
-      <div class="dns-section-header">
-        <span class="dns-section-icon" data-tone="muted">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l7-4 7 4-7 4-7-4z"/><path d="M3 8v3l7 4 7-4V8"/></svg>
+    <div class="path-card">
+      <div class="path-card-header">
+        <span class="path-card-icon">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l7-4 7 4-7 4-7-4z"/><path d="M3 8v3l7 4 7-4V8"/></svg>
         </span>
-        <span class="dns-section-title">Send from your own domain</span>
-        <span style="margin-left: auto; font-size: 12px; color: var(--text-muted);">Optional · ~5 minutes</span>
-      </div>
-      <div class="dns-section-body">
-        <p>Improves inbox placement on Gmail and Outlook, and removes the platform tag from your sender line.</p>
-        <ul class="dns-section-bullets">
-          <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3 3L13 4.5"/></svg> Better deliverability and brand trust</li>
-          <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3 3L13 4.5"/></svg> Detects your DNS provider automatically</li>
-          <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3 3L13 4.5"/></svg> Forward setup to your IT contact if you don't have access</li>
-        </ul>
-        <div class="dns-section-actions">
-          <button class="btn btn-primary" onclick="enterBYO()">Connect your domain</button>
+        <div>
+          <h2>Send from your own domain</h2>
+          <p>Better deliverability and brand trust. Takes about 5 minutes — you can skip this for now and come back later.</p>
         </div>
-        <p class="reassurance-line">You can do this anytime — skip for now and come back from settings whenever you're ready.</p>
+        <span style="margin-left: auto; font-size: 11.5px; color: var(--text-muted); align-self: flex-start;">Optional · recommended</span>
+      </div>
+      <div class="path-card-body">
+        <ul class="dns-section-bullets" style="margin: 0 0 16px;">
+          <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3 3L13 4.5"/></svg> Higher inbox placement on Gmail and Outlook</li>
+          <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3 3L13 4.5"/></svg> Recipients see your business, not the platform tag</li>
+          <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3 3L13 4.5"/></svg> Forward setup to your IT contact if you don't have DNS access</li>
+        </ul>
+        <button class="btn btn-primary" onclick="enterBYO()">Connect your domain</button>
       </div>
     </div>
   `;
@@ -1955,17 +2112,18 @@ function renderDnsPausedVariant() {
   const byo = state.byo;
   const pausedSubLabel = BYO_SUBSTEPS.find(s => s.key === byo.pausedAt)?.label || 'Subdomain';
   return `
-    <div class="dns-section" data-state="pending">
-      <div class="dns-section-header">
-        <span class="dns-section-icon" data-tone="info">
-          <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M10 6v4l2.5 2.5"/></svg>
+    <div class="path-card">
+      <div class="path-card-header">
+        <span class="path-card-icon" style="background: var(--warning-bg); border-color: var(--warning-border); color: var(--warning);">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M10 6v4l2.5 2.5"/></svg>
         </span>
-        <span class="dns-section-title">Domain setup paused</span>
-        <span style="margin-left: auto; font-size: 12px; color: var(--text-muted);">at ${pausedSubLabel}</span>
+        <div>
+          <h2>Send from your own domain — paused</h2>
+          <p>You started connecting <code style="font-family: var(--font-mono); font-size: 12px;">${byo.subdomain}.${byo.rootDomain}</code> and paused at ${pausedSubLabel}. Your choices are saved.</p>
+        </div>
       </div>
-      <div class="dns-section-body">
-        <p>You started connecting <code>${byo.subdomain}.${byo.rootDomain}</code>. Your DMARC and subdomain choices are saved — pick up where you left off, or remove the in-progress domain to start fresh.</p>
-        <div class="dns-section-actions">
+      <div class="path-card-body">
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
           <button class="btn btn-primary" onclick="enterBYO()">Resume setup</button>
           <button class="btn btn-secondary" onclick="dismissResume()">Remove in-progress domain</button>
         </div>
@@ -1974,23 +2132,23 @@ function renderDnsPausedVariant() {
   `;
 }
 
-/* Configured — BYO verified, mirrors the settings configured-state card */
+/* Configured — BYO verified */
 function renderDnsConfiguredVariant() {
   const byo = state.byo;
   return `
-    <div class="dns-section">
-      <div class="dns-section-header">
-        <span class="dns-section-icon" data-tone="success">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3 3L13 4.5"/></svg>
+    <div class="path-card">
+      <div class="path-card-header">
+        <span class="path-card-icon" style="background: var(--success-pill-bg); border-color: var(--success-border); color: var(--success);">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3 3L13 4.5"/></svg>
         </span>
-        <span class="dns-section-title">DNS connected</span>
-        <span style="margin-left: auto; font-size: 12px; color: var(--text-muted); font-family: var(--font-mono);">last verified just now</span>
-      </div>
-      <div class="dns-section-body">
-        <p>Outbound mail is DKIM-signed under <code>${byo.subdomain}.${byo.rootDomain}</code>. Recipients see your business — no platform tag.</p>
-        <div class="dns-section-actions">
-          <button class="btn btn-secondary" onclick="dismissResume()">Disconnect & start over</button>
+        <div>
+          <h2>Your domain is connected</h2>
+          <p>Outbound mail is DKIM-signed under <code style="font-family: var(--font-mono); font-size: 12px;">${byo.subdomain}.${byo.rootDomain}</code>. Recipients see your business — no platform tag.</p>
         </div>
+        <span class="path-card-status-pill">Verified</span>
+      </div>
+      <div class="path-card-body" style="font-size: 13px; color: var(--text-secondary);">
+        <p style="margin: 0;">When you finish onboarding, your branded domain becomes the default sender. You can manage both domains anytime from Settings → Email Channel.</p>
       </div>
     </div>
   `;
@@ -2024,29 +2182,82 @@ function renderSubJourneyRoot() {
 }
 
 function renderSubJourneySubdomain() {
+  const fullSendingDomain = `${state.byo.subdomain}.${state.byo.rootDomain}`;
+  const replyToPlaceholder = suggestedReplyTo(fullSendingDomain);
+  const replyToWarn = replyToCrossDomain(state.byo.replyTo, fullSendingDomain);
+
   return `
     <div class="shell-main-narrow">
       <div class="step-header">
-        <h1>Pick a sending subdomain</h1>
-        <p>This is where your emails will be sent from. Use a subdomain you're not already using elsewhere.</p>
+        <h1>Configure your sending domain</h1>
+        <p>Pick a subdomain and set the sender details your customers will see in their inbox.</p>
       </div>
+
+      <!-- Subdomain picker -->
       <div class="preview-chip">
         <svg width="14" height="14" style="color:var(--text-muted);" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="2.5"/><path d="M2 10s2.5-5 8-5 8 5 8 5-2.5 5-8 5-8-5-8-5z"/></svg>
         <div>
-          <div class="preview-chip-label">Preview</div>
-          <div class="preview-chip-value">${state.byo.subdomain}.${state.byo.rootDomain}</div>
+          <div class="preview-chip-label">Sending domain preview</div>
+          <div class="preview-chip-value">${fullSendingDomain}</div>
         </div>
       </div>
+
       <div class="form-group">
         <label>Sending subdomain</label>
-        <span class="helper">Common choices: <code>send</code>, <code>email</code>, <code>notifications</code></span>
+        <span class="helper">Common choices: <code>send</code>, <code>email</code>, <code>notifications</code>. Use one you're not already using elsewhere.</span>
         <div class="subdomain-row">
           <input class="form-input" type="text" value="${state.byo.subdomain}" data-focus-key="byo.subdomain"
             oninput="state.byo.subdomain=this.value; render();" />
           <span class="domain-suffix">.${state.byo.rootDomain}</span>
         </div>
       </div>
-      <p style="font-size: 12.5px; color: var(--text-muted); margin-top: 4px;">When you continue, we'll check whether your DNS provider supports automatic setup so we can route you to the smoothest path on the next step.</p>
+
+      <!-- Sender identity for the BYO domain. Same component shape as the
+           managed-domain config above on the Email step. -->
+      <div class="form-group" style="margin-top: 24px;">
+        <label>Sending email address</label>
+        <span class="helper">Edit the prefix to match your team — common choices: <code>marketing</code>, <code>hello</code>, <code>news</code>.</span>
+        <div class="sender-prefix-row">
+          <input class="form-input" type="text" value="${state.byo.prefix}" data-focus-key="byo.prefix"
+            oninput="state.byo.prefix=this.value; render();" />
+          <span class="at-sign">@</span>
+          <span class="domain-suffix">${fullSendingDomain}</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Display name<span class="req-asterisk">*</span></label>
+        <span class="helper">What customers see in their inbox before the email opens.</span>
+        <input class="form-input" type="text" value="${state.byo.displayName}" data-focus-key="byo.displayName"
+          oninput="state.byo.displayName=this.value; render();" />
+      </div>
+
+      <div class="form-group">
+        <label>Reply-to email</label>
+        <span class="helper">For best deliverability, use an address on the same root domain as your sending domain.</span>
+        <input class="form-input" type="email" placeholder="${replyToPlaceholder}" value="${state.byo.replyTo}" data-focus-key="byo.replyTo"
+          oninput="state.byo.replyTo=this.value; render();" />
+        ${replyToWarn ? `
+          <span class="deliverability-chip">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2L1 14h14L8 2z"/><path d="M8 6v3M8 11h.01"/></svg>
+            Reply-to on a different root domain can hurt deliverability
+          </span>
+        ` : ''}
+      </div>
+
+      <!-- Inbox preview -->
+      <div style="margin-top: 24px;">
+        <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:10px;">How it appears in inbox</div>
+        <div class="inbox-preview">
+          <div class="inbox-row">
+            <div class="inbox-avatar">${(state.byo.displayName || 'E').charAt(0).toUpperCase()}</div>
+            <div class="inbox-meta">
+              <div class="inbox-from">${state.byo.displayName || 'Your business'}</div>
+              <div class="inbox-subject">${state.byo.prefix || 'hello'}@${fullSendingDomain} · Get your tickets for the 2026 Fair</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   `;
 }
@@ -2342,7 +2553,7 @@ function resetPrototype() {
   state.brand.website = 'muskingumcofair.com';
   state.business = { dba: 'Muskingum County Fair', address1: '', address2: '', city: '', state: '', zip: '', country: 'United States' };
   state.email = { prefix: 'marketing', displayName: 'Muskingum County Fair', replyTo: '', managedDomain: 'muskingum-county-fair.fairs-mail.com' };
-  state.byo = { status: 'none', subStep: null, rootDomain: 'muskingumcofair.com', subdomain: 'send', dmarcOn: true, paused: false, pausedAt: null, verifyProgress: 0 };
+  state.byo = { status: 'none', subStep: null, rootDomain: 'muskingumcofair.com', subdomain: 'send', dmarcOn: true, prefix: 'marketing', displayName: '', replyTo: '', paused: false, pausedAt: null, verifyProgress: 0 };
   state.merge = { firstName: '', lastName: '' };
   state.automations = { welcome: true, birthday: true, thankyou: false };
   state.showEntriModal = false;

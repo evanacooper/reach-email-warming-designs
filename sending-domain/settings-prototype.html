@@ -588,6 +588,43 @@
     border: 1px solid var(--border);
     font-family: var(--font-sans);
   }
+  /* Default pill — star icon + label as a single visually-bound component.
+     Two variants: read-only (current default) and action (clickable to set). */
+  .default-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-left: 10px;
+    padding: 2px 9px 2px 7px;
+    border-radius: 999px;
+    font-size: 10.5px;
+    font-weight: 600;
+    font-family: var(--font-sans);
+    letter-spacing: 0.02em;
+    background: #fef9c3;
+    color: #854d0e;
+    border: 1px solid #fde68a;
+    cursor: default;
+  }
+  .default-pill svg { color: #d97706; }
+  .default-pill--action {
+    background: var(--bg-subtle);
+    color: var(--text-muted);
+    border-color: var(--border);
+    border: 1px dashed var(--border-strong);
+    cursor: pointer;
+    appearance: none;
+    font-family: inherit;
+    transition: color 120ms ease, background 120ms ease, border-color 120ms ease;
+  }
+  .default-pill--action svg { color: var(--text-faint); transition: color 120ms ease; }
+  .default-pill--action:hover {
+    background: #fef9c3;
+    color: #854d0e;
+    border-color: #fde68a;
+    border-style: solid;
+  }
+  .default-pill--action:hover svg { color: #d97706; }
   .domain-table .actions {
     display: flex;
     gap: 6px;
@@ -1002,6 +1039,19 @@
     margin: 0;
     font-size: 13px;
     color: var(--text-secondary);
+  }
+  /* Soft warning chip used for the cross-root-domain reply-to nudge */
+  .deliverability-chip {
+    margin-top: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--warning);
+    background: var(--warning-bg);
+    border: 1px solid var(--warning-border);
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
   }
   .recommended-pill {
     background: var(--bg-subtle);
@@ -1522,6 +1572,23 @@ function loadDemoScenario(key) {
 /* =========================================================
    NAVIGATION
    ========================================================= */
+/* Reply-to helpers: suggest a value derived from the sending domain root,
+   and detect cross-root-domain reply-tos for the deliverability nudge. */
+function rootDomainOf(host) {
+  if (!host) return '';
+  const parts = host.split('.').filter(Boolean);
+  return parts.length >= 2 ? parts.slice(-2).join('.') : host;
+}
+function suggestedReplyTo(sendingDomain) {
+  const root = rootDomainOf(sendingDomain);
+  return root ? `info@${root}` : '';
+}
+function replyToCrossDomain(replyTo, sendingDomain) {
+  if (!replyTo || !replyTo.includes('@') || !sendingDomain) return false;
+  const replyHost = replyTo.split('@')[1] || '';
+  return rootDomainOf(replyHost) !== rootDomainOf(sendingDomain);
+}
+
 function setTab(key) {
   state.tab = key;
   state.byo.subStep = null;
@@ -1962,9 +2029,15 @@ function emailChannelDomainDetailPage(domainId) {
 
         <div class="form-group">
           <label>Reply-to email</label>
-          <span class="helper">When customers reply, their response goes here.</span>
-          <input class="form-input" type="email" value="${edits.replyTo}" data-focus-key="detail.replyTo"
+          <span class="helper">For best deliverability, use an address on the same root domain as your sending domain.</span>
+          <input class="form-input" type="email" placeholder="${suggestedReplyTo(d.fullDomain)}" value="${edits.replyTo}" data-focus-key="detail.replyTo"
             oninput="state.pendingEdits.replyTo=this.value; render();" />
+          ${replyToCrossDomain(edits.replyTo, d.fullDomain) ? `
+            <span class="deliverability-chip">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2L1 14h14L8 2z"/><path d="M8 6v3M8 11h.01"/></svg>
+              Reply-to on a different root domain can hurt deliverability
+            </span>
+          ` : ''}
         </div>
 
         <div style="margin-top: 20px;">
@@ -2079,7 +2152,10 @@ function renderDnsSectionConfigured(d) {
         <div class="dns-section-actions">
           <button class="btn btn-secondary" onclick="reverify('${d.id}')">Re-verify DNS</button>
           <button class="btn btn-secondary" onclick="reconnectDisconnected('${d.id}')">Reconfigure</button>
-          <button class="btn btn-secondary" style="margin-left: auto; color: var(--danger); border-color: var(--danger-border);" onclick="confirmDisconnect('${d.id}')">Disconnect DNS</button>
+        </div>
+        <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--text-muted); line-height: 1.55;">
+          <strong style="color: var(--text); font-weight: 600;">Need to disconnect?</strong>
+          To take this domain offline, remove the DKIM TXT record from your DNS provider. Once it's removed, this domain will move to a Disconnected state here and outbound mail will fall back to the managed domain.
         </div>
       </div>
     </div>
@@ -2403,21 +2479,36 @@ function renderDomainRow(d) {
     : 'Managed';
   const rowStyle = d.status === 'disconnected' ? 'background: var(--danger-bg); cursor: pointer;' : 'cursor: pointer;';
 
-  // Quick actions live in the row; the row body itself navigates to the detail page.
-  // Clicks on action buttons must not bubble up to the row click.
-  // A faint chevron at the row end + hover background change make
-  // "row is clickable" obvious without competing with the quick actions.
+  // Default-badge composes a star + "Default" label so the star and the
+  // word "Default" are visibly bound together. On hover the star icon
+  // shows a "Set as default" tooltip and is clickable for non-default rows.
   const chevron = `<span class="row-chevron" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg></span>`;
 
-  let actions = '';
+  let defaultControl = '';
+  if (d.isDefault) {
+    defaultControl = `
+      <span class="default-pill" title="Default sending domain — used unless overridden on a specific automation or campaign">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l2 5 5 .5-3.7 3.5L13 15l-5-2.5L3 15l1.7-4.5L1 6.5l5-.5z"/></svg>
+        Default
+      </span>
+    `;
+  } else if (!d.isManaged && d.status === 'verified') {
+    defaultControl = `
+      <button class="default-pill default-pill--action" onclick="event.stopPropagation(); setDefault('${d.id}')" title="Set as default sending domain">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1l2 5 5 .5-3.7 3.5L13 15l-5-2.5L3 15l1.7-4.5L1 6.5l5-.5z"/></svg>
+        Set as default
+      </button>
+    `;
+  }
+
+  // Remove is the only action that stays in the actions column; star moved
+  // into the name cell, re-verify/reconfigure live on the detail page.
+  let actions;
   if (d.isManaged) {
     actions = `<div class="actions"><span style="font-size:12px; color:var(--text-faint);">Always available</span>${chevron}</div>`;
   } else {
-    const setDefaultBtn = !d.isDefault && d.status === 'verified'
-      ? `<button class="icon-btn" onclick="event.stopPropagation(); setDefault('${d.id}')" title="Set as default"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1l2 5 5 .5-3.7 3.5L13 15l-5-2.5L3 15l1.7-4.5L1 6.5l5-.5z"/></svg></button>`
-      : '';
     const removeBtn = `<button class="icon-btn" onclick="event.stopPropagation(); confirmRemove('${d.id}')" title="Remove" style="color:var(--danger);"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h10M6 4V2.5h4V4M5 4l1 9h4l1-9"/></svg></button>`;
-    actions = `<div class="actions">${setDefaultBtn}${removeBtn}${chevron}</div>`;
+    actions = `<div class="actions">${removeBtn}${chevron}</div>`;
   }
 
   // Compose the per-row "from" line for hover/scan: prefix@fullDomain · displayName
@@ -2429,7 +2520,7 @@ function renderDomainRow(d) {
         <div class="domain-name-cell">
           <span class="name" style="${d.isManaged ? 'color: var(--text-muted);' : ''}">
             ${d.fullDomain}
-            ${d.isDefault ? '<span class="default-badge">Default</span>' : ''}
+            ${defaultControl}
           </span>
           <span class="purpose" style="font-family: var(--font-mono); font-size: 11.5px; color: var(--text-muted);">${senderSummary}</span>
           <span class="purpose" style="margin-top: 2px;">${d.purpose} · ${d.displayName}</span>
