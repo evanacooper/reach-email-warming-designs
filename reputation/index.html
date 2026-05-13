@@ -1142,6 +1142,226 @@
   box-shadow: 0 1px 4px rgba(0,0,0,0.08);
 }
 .back-link:hover { color: #1e293b; background: #f8fafc; }
+
+/* ── Step 6: Automation builder ── */
+.prev6-top { margin-bottom: 16px; }
+.abh-wrap { display: flex; flex-direction: column; gap: 16px; }
+
+.abh-flowblock {
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.abh-flowhead {
+  padding: 12px 16px 8px;
+  border-bottom: 1px solid var(--color-border);
+}
+.abh-flowhead-name {
+  margin: 0 0 3px;
+  font-size: 13px; font-weight: 700;
+  color: var(--color-text-primary);
+  display: inline-flex; align-items: baseline; gap: 8px;
+}
+.abh-flowhead-num {
+  font-size: 11px; font-weight: 600;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.abh-flowhead-trigger {
+  font-size: 11.5px; color: var(--color-text-secondary); line-height: 1.4;
+}
+.abh-seq {
+  padding: 14px 16px;
+  display: flex; align-items: center; gap: 0;
+  overflow-x: auto;
+}
+.abh-startcap {
+  flex-shrink: 0; display: flex; align-items: center;
+}
+.abh-startcap-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--abh-accent, #0f172a);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--abh-accent, #0f172a) 18%, transparent);
+}
+.abh-startcap-line { width: 8px; height: 1.5px; background: var(--color-border); }
+
+.abh-conn {
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  min-width: 56px;
+}
+.abh-conn-line { flex: 1; height: 1.5px; background: var(--color-border); min-width: 4px; }
+.abh-conn-pill {
+  flex-shrink: 0; display: inline-flex; gap: 3px; align-items: center;
+  padding: 3px 7px;
+  background: #fff; border: 1px dashed var(--color-border);
+  border-radius: 99px;
+  font-size: 10px; font-weight: 700; color: var(--color-text-muted);
+  white-space: nowrap;
+}
+.abh-conn-pill.audience {
+  border-style: solid;
+}
+
+.abh-end { flex-shrink: 0; padding-left: 6px; display: grid; place-items: center; }
+.abh-end-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: #fff; border: 2px solid var(--color-text-muted);
+}
+
+.abh-msg {
+  flex: 1 1 0;
+  min-width: 130px; max-width: 200px;
+  background: #fff; border: 1px solid var(--color-border);
+  border-radius: 10px; padding: 10px 11px;
+  cursor: pointer; display: flex; flex-direction: column; gap: 6px;
+  transition: border-color .15s, box-shadow .15s;
+}
+.abh-msg:hover { border-color: var(--color-text-muted); box-shadow: 0 2px 8px rgba(15,23,42,.06); }
+.abh-msg.abh-active { border-color: var(--color-text-primary); box-shadow: 0 0 0 2px rgba(15,23,42,.10); }
+.abh-msg-head { display: flex; align-items: center; gap: 5px; }
+.abh-msg-icon {
+  width: 20px; height: 20px; border-radius: 5px;
+  display: grid; place-items: center;
+  background: #f1f5f9; color: var(--color-text-muted); flex-shrink: 0;
+}
+.abh-msg-step {
+  font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--color-text-muted); padding: 2px 6px; border-radius: 4px; background: #f1f5f9;
+}
+.abh-msg-channels { margin-left: auto; display: inline-flex; gap: 3px; }
+.abh-ch {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; border-radius: 4px;
+  background: #f1f5f9; color: var(--color-text-muted);
+  font-size: 9px; font-weight: 700;
+}
+.abh-msg-title {
+  font-size: 12.5px; font-weight: 700; color: var(--color-text-primary); line-height: 1.3;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.abh-msg-subject {
+  font-size: 11px; color: var(--color-text-muted); line-height: 1.4;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.abh-msg-edit {
+  display: inline-flex; gap: 4px; align-items: center;
+  font-size: 10.5px; font-weight: 600; color: var(--color-text-muted); margin-top: 2px;
+}
+.abh-msg:hover .abh-msg-edit { color: var(--color-text-primary); }
+
+/* Drawer */
+.abh-drawer-overlay {
+  display: none; position: fixed; inset: 0; z-index: 200;
+}
+.abh-drawer-overlay.open { display: block; }
+.abh-drawer-scrim {
+  position: absolute; inset: 0;
+  background: rgba(15,23,42,.35);
+}
+.abh-drawer {
+  position: absolute; top: 0; right: 0; bottom: 0;
+  width: 480px; max-width: 100vw;
+  background: #fff;
+  box-shadow: -4px 0 32px rgba(15,23,42,.12);
+  display: flex; flex-direction: column;
+}
+.abh-drawer-head {
+  padding: 20px 22px 16px; border-bottom: 1px solid var(--color-border);
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;
+  flex-shrink: 0;
+}
+.abh-drawer-eyebrow {
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--color-text-muted); margin-bottom: 4px;
+}
+.abh-drawer-title { font-size: 17px; font-weight: 700; color: var(--color-text-primary); }
+.abh-drawer-sub { font-size: 12px; color: var(--color-text-muted); margin-top: 3px; }
+.abh-drawer-close {
+  all: unset; cursor: pointer; padding: 6px; border-radius: 8px;
+  color: var(--color-text-muted); flex-shrink: 0;
+}
+.abh-drawer-close:hover { background: var(--color-bg); color: var(--color-text-primary); }
+.abh-drawer-toolbar {
+  padding: 12px 22px; border-bottom: 1px solid var(--color-border);
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  flex-shrink: 0;
+}
+.abh-drawer-nav { display: inline-flex; gap: 6px; align-items: center; }
+.abh-nav-btn {
+  all: unset; cursor: pointer; width: 28px; height: 28px; border-radius: 7px;
+  display: grid; place-items: center; color: var(--color-text-muted);
+  border: 1px solid var(--color-border); background: #fff; font-size: 13px;
+}
+.abh-nav-btn:hover:not(:disabled) { color: var(--color-text-primary); border-color: var(--color-text-primary); }
+.abh-nav-btn:disabled { opacity: .35; cursor: not-allowed; }
+.abh-nav-pills { display: inline-flex; gap: 3px; }
+.abh-nav-pill {
+  all: unset; cursor: pointer; padding: 4px 8px; border-radius: 6px;
+  font-size: 10.5px; font-weight: 700; color: var(--color-text-muted); background: #f1f5f9;
+}
+.abh-nav-pill.on { background: var(--color-text-primary); color: #fff; }
+.abh-ch-toggle { display: inline-flex; gap: 2px; background: #f1f5f9; padding: 3px; border-radius: 8px; }
+.abh-ch-btn {
+  all: unset; cursor: pointer; padding: 5px 11px; border-radius: 6px;
+  font-size: 12px; font-weight: 600; color: var(--color-text-muted);
+  display: inline-flex; gap: 5px; align-items: center;
+}
+.abh-ch-btn.on { background: #fff; color: var(--color-text-primary); box-shadow: 0 1px 3px rgba(15,23,42,.08); }
+.abh-drawer-body { padding: 20px 22px; overflow-y: auto; flex: 1; }
+.abh-drawer-foot {
+  padding: 14px 22px; border-top: 1px solid var(--color-border);
+  display: flex; justify-content: flex-end; gap: 8px;
+  background: var(--color-bg); flex-shrink: 0;
+}
+
+/* Email preview inside drawer */
+.abh-email-preview {
+  border: 1px solid var(--color-border); border-radius: 10px; overflow: hidden;
+  font-family: Inter, sans-serif; font-size: 13px;
+  background: #f9fafb;
+}
+.abh-email-header {
+  background: #fff; padding: 12px 16px; border-bottom: 1px solid var(--color-border);
+}
+.abh-email-from { font-size: 11px; color: var(--color-text-muted); }
+.abh-email-subject { font-size: 13px; font-weight: 700; margin-top: 2px; color: var(--color-text-primary); }
+.abh-email-body {
+  background: #fff; padding: 20px 16px; text-align: center;
+}
+.abh-email-logo {
+  width: 48px; height: 48px; background: #f9fafb; border: 1px solid var(--color-border);
+  border-radius: 8px; margin: 0 auto 10px; display: flex; align-items: center;
+  justify-content: center; font-size: 22px;
+}
+.abh-email-biz { font-size: 14px; font-weight: 700; margin-bottom: 14px; }
+.abh-email-card {
+  background: #f9fafb; border-radius: 10px; padding: 16px 14px; margin-bottom: 14px; text-align: left;
+}
+.abh-email-card-body {
+  font-size: 13px; color: #374151; line-height: 1.6; white-space: pre-line; margin-bottom: 14px;
+}
+.abh-email-cta {
+  display: inline-block; padding: 10px 22px; border-radius: 7px;
+  font-size: 13px; font-weight: 600; color: #fff; text-decoration: none;
+}
+.abh-email-footer {
+  padding: 10px 16px 14px;
+  font-size: 11px; color: #9ca3af; text-align: center; line-height: 1.6;
+}
+
+/* SMS preview inside drawer */
+.abh-sms-preview {
+  background: #f1f5f9; border-radius: 14px; padding: 16px;
+}
+.abh-sms-bubble {
+  background: #fff; border: 1px solid var(--color-border);
+  border-radius: 14px 14px 14px 2px;
+  padding: 12px 14px; font-size: 13px; color: var(--color-text-primary); line-height: 1.55;
+}
+.abh-sms-meta {
+  font-size: 10.5px; color: var(--color-text-muted); margin-top: 8px; text-align: right;
+}
 </style>
 </head>
 <body>
@@ -1424,21 +1644,11 @@
       <!-- STEP 6: Preview Communications             -->
       <!-- ═══════════════════════════════════════════ -->
       <div class="step-panel" id="panel-step6" role="region" aria-label="Preview communications">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div class="prev6-top">
           <h2 class="step-title">Preview Communications</h2>
-          <div class="channel-toggle" id="channel-toggle">
-            <button class="ch-toggle-btn active" onclick="setChannel('email')" id="toggle-email">
-              <svg width="13" height="11" viewBox="0 0 13 11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="0.75" y="0.75" width="11.5" height="9.5" rx="1.5"/><path d="M0.75 3L6.5 6.5 12.25 3"/></svg>
-              Email
-            </button>
-            <button class="ch-toggle-btn" onclick="setChannel('sms')" id="toggle-sms">
-              <svg width="10" height="12" viewBox="0 0 10 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="0.75" y="0.75" width="8.5" height="10.5" rx="2"/><path d="M3.5 9.5h3"/></svg>
-              SMS
-            </button>
-          </div>
+          <p class="step-description" id="step-desc">Review the messages your customers will receive. Click any message to preview or edit.</p>
         </div>
-        <p class="step-description" id="step-desc">Review the messages your customers will receive. Click any message to see a full preview or make edits.</p>
-        <div class="comms-grid" id="comms-grid"></div>
+        <div class="abh-wrap" id="abh-wrap"></div>
       </div>
 
     </div>
@@ -1458,24 +1668,43 @@
 
 </div>
 
-<!-- Preview slide-up panel (for Step 6) -->
-<div class="preview-overlay" id="preview-overlay" onclick="maybeClose(event)">
-  <div class="preview-panel">
-    <div class="preview-header">
-      <div class="preview-header-left">
-        <div class="preview-title" id="preview-title"></div>
-        <div class="preview-subtitle" id="preview-subtitle"></div>
+<!-- Step 6: Message preview drawer -->
+<div class="abh-drawer-overlay" id="abh-drawer-overlay">
+  <div class="abh-drawer-scrim" onclick="closeAbhDrawer()"></div>
+  <aside class="abh-drawer">
+    <div class="abh-drawer-head">
+      <div>
+        <div class="abh-drawer-eyebrow" id="abh-drawer-eyebrow">Message 1 of 2</div>
+        <div class="abh-drawer-title" id="abh-drawer-title"></div>
+        <div class="abh-drawer-sub" id="abh-drawer-sub"></div>
       </div>
-      <div class="preview-header-actions">
-        <button class="btn btn-secondary" onclick="closePreview()">Close</button>
-        <button class="btn btn-primary" onclick="closePreview()">
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M1 6.5h11M7.5 1.5l5 5-5 5"/></svg>
-          Edit
+      <button class="abh-drawer-close" onclick="closeAbhDrawer()" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M3 3l10 10M13 3L3 13"/></svg>
+      </button>
+    </div>
+    <div class="abh-drawer-toolbar">
+      <div class="abh-drawer-nav">
+        <button class="abh-nav-btn" id="abh-drawer-prev" aria-label="Previous message">&#8592;</button>
+        <div class="abh-nav-pills" id="abh-drawer-pills"></div>
+        <button class="abh-nav-btn" id="abh-drawer-next" aria-label="Next message">&#8594;</button>
+      </div>
+      <div class="abh-ch-toggle">
+        <button class="abh-ch-btn on" id="abh-ch-email" onclick="setAbhChannel('email')">
+          <svg width="12" height="10" viewBox="0 0 13 11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="0.75" y="0.75" width="11.5" height="9.5" rx="1.5"/><path d="M0.75 3L6.5 6.5 12.25 3"/></svg>
+          Email
+        </button>
+        <button class="abh-ch-btn" id="abh-ch-sms" onclick="setAbhChannel('sms')">
+          <svg width="9" height="11" viewBox="0 0 10 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="0.75" y="0.75" width="8.5" height="10.5" rx="2"/><path d="M3.5 9.5h3"/></svg>
+          SMS
         </button>
       </div>
     </div>
-    <div class="preview-body" id="preview-body"></div>
-  </div>
+    <div class="abh-drawer-body" id="abh-drawer-body"></div>
+    <div class="abh-drawer-foot">
+      <button class="btn btn-secondary" onclick="closeAbhDrawer()">Close</button>
+      <button class="btn btn-primary" onclick="closeAbhDrawer()">Done</button>
+    </div>
+  </aside>
 </div>
 
 <!-- Annotations toggle -->
@@ -1738,191 +1967,285 @@ const PREVIEW_SCENARIOS = {
   both:     { desc: 'Private First, Then Google is active. Every customer gets a private feedback request, then a Google review invitation.', flows: ['internal','google'] },
 };
 
+const PREVIEW_FLOWS = {
+  smart: {
+    id: "smart",
+    label: "Smart Review Routing",
+    automations: [
+      {
+        id: "feedback",
+        name: "Private Feedback Request",
+        accent: "#7c3aed",
+        accentSoft: "#f3efff",
+        trigger: { hint: "All customers who completed a visit in the last 48 hours." },
+        nodes: [
+          { type: "wait", value: "Until 9am" },
+          { type: "message", stepId: "s1" },
+          { type: "wait", value: "3 days" },
+          { type: "audience" },
+          { type: "message", stepId: "s2" },
+        ],
+      },
+      {
+        id: "google",
+        name: "Google Review Request",
+        accent: "#0f172a",
+        accentSoft: "#f1f5f9",
+        trigger: { hint: "Customers who completed the Private Feedback flow." },
+        nodes: [
+          { type: "wait", value: "Until 9am" },
+          { type: "message", stepId: "s3" },
+          { type: "wait", value: "3 days" },
+          { type: "audience" },
+          { type: "message", stepId: "s4" },
+        ],
+      },
+    ],
+    steps: {
+      s1: { title: "Rating Request", sub: "Sent right after the visit.", subject: "How was your experience at Tomer's Rental?", body: "Hi Jane,\n\nThanks for your recent visit! How was it? Tap below to rate your stay — it only takes 10 seconds.", cta: "Rate your stay", ctaColor: "#7c3aed", sms: "Tomer's Rental: Thanks for visiting! How was your stay? Rate it here: [link] Reply STOP to opt out." },
+      s2: { title: "Rating Reminder", sub: "Only sent if no rating yet.", subject: "A quick favor from Tomer's Rental", body: "Hi Jane,\n\nFriendly nudge — got 10 seconds to rate your recent visit? It really helps our team.", cta: "Rate your stay", ctaColor: "#7c3aed", sms: "Tomer's Rental: Quick nudge — 10 sec to rate your visit? [link] Reply STOP to opt out." },
+      s3: { title: "Google Review Ask", sub: "Sent after a positive rating.", subject: "Mind sharing your experience on Google?", body: "Hi Jane,\n\nSo glad to hear you had a great visit! Would you take a minute to leave a Google review? It really helps other customers find us.", cta: "Leave a Google review", ctaColor: "#4285F4", sms: "Tomer's Rental: Glad you had a great visit! Share it on Google? [link] Reply STOP to opt out." },
+      s4: { title: "Google Reminder", sub: "3 days later, if no review left.", subject: "One last ask — a Google review?", body: "Hi Jane,\n\nNo pressure, but if you have a moment, a Google review would mean a lot for a small business like ours.", cta: "Leave a Google review", ctaColor: "#4285F4", sms: "Tomer's Rental: No pressure — but a quick Google review would mean a lot. [link] Reply STOP to opt out." },
+    },
+  },
+  google: {
+    id: "google",
+    label: "Google Reviews Only",
+    automations: [
+      {
+        id: "google",
+        name: "Google Review Request",
+        accent: "#0f172a",
+        accentSoft: "#f1f5f9",
+        trigger: { hint: "All customers who completed a visit in the last 48 hours." },
+        nodes: [
+          { type: "wait", value: "Until 9am" },
+          { type: "message", stepId: "g1" },
+          { type: "wait", value: "4 days" },
+          { type: "audience" },
+          { type: "message", stepId: "g2" },
+        ],
+      },
+    ],
+    steps: {
+      g1: { title: "Google Review Request", sub: "Sent right after the visit.", subject: "Would you leave us a Google review?", body: "Hi Jane,\n\nThanks for choosing Tomer's Rental! If your stay was great, we'd love it if you took a moment to share your experience on Google.", cta: "Leave a Google review", ctaColor: "#4285F4", sms: "Tomer's Rental: Thanks for visiting! Mind sharing on Google? [link] Reply STOP to opt out." },
+      g2: { title: "Google Review Reminder", sub: "Sent if no review left.", subject: "A quick Google review?", body: "Hi Jane,\n\nJust a friendly reminder — if you have a minute, a Google review really helps other customers find us.", cta: "Leave a Google review", ctaColor: "#4285F4", sms: "Tomer's Rental: Friendly nudge — a quick Google review helps a lot! [link] Reply STOP to opt out." },
+    },
+  },
+  internal: {
+    id: "internal",
+    label: "Private Feedback Only",
+    automations: [
+      {
+        id: "feedback",
+        name: "Private Feedback Request",
+        accent: "#7c3aed",
+        accentSoft: "#f3efff",
+        trigger: { hint: "All customers who completed a visit in the last 48 hours." },
+        nodes: [
+          { type: "wait", value: "Until 9am" },
+          { type: "message", stepId: "p1" },
+          { type: "wait", value: "3 days" },
+          { type: "audience" },
+          { type: "message", stepId: "p2" },
+        ],
+      },
+    ],
+    steps: {
+      p1: { title: "Feedback Request", sub: "Sent right after the visit.", subject: "How was your experience at Tomer's Rental?", body: "Hi Jane,\n\nWe'd love your honest take on your recent visit. Your responses come straight to our team — nothing public.", cta: "Share Feedback", ctaColor: "#7c3aed", sms: "Tomer's Rental: How was your visit? Share private feedback here: [link] Reply STOP to opt out." },
+      p2: { title: "Feedback Reminder", sub: "Only sent if no response yet.", subject: "We'd still love to hear from you, Jane", body: "Hi Jane,\n\nQuick nudge in case you missed our last note — your feedback would really help us improve.", cta: "Leave Feedback", ctaColor: "#7c3aed", sms: "Tomer's Rental: Quick nudge — got 30 sec? [link] Reply STOP to opt out." },
+    },
+  },
+};
+
+// Map from previewScenario to PREVIEW_FLOWS key
+const PREVIEW_FLOW_MAP = {
+  smart: 'smart',
+  google: 'google',
+  internal: 'internal',
+  both: 'smart', // reuse smart data for the "both" scenario
+};
+
 function renderGrid() {
   const sc = PREVIEW_SCENARIOS[state.previewScenario];
-  const ch = state.previewChannel;
   document.getElementById('step-desc').textContent = sc.desc;
 
-  const grid = document.getElementById('comms-grid');
-  grid.style.gridTemplateColumns = `150px 1fr`;
+  const flowKey = PREVIEW_FLOW_MAP[state.previewScenario];
+  const flow = PREVIEW_FLOWS[flowKey];
+  const wrap = document.getElementById('abh-wrap');
+  if (!wrap) return;
 
   let html = '';
-
-  const chIcon = ch === 'email'
-    ? `<svg width="13" height="11" viewBox="0 0 13 11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="0.75" y="0.75" width="11.5" height="9.5" rx="1.5"/><path d="M0.75 3L6.5 6.5 12.25 3"/></svg>`
-    : `<svg width="10" height="12" viewBox="0 0 10 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="0.75" y="0.75" width="8.5" height="10.5" rx="2"/><path d="M3.5 9.5h3"/></svg>`;
-
-  html += `<div class="grid-col-header flow-col">
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="10" height="10" rx="1.5"/><path d="M3.5 4h5M3.5 6.5h5M3.5 9h3"/></svg>
-    Flow
-  </div>`;
-  html += `<div class="grid-col-header ch-col">${chIcon} ${ch === 'email' ? 'Email messages' : 'SMS messages'}</div>`;
-
-  sc.flows.forEach((flowId, rowIdx) => {
-    const isLastRow = rowIdx === sc.flows.length - 1;
-    const meta = FLOWS_META[flowId];
-    const msgs = MSGS[flowId]?.[ch];
-    const cellClass = `grid-cell${isLastRow ? ' row-last' : ''}`;
-
-    html += `<div class="flow-row-label${isLastRow ? ' flow-label-last' : ''}">
-      <span class="flow-name">${meta.name}</span>
-      <span class="flow-pill ${meta.pill.cls}">${meta.pill.label}</span>
+  flow.automations.forEach((auto, i) => {
+    const accent = auto.accent;
+    html += `<div class="abh-flowblock" style="--abh-accent:${accent}">`;
+    html += `<div class="abh-flowhead">
+      <h3 class="abh-flowhead-name">
+        <span class="abh-flowhead-num">${String(i+1).padStart(2,'0')}</span>
+        ${auto.name}
+      </h3>
+      <div class="abh-flowhead-trigger">${auto.trigger.hint}</div>
     </div>`;
-
-    if (!msgs || msgs.length === 0) {
-      html += `<div class="${cellClass} na"><span class="na-label">Not configured</span></div>`;
-      return;
-    }
-
-    html += `<div class="${cellClass}">`;
-
-    msgs.forEach((msg, mi) => {
-      const unitId = `${flowId}-${ch}-${mi}`;
-
-      if (mi > 0) {
-        html += `<div class="thumb-arrow">
-          <div style="display:flex;align-items:center">
-            <div class="arrow-line"></div>
-            <div class="arrow-head"></div>
+    html += `<div class="abh-seq">`;
+    // start cap
+    html += `<div class="abh-startcap"><div class="abh-startcap-dot"></div><div class="abh-startcap-line"></div></div>`;
+    auto.nodes.forEach((n) => {
+      if (n.type === 'wait') {
+        html += `<div class="abh-conn">
+          <div class="abh-conn-line"></div>
+          <div class="abh-conn-pill">
+            <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="6" r="5"/><path d="M6 3v3l2 1.5" stroke-linecap="round"/></svg>
+            ${n.value}
           </div>
-          <div class="arrow-reminder-label">reminder</div>
+          <div class="abh-conn-line"></div>
         </div>`;
-      }
-
-      const subjectText = msg.subject
-        ? (msg.subject.length > 32 ? msg.subject.slice(0, 32) + '…' : msg.subject)
-        : (msg.smsText.length > 32 ? msg.smsText.slice(0, 32) + '…' : msg.smsText);
-
-      html += `<div class="thumb-unit" id="unit-${unitId}" onclick="openPreview('${flowId}','${ch}',${mi})">`;
-
-      if (ch === 'email') {
-        html += `<div class="email-thumb">
-          <div class="email-thumb-inner">${emailThumbHtml(msg, meta)}</div>
-          <div class="thumb-edit-overlay">
-            <button class="thumb-edit-btn" onclick="event.stopPropagation();openPreview('${flowId}','${ch}',${mi})">
-              <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 1.5l2 2-6 6H1.5v-2l6-6z"/></svg>
-              Edit
-            </button>
+      } else if (n.type === 'audience') {
+        html += `<div class="abh-conn">
+          <div class="abh-conn-line"></div>
+          <div class="abh-conn-pill audience">
+            <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="4.5" cy="3.5" r="1.5"/><path d="M1 10c0-2 1.5-3 3.5-3s3.5 1 3.5 3"/><circle cx="9" cy="3.5" r="1.5"/><path d="M9 7c1.5 0 2.5 1 2.5 3" stroke-linecap="round"/></svg>
+            Audience check
           </div>
+          <div class="abh-conn-line"></div>
         </div>`;
-      } else {
-        html += `<div class="sms-thumb">
-          <div class="sms-label-row">
-            <svg width="9" height="10" viewBox="0 0 9 10" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"><rect x="0.5" y="0.5" width="8" height="9" rx="1.5"/><path d="M2.5 8h4"/></svg>
-            SMS
+      } else if (n.type === 'message') {
+        const step = flow.steps[n.stepId];
+        if (!step) return;
+        const isGoogle = n.stepId.startsWith('g') || n.stepId === 's3' || n.stepId === 's4';
+        const isReminder = step.title.toLowerCase().includes('reminder');
+        const unitId = `abh-${auto.id}-${n.stepId}`;
+        html += `<div class="abh-msg" id="${unitId}" role="button" tabindex="0"
+          onclick="openAbhDrawer('${flowKey}','${auto.id}','${n.stepId}')"
+          onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openAbhDrawer('${flowKey}','${auto.id}','${n.stepId}');}">
+          <div class="abh-msg-head">
+            <div class="abh-msg-icon">
+              ${isGoogle
+                ? `<svg width="12" height="12" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>`
+                : `<svg width="11" height="10" viewBox="0 0 13 11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="0.75" y="0.75" width="11.5" height="9.5" rx="1.5"/><path d="M0.75 3L6.5 6.5 12.25 3"/></svg>`}
+            </div>
+            <span class="abh-msg-step">${isReminder ? 'Reminder' : 'Initial send'}</span>
+            <div class="abh-msg-channels"><span class="abh-ch">Em</span><span class="abh-ch">Sm</span></div>
           </div>
-          <div class="sms-thumb-bubble">${msg.smsText.slice(0, 65)}${msg.smsText.length > 65 ? '…' : ''}</div>
-          <div class="sms-thumb-bar w80"></div>
-          <div class="sms-thumb-bar w60"></div>
-          <div class="thumb-edit-overlay" style="border-radius:4px">
-            <button class="thumb-edit-btn" onclick="event.stopPropagation();openPreview('${flowId}','${ch}',${mi})">
-              <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 1.5l2 2-6 6H1.5v-2l6-6z"/></svg>
-              Edit
-            </button>
+          <div class="abh-msg-title">${step.title}</div>
+          <div class="abh-msg-subject">${step.subject}</div>
+          <div class="abh-msg-edit">
+            <svg width="10" height="10" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 1.5l2 2-6 6H1.5v-2l6-6z"/></svg>
+            Preview &amp; edit
           </div>
         </div>`;
       }
-
-      html += `<div class="thumb-label">${subjectText}</div></div>`;
     });
-
-    html += `</div>`;
+    // end pip
+    html += `<div class="abh-end"><div class="abh-end-dot"></div></div>`;
+    html += `</div>`; // .abh-seq
+    html += `</div>`; // .abh-flowblock
   });
 
-  grid.innerHTML = html;
+  wrap.innerHTML = html;
+  state.abhActiveStep = null;
 }
 
-function emailThumbHtml(msg, meta) {
-  return `<div style="background:white;font-family:Inter,sans-serif;padding:20px 16px;text-align:center;color:#111827">
-    <div style="width:52px;height:52px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:26px">🔧</div>
-    <div style="font-size:16px;font-weight:700;margin-bottom:16px">Tomer's Rental</div>
-    <div style="background:#f9fafb;border-radius:10px;padding:18px 14px;margin-bottom:14px">
-      <div style="font-size:18px;font-weight:700;margin-bottom:8px">How was your experience?</div>
-      <div style="font-size:24px;letter-spacing:3px;margin-bottom:10px">⭐⭐⭐⭐⭐</div>
-      <div style="font-size:14px;color:#6b7280;line-height:1.5;margin-bottom:14px">${msg.body}</div>
-      <div style="display:inline-block;padding:11px 24px;border-radius:7px;font-size:14px;font-weight:600;color:white;background:${msg.ctaColor}">${msg.cta}</div>
-    </div>
-    <div style="font-size:13px;color:#9ca3af;line-height:1.6;margin-bottom:8px">Thank you for choosing Tomer's Rental!<br>This email was sent because you recently visited.</div>
-    <div style="font-size:12px;color:#d1d5db">© 2025 Tomer's Rental. All rights reserved</div>
-    <div style="margin-top:12px;padding-top:10px;border-top:1px solid #e5e7eb;font-size:11px;color:#d1d5db">1881 Oak Ave, Evanston, IL, 60201</div>
-  </div>`;
+// Drawer state
+const abhDrawerState = {
+  open: false,
+  flowKey: null,
+  autoId: null,
+  stepId: null,
+  channel: 'email',
+};
+
+function openAbhDrawer(flowKey, autoId, stepId) {
+  abhDrawerState.flowKey = flowKey;
+  abhDrawerState.autoId = autoId;
+  abhDrawerState.stepId = stepId;
+  abhDrawerState.open = true;
+  // Deactivate previous
+  document.querySelectorAll('.abh-msg.abh-active').forEach(el => el.classList.remove('abh-active'));
+  const unitId = `abh-${autoId}-${stepId}`;
+  const unit = document.getElementById(unitId);
+  if (unit) unit.classList.add('abh-active');
+  renderAbhDrawer();
+  document.getElementById('abh-drawer-overlay').classList.add('open');
 }
 
-function setChannel(ch) {
-  state.previewChannel = ch;
-  document.getElementById('toggle-email').classList.toggle('active', ch === 'email');
-  document.getElementById('toggle-sms').classList.toggle('active', ch === 'sms');
-  closePreview();
-  renderGrid();
+function closeAbhDrawer() {
+  abhDrawerState.open = false;
+  document.getElementById('abh-drawer-overlay').classList.remove('open');
+  document.querySelectorAll('.abh-msg.abh-active').forEach(el => el.classList.remove('abh-active'));
 }
 
-function openPreview(flowId, ch, mi) {
-  if (state.previewActiveUnit) {
-    const prev = document.getElementById(`unit-${state.previewActiveUnit}`);
-    if (prev) prev.classList.remove('active');
-  }
-  const unitId = `${flowId}-${ch}-${mi}`;
-  state.previewActiveUnit = unitId;
-  const unit = document.getElementById(`unit-${unitId}`);
-  if (unit) unit.classList.add('active');
+function setAbhChannel(ch) {
+  abhDrawerState.channel = ch;
+  renderAbhDrawer();
+}
 
-  const msg = MSGS[flowId][ch][mi];
-  const meta = FLOWS_META[flowId];
+function renderAbhDrawer() {
+  const { flowKey, autoId, stepId, channel } = abhDrawerState;
+  const flow = PREVIEW_FLOWS[flowKey];
+  if (!flow) return;
+  const step = flow.steps[stepId];
+  if (!step) return;
 
-  document.getElementById('preview-title').textContent =
-    `${msg.seqLabel} — ${ch === 'email' ? 'Email' : 'SMS'}`;
-  document.getElementById('preview-subtitle').textContent =
-    `${meta.name} · Tomer's Rental`;
+  // Build all message stepIds in sequence order for this automation
+  const auto = flow.automations.find(a => a.id === autoId);
+  const allStepIds = auto ? auto.nodes.filter(n => n.type === 'message').map(n => n.stepId) : [];
+  const currentIdx = allStepIds.indexOf(stepId);
 
-  const body = document.getElementById('preview-body');
+  document.getElementById('abh-drawer-eyebrow').textContent = `Message ${currentIdx + 1} of ${allStepIds.length}`;
+  document.getElementById('abh-drawer-title').textContent = step.title;
+  document.getElementById('abh-drawer-sub').textContent = step.sub;
 
-  if (ch === 'email') {
-    body.innerHTML = `
-      <div class="email-preview-full">
-        <div class="email-preview-meta">
-          <div class="meta-row"><span class="meta-label">From</span><span class="meta-value">Tomer's Rental &lt;hello@tomersrental.com&gt;</span></div>
-          <div class="meta-row"><span class="meta-label">To</span><span class="meta-value">Jane Smith &lt;jane@example.com&gt;</span></div>
-          <div class="meta-row"><span class="meta-label">Re</span><span class="meta-value">${msg.subject}</span></div>
-        </div>
-        <div class="email-preview-body">
-          <div class="email-preview-body-inner">
-            <div class="ep-logo">🔧</div>
-            <div class="ep-biz-name">Tomer's Rental</div>
-            <div class="ep-card">
-              <h2>How was your experience?</h2>
-              <div class="ep-stars">⭐⭐⭐⭐⭐</div>
-              <p class="ep-body-text">${msg.body}</p>
-              <a href="#" class="ep-cta" style="background:${msg.ctaColor}" onclick="return false">${msg.cta}</a>
-            </div>
-            <p style="font-size:12px;color:#9ca3af;line-height:1.7;margin-bottom:8px">Thank you for choosing Tomer's Rental!<br>This email was sent because you recently visited our business.</p>
-            <p style="font-size:11px;color:#d1d5db">© 2025 Tomer's Rental. All rights reserved</p>
+  // Nav pills
+  const pills = allStepIds.map((sid, i) => {
+    const s = flow.steps[sid];
+    const label = s.title.toLowerCase().includes('reminder') ? 'Reminder' : 'Initial';
+    return `<button class="abh-nav-pill${sid === stepId ? ' on' : ''}" onclick="openAbhDrawer('${flowKey}','${autoId}','${sid}')">${label}</button>`;
+  }).join('');
+  document.getElementById('abh-drawer-pills').innerHTML = pills;
+
+  // Nav buttons
+  document.getElementById('abh-drawer-prev').disabled = currentIdx === 0;
+  document.getElementById('abh-drawer-next').disabled = currentIdx === allStepIds.length - 1;
+  document.getElementById('abh-drawer-prev').onclick = () => {
+    if (currentIdx > 0) openAbhDrawer(flowKey, autoId, allStepIds[currentIdx - 1]);
+  };
+  document.getElementById('abh-drawer-next').onclick = () => {
+    if (currentIdx < allStepIds.length - 1) openAbhDrawer(flowKey, autoId, allStepIds[currentIdx + 1]);
+  };
+
+  // Channel toggle
+  document.getElementById('abh-ch-email').classList.toggle('on', channel === 'email');
+  document.getElementById('abh-ch-sms').classList.toggle('on', channel === 'sms');
+
+  // Body
+  const body = document.getElementById('abh-drawer-body');
+  if (channel === 'email') {
+    body.innerHTML = `<div class="abh-email-preview">
+      <div class="abh-email-header">
+        <div class="abh-email-from">From: Tomer's Rental &lt;noreply@tomersrental.com&gt;</div>
+        <div class="abh-email-subject">${step.subject}</div>
+      </div>
+      <div class="abh-email-body">
+        <div class="abh-email-logo">🔧</div>
+        <div class="abh-email-biz">Tomer's Rental</div>
+        <div class="abh-email-card">
+          <div class="abh-email-card-body">${step.body.replace(/\n/g, '<br>')}</div>
+          <div style="text-align:center">
+            <span class="abh-email-cta" style="background:${step.ctaColor}">${step.cta}</span>
           </div>
-          <div class="ep-footer">Business Address 1881 Oak Ave, Evanston, IL, 60201, US</div>
         </div>
-      </div>`;
+        <div class="abh-email-footer">
+          Thank you for choosing Tomer's Rental!<br>
+          <span style="color:#d1d5db">Unsubscribe · 1881 Oak Ave, Evanston, IL, 60201</span>
+        </div>
+      </div>
+    </div>`;
   } else {
-    body.innerHTML = `
-      <div class="sms-preview-full">
-        <p style="font-size:12px;color:var(--color-text-muted);margin-bottom:16px">SMS message preview</p>
-        <div class="sms-bubble">${msg.smsText}</div>
-        <p style="font-size:11px;color:var(--color-text-muted);margin-top:20px;line-height:1.6">Standard SMS rates may apply. Sent via your configured SMS sender.</p>
-      </div>`;
+    body.innerHTML = `<div class="abh-sms-preview">
+      <div class="abh-sms-bubble">${step.sms}</div>
+      <div class="abh-sms-meta">Tomer's Rental · SMS</div>
+    </div>`;
   }
-
-  document.getElementById('preview-overlay').classList.add('open');
-}
-
-function closePreview() {
-  document.getElementById('preview-overlay').classList.remove('open');
-  if (state.previewActiveUnit) {
-    const u = document.getElementById(`unit-${state.previewActiveUnit}`);
-    if (u) u.classList.remove('active');
-    state.previewActiveUnit = null;
-  }
-}
-
-function maybeClose(e) {
-  if (e.target === document.getElementById('preview-overlay')) closePreview();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -2181,7 +2504,7 @@ function setScenario(key) {
 
   if (isStep3) {
     modal.classList.remove('wide');
-    closePreview();
+    closeAbhDrawer();
     const steps = getSteps();
     const step3Idx = steps.findIndex(s => s.id === 'step3');
     if (step3Idx !== -1) state.currentStep = step3Idx;
@@ -2209,8 +2532,6 @@ function setScenario(key) {
     if (previewIdx !== -1) state.currentStep = previewIdx;
 
     document.getElementById('panel-step6').classList.add('active');
-    document.getElementById('toggle-email').classList.toggle('active', state.previewChannel === 'email');
-    document.getElementById('toggle-sms').classList.toggle('active', state.previewChannel === 'sms');
     document.getElementById('footer-hint').style.display = 'none';
     document.getElementById('btn-previous').style.display = 'inline-flex';
     document.getElementById('btn-next').textContent = 'Save Changes';
@@ -2218,7 +2539,7 @@ function setScenario(key) {
     renderGrid();
   } else {
     modal.classList.remove('wide');
-    closePreview();
+    closeAbhDrawer();
 
     if (key === 'step1') {
       document.querySelectorAll('.flow-card').forEach(c => {
@@ -2288,7 +2609,7 @@ function toggleAnnotations() {
 // KEYBOARD
 // ═══════════════════════════════════════════════════════════════════════════
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closePreview();
+  if (e.key === 'Escape') closeAbhDrawer();
   if (e.key === 'Enter' || e.key === ' ') {
     const el = document.activeElement;
     if (el && el.classList.contains('flow-card')) {
