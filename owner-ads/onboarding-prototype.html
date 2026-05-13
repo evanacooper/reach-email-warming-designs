@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Owner Ads — Onboarding Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --primary: hsl(210 30% 25%);
+  --bg: hsl(220 13% 97%);
+  --fg: hsl(225 15% 16%);
+  --muted-fg: hsl(220 10% 45%);
+  --subtle-fg: hsl(220 10% 35%);
+  --border: hsl(220 13% 90%);
+  --border-strong: hsl(220 13% 82%);
+  --card: hsl(0 0% 100%);
+  --shell: hsl(220 14% 96%);
+  --field: hsl(0 0% 100%);
+  --radius: 0.625rem;
+
+  /* Owner brand palette */
+  --owner: hsl(142 70% 32%);
+  --owner-strong: hsl(142 72% 26%);
+  --owner-bg: hsl(142 76% 96%);
+  --owner-bg-2: hsl(142 65% 92%);
+  --owner-border: hsl(142 55% 78%);
+  --owner-fg-on-bg: hsl(142 72% 22%);
+
+  --amber: hsl(38 92% 50%);
+  --amber-bg: hsl(38 100% 96%);
+  --amber-border: hsl(38 90% 80%);
+  --amber-fg: hsl(28 85% 35%);
+
+  --red: hsl(0 72% 50%);
+  --red-bg: hsl(0 86% 97%);
+  --red-border: hsl(0 75% 88%);
+  --red-fg: hsl(0 70% 38%);
+
+  --blue: hsl(217 91% 50%);
+  --blue-fg: hsl(217 80% 36%);
+}
+
+html, body {
+  min-height: 100%;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--fg);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Top "back to project" link ── */
+.back-link {
+  position: fixed; top: 12px; left: 12px; z-index: 9999;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500;
+  color: #64748b; background: white; border: 1px solid #e2e8f0;
+  padding: 5px 11px; border-radius: 6px; text-decoration: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.back-link:hover { color: #1e293b; background: #f8fafc; }
+
+/* ── Owner shell chrome (the surrounding partner app) ── */
+.shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: 56px 1fr;
+}
+
+.shell-top {
+  background: white;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 20px;
+  gap: 20px;
+  position: sticky; top: 0; z-index: 50;
+}
+.brand {
+  display: flex; align-items: center; gap: 9px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800; letter-spacing: -.01em; font-size: 15px;
+  color: var(--owner-strong);
+}
+.brand-mark {
+  width: 26px; height: 26px;
+  background: var(--owner); color: white;
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800;
+}
+.shell-nav {
+  display: flex; gap: 2px; font-size: 13px;
+}
+.shell-nav-item {
+  padding: 8px 12px; border-radius: 6px;
+  color: var(--muted-fg); font-weight: 500;
+}
+.shell-nav-item.active { background: var(--owner-bg); color: var(--owner-fg-on-bg); }
+.shell-spacer { flex: 1; }
+.shell-right {
+  display: flex; align-items: center; gap: 14px;
+  font-size: 13px; color: var(--muted-fg);
+}
+.shell-loc {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border: 1px solid var(--border); border-radius: 7px;
+}
+.shell-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, #f5a623, #e63946);
+  color: white; font-weight: 700; font-size: 11px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── Onboarding container ── */
+.flow {
+  max-width: 880px; margin: 0 auto; padding: 32px 24px 80px;
+  width: 100%;
+}
+
+/* ── Step header / stepper ── */
+.flow-head {
+  margin-bottom: 24px;
+}
+.flow-eyebrow {
+  font-size: 11.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--owner-fg-on-bg); margin-bottom: 8px;
+}
+.flow-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 28px; font-weight: 800; letter-spacing: -.02em; line-height: 1.15;
+  margin-bottom: 8px;
+}
+.flow-subtitle {
+  font-size: 15px; color: var(--muted-fg); line-height: 1.55;
+  max-width: 620px;
+}
+
+.stepper {
+  display: flex; align-items: center; gap: 0;
+  margin: 24px 0 28px;
+  background: white; border: 1px solid var(--border); border-radius: 999px;
+  padding: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.stepper::-webkit-scrollbar { display: none; }
+
+.stepper-item {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 12px; border-radius: 999px;
+  font-size: 12px; font-weight: 600;
+  color: var(--muted-fg); cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s, color .15s;
+  border: none; background: transparent; font-family: inherit;
+}
+.stepper-item:hover { color: var(--fg); background: hsl(220 14% 96%); }
+.stepper-item.done { color: var(--owner-fg-on-bg); }
+.stepper-item.done .stepper-dot {
+  background: var(--owner); border-color: var(--owner); color: white;
+}
+.stepper-item.active {
+  background: var(--owner-bg); color: var(--owner-fg-on-bg);
+}
+.stepper-item.active .stepper-dot {
+  background: var(--owner); border-color: var(--owner); color: white;
+}
+.stepper-dot {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: white; border: 1.5px solid var(--border-strong);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700;
+  color: var(--muted-fg);
+}
+
+/* ── Step body ── */
+.step { display: none; }
+.step.active { display: block; }
+
+.step-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px 32px 32px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03), 0 6px 24px rgba(15, 30, 22, 0.04);
+}
+
+.step-card h2 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 22px; font-weight: 800; letter-spacing: -.015em; line-height: 1.2;
+  margin-bottom: 6px;
+}
+.step-card p.lead {
+  font-size: 14.5px; color: var(--subtle-fg); line-height: 1.55;
+  margin-bottom: 22px; max-width: 640px;
+}
+
+/* Goal cards (step 1) */
+.goal-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  margin-bottom: 8px;
+}
+.goal-card {
+  background: var(--field);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 18px 16px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: border-color .15s, background .15s, transform .12s;
+}
+.goal-card:hover { border-color: var(--owner-border); transform: translateY(-1px); }
+.goal-card.selected {
+  border-color: var(--owner);
+  background: var(--owner-bg);
+}
+.goal-card.selected .goal-icon {
+  background: var(--owner); color: white;
+}
+.goal-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--owner-bg); color: var(--owner-strong);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 14px; font-size: 18px;
+}
+.goal-name {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700; font-size: 15px; margin-bottom: 4px;
+}
+.goal-desc {
+  font-size: 12.5px; color: var(--muted-fg); line-height: 1.45;
+}
+
+/* Prior-ads gate (step 1.5) — needs to feel weighty */
+.warning-callout {
+  background: var(--amber-bg);
+  border: 1px solid var(--amber-border);
+  border-left: 4px solid var(--amber);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin: 18px 0;
+  display: grid; grid-template-columns: 26px 1fr; gap: 12px;
+  align-items: start;
+}
+.warning-callout .icon {
+  color: var(--amber-fg);
+  display: flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px;
+  background: white; border: 1px solid var(--amber-border); border-radius: 50%;
+  font-weight: 700;
+}
+.warning-callout .body { font-size: 13.5px; color: var(--amber-fg); line-height: 1.55; }
+.warning-callout .body strong { color: hsl(28 90% 25%); font-weight: 700; }
+
+.choice-stack {
+  display: flex; flex-direction: column; gap: 10px;
+  margin-bottom: 6px;
+}
+.choice-card {
+  display: grid; grid-template-columns: 24px 1fr;
+  gap: 12px; align-items: start;
+  padding: 16px 18px;
+  background: var(--field);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: inherit; text-align: left;
+  transition: border-color .15s, background .15s;
+  width: 100%;
+}
+.choice-card:hover { border-color: var(--owner-border); }
+.choice-card.selected { border-color: var(--owner); background: var(--owner-bg); }
+.choice-radio {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 2px solid var(--border-strong);
+  margin-top: 2px;
+  position: relative;
+  flex-shrink: 0;
+}
+.choice-card.selected .choice-radio {
+  border-color: var(--owner);
+}
+.choice-card.selected .choice-radio::after {
+  content: ""; position: absolute; inset: 3px;
+  background: var(--owner); border-radius: 50%;
+}
+.choice-card .label {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700; font-size: 15px; margin-bottom: 3px;
+}
+.choice-card .sub {
+  font-size: 13px; color: var(--muted-fg); line-height: 1.45;
+}
+
+.pause-block {
+  margin-top: 18px;
+  padding: 18px;
+  background: var(--shell);
+  border-radius: 10px;
+  border: 1px dashed var(--border-strong);
+  display: none;
+}
+.pause-block.visible { display: block; }
+.pause-block h4 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px; font-weight: 700; margin-bottom: 8px;
+}
+.pause-block ol {
+  margin: 0 0 14px 18px; font-size: 13px; color: var(--subtle-fg); line-height: 1.7;
+}
+.pause-confirm {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  background: white; border: 1px solid var(--border); border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.pause-confirm input[type="checkbox"] {
+  width: 18px; height: 18px;
+  accent-color: var(--owner);
+}
+
+/* GBP connect card */
+.gbp-card {
+  background: var(--shell);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 14px;
+}
+.gbp-logo {
+  width: 56px; height: 56px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  margin: 0 auto 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800;
+  font-size: 26px;
+  background-image: conic-gradient(from 0deg, #4285f4 0deg 90deg, #34a853 90deg 180deg, #fbbc05 180deg 270deg, #ea4335 270deg 360deg);
+  color: white;
+}
+.gbp-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 17px; font-weight: 700; margin-bottom: 6px;
+}
+.gbp-sub {
+  font-size: 13.5px; color: var(--muted-fg); margin-bottom: 18px;
+  line-height: 1.55; max-width: 460px; margin-left: auto; margin-right: auto;
+}
+
+.gbp-connected {
+  display: none;
+  background: var(--owner-bg);
+  border: 1px solid var(--owner-border);
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 14px;
+}
+.gbp-connected.visible { display: block; }
+.gbp-conn-head {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 14px;
+}
+.gbp-conn-icon {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--owner); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800;
+}
+.gbp-conn-text { flex: 1; }
+.gbp-conn-text .biz {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700; font-size: 15px;
+}
+.gbp-conn-text .addr {
+  font-size: 12.5px; color: var(--owner-fg-on-bg);
+}
+.gbp-conn-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  padding-top: 14px; border-top: 1px solid var(--owner-border);
+}
+.gbp-conn-stat {
+  font-size: 12px; color: var(--owner-fg-on-bg);
+}
+.gbp-conn-stat strong {
+  display: block; font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 18px; font-weight: 700; color: var(--owner-strong);
+  margin-bottom: 1px;
+}
+
+/* Field grouping */
+.field {
+  margin-bottom: 16px;
+}
+.field-label {
+  display: block;
+  font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+  color: var(--muted-fg);
+  margin-bottom: 6px;
+}
+.field-label .sub {
+  font-weight: 500; text-transform: none; letter-spacing: 0; color: var(--muted-fg);
+}
+.input, textarea.input {
+  width: 100%;
+  background: var(--field);
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
+  padding: 10px 12px;
+  font-size: 14px; font-family: inherit; color: var(--fg);
+  transition: border-color .15s;
+  resize: vertical;
+}
+.input:focus, textarea.input:focus {
+  outline: none; border-color: var(--owner);
+  box-shadow: 0 0 0 3px var(--owner-bg-2);
+}
+.input.with-prefix {
+  padding-left: 36px;
+}
+.input-wrap { position: relative; }
+.input-prefix {
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  color: var(--muted-fg); font-size: 14px;
+  pointer-events: none;
+}
+.field-help {
+  font-size: 12.5px; color: var(--muted-fg); margin-top: 6px; line-height: 1.5;
+}
+
+.two-col {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+}
+
+/* Service area visual */
+.area-card {
+  background: var(--shell);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  display: grid; grid-template-columns: 120px 1fr; gap: 16px; align-items: center;
+}
+.area-map {
+  width: 120px; height: 120px; border-radius: 10px;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(10,138,60,0.15) 0%, rgba(10,138,60,0.15) 40%, transparent 41%),
+    radial-gradient(circle at 50% 50%, rgba(10,138,60,0.6) 0%, rgba(10,138,60,0.6) 4px, transparent 5px),
+    linear-gradient(135deg, hsl(120 15% 92%), hsl(140 12% 88%));
+  border: 1px solid var(--border);
+  position: relative;
+}
+.area-info .where { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+.area-info .addr { font-size: 12.5px; color: var(--muted-fg); margin-bottom: 12px; }
+.radius-row { display: flex; align-items: center; gap: 10px; }
+.radius-row input[type="range"] { flex: 1; accent-color: var(--owner); }
+.radius-value {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700; font-size: 14px;
+  min-width: 60px;
+}
+
+/* Vertical detection chip (step 4) */
+.detected-vertical {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 5px 10px;
+  background: var(--owner-bg);
+  border: 1px solid var(--owner-border);
+  color: var(--owner-fg-on-bg);
+  font-size: 12.5px; font-weight: 600;
+  border-radius: 999px;
+  margin-bottom: 14px;
+}
+
+/* Budget slider (step 5) */
+.budget-display {
+  display: flex; align-items: baseline; justify-content: space-between;
+  background: var(--shell);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 16px;
+}
+.budget-display .amt {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 36px; font-weight: 800; letter-spacing: -.02em; color: var(--fg);
+}
+.budget-display .amt small {
+  font-size: 14px; font-weight: 500; color: var(--muted-fg); margin-left: 4px;
+}
+.budget-display .rec {
+  font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em;
+  background: var(--owner-bg); color: var(--owner-fg-on-bg);
+  border: 1px solid var(--owner-border);
+  padding: 4px 10px; border-radius: 999px;
+}
+
+.budget-slider {
+  width: 100%; accent-color: var(--owner);
+  height: 4px;
+}
+.budget-scale {
+  display: flex; justify-content: space-between;
+  margin-top: 10px; font-size: 11.5px; color: var(--muted-fg);
+}
+.budget-projection {
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 13.5px; line-height: 1.55; color: var(--subtle-fg);
+}
+.budget-projection strong { color: var(--fg); font-weight: 600; }
+
+/* Step 6 — ad preview */
+.review-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.headlines-stack { display: flex; flex-direction: column; gap: 8px; }
+.headline-line {
+  display: grid; grid-template-columns: 1fr 28px; gap: 6px;
+  align-items: center;
+}
+.headline-line .input { font-size: 13.5px; }
+.regen-btn {
+  width: 28px; height: 28px; border-radius: 7px;
+  background: white;
+  border: 1px solid var(--border);
+  color: var(--owner);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  transition: background .15s;
+}
+.regen-btn:hover { background: var(--owner-bg); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px;
+  background: white;
+  border: 1px solid var(--owner-border);
+  color: var(--owner-fg-on-bg);
+  border-radius: 999px;
+  font-size: 12px; font-weight: 600;
+}
+.chip .x { color: var(--muted-fg); cursor: pointer; }
+.add-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px;
+  background: var(--shell);
+  border: 1px dashed var(--border-strong);
+  color: var(--muted-fg);
+  border-radius: 999px;
+  font-size: 12px; font-weight: 600;
+  cursor: pointer;
+}
+
+.preview-pane {
+  background: var(--shell);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+}
+.preview-eyebrow {
+  font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted-fg); margin-bottom: 12px;
+}
+
+.search-ad {
+  background: white; border-radius: 10px; padding: 14px;
+  margin-bottom: 12px;
+  border: 1px solid hsl(220 13% 95%);
+}
+.search-ad-head {
+  display: grid; grid-template-columns: auto auto 1fr; gap: 8px; align-items: center;
+  margin-bottom: 8px;
+}
+.search-sponsored { font-size: 11px; font-weight: 700; color: var(--fg); }
+.search-favicon {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: linear-gradient(135deg, #f5a623, #e63946); color: white; font-weight: 800;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 11px;
+}
+.search-domain { font-size: 12.5px; color: var(--fg); font-weight: 600; }
+.search-domain-sub { font-size: 11px; color: var(--muted-fg); }
+.search-headline {
+  color: #1a0dab; font-size: 16px; line-height: 1.25; margin-bottom: 4px; font-weight: 500;
+}
+.search-desc { color: #4d5156; font-size: 12.5px; line-height: 1.4; margin-bottom: 8px; }
+.search-sitelinks { display: flex; gap: 12px; font-size: 11.5px; color: #1a73e8; }
+
+.map-card {
+  background: white;
+  border-radius: 10px;
+  padding: 12px;
+  border: 1px solid hsl(220 13% 95%);
+}
+.map-card-head { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; margin-bottom: 10px; }
+.map-pin-mini { width: 10px; height: 14px; background: #ea4335; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: inline-block; }
+.map-card-title { font-weight: 700; font-size: 13px; }
+.map-card-meta { font-size: 11px; color: var(--muted-fg); }
+.map-card-badge {
+  font-size: 10px; text-transform: uppercase; letter-spacing: .06em;
+  background: hsl(220 13% 94%); color: var(--subtle-fg);
+  padding: 3px 8px; border-radius: 999px; font-weight: 700;
+}
+.map-card-row { display: flex; gap: 6px; }
+.map-card-action {
+  flex: 1; text-align: center;
+  background: hsl(220 13% 96%); color: var(--subtle-fg);
+  font-size: 11px; font-weight: 600;
+  padding: 6px 0; border-radius: 999px;
+}
+.map-card-action.primary { background: var(--owner); color: white; }
+
+/* AI write banner */
+.ai-banner {
+  display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center;
+  padding: 14px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, hsl(142 60% 96%), hsl(180 50% 96%));
+  border: 1px dashed var(--owner-border);
+  margin: 12px 0 18px;
+}
+.ai-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--owner), hsl(170 60% 40%));
+  color: white; font-weight: 800; font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
+}
+.ai-banner-title { font-weight: 700; font-size: 14px; }
+.ai-banner-sub { color: var(--subtle-fg); font-size: 12.5px; line-height: 1.45; }
+.ai-banner-btn {
+  background: var(--owner); color: white;
+  padding: 9px 14px; border-radius: 9px;
+  font-size: 13px; font-weight: 700;
+  border: none; cursor: pointer; font-family: inherit;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.ai-banner-btn:hover { background: var(--owner-strong); }
+
+/* Step 7 — launch */
+.launch-card {
+  text-align: center;
+  padding: 40px 20px 32px;
+}
+.launch-emoji {
+  font-size: 56px; line-height: 1;
+  margin-bottom: 12px;
+  display: inline-block;
+  animation: launch-float 2.4s ease-in-out infinite;
+}
+@keyframes launch-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.launch-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 28px; font-weight: 800; letter-spacing: -.02em;
+  margin-bottom: 8px;
+}
+.launch-sub {
+  font-size: 15px; color: var(--muted-fg); line-height: 1.55;
+  max-width: 480px; margin: 0 auto 28px;
+}
+
+.timeline {
+  background: var(--shell);
+  border-radius: 14px;
+  padding: 22px;
+  margin: 0 auto 24px;
+  max-width: 640px;
+  text-align: left;
+  border: 1px solid var(--border);
+}
+.timeline-head {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700; font-size: 14px; margin-bottom: 14px;
+}
+.timeline-track {
+  position: relative;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
+  padding: 0 12px;
+}
+.timeline-track::before {
+  content: ""; position: absolute; top: 8px; left: 12px; right: 12px; height: 2px;
+  background: linear-gradient(90deg, var(--owner) 12%, var(--border) 12%);
+  border-radius: 2px;
+}
+.timeline-step { position: relative; }
+.timeline-step .dot {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: white; border: 2px solid var(--border-strong);
+  margin: 0 auto 10px; position: relative; z-index: 2;
+}
+.timeline-step.now .dot {
+  background: var(--owner); border-color: var(--owner);
+  box-shadow: 0 0 0 4px var(--owner-bg);
+}
+.timeline-step .week {
+  text-align: center; font-size: 11px; font-weight: 700; letter-spacing: .04em;
+  color: var(--muted-fg); text-transform: uppercase; margin-bottom: 2px;
+}
+.timeline-step.now .week { color: var(--owner-strong); }
+.timeline-step .what {
+  text-align: center; font-size: 11.5px; color: var(--subtle-fg);
+  line-height: 1.4;
+}
+
+.launch-expectations {
+  font-size: 13.5px; color: var(--subtle-fg);
+  max-width: 580px; margin: 0 auto 28px; line-height: 1.6;
+  text-align: left;
+  background: white; border: 1px solid var(--border); border-radius: 10px;
+  padding: 16px 18px;
+}
+.launch-expectations strong { color: var(--fg); font-weight: 600; }
+
+/* Footer / nav buttons */
+.flow-footer {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 24px;
+}
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 14px; font-weight: 600;
+  border: 1px solid var(--border);
+  background: white; color: var(--fg);
+  cursor: pointer; font-family: inherit;
+  transition: background .15s, border-color .15s, transform .1s;
+  text-decoration: none;
+}
+.btn:hover { background: var(--shell); }
+.btn.primary {
+  background: var(--owner); color: white; border-color: var(--owner);
+}
+.btn.primary:hover { background: var(--owner-strong); border-color: var(--owner-strong); }
+.btn.primary:disabled, .btn:disabled {
+  opacity: 0.45; cursor: not-allowed;
+}
+.btn.ghost { border: none; background: transparent; color: var(--muted-fg); }
+.btn.ghost:hover { background: var(--shell); color: var(--fg); }
+.btn.large { padding: 12px 24px; font-size: 14.5px; }
+
+/* Modal overlay (success state after launch) */
+.confetti-layer {
+  position: fixed; inset: 0; pointer-events: none; z-index: 60;
+  overflow: hidden;
+  display: none;
+}
+.confetti-layer.on { display: block; }
+.confetti-piece {
+  position: absolute; top: -20px;
+  width: 8px; height: 12px;
+  border-radius: 2px;
+  animation: confetti-fall 3.2s linear forwards;
+}
+@keyframes confetti-fall {
+  0% { transform: translateY(0) rotate(0); opacity: 1; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: 0.4; }
+}
+
+/* Empty / disabled controls */
+.checkbox-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px 14px;
+  background: var(--field);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+.checkbox-row input[type="checkbox"] {
+  margin-top: 1px;
+  width: 18px; height: 18px;
+  accent-color: var(--owner);
+  flex-shrink: 0;
+}
+.checkbox-row .label { font-weight: 600; font-size: 13.5px; }
+.checkbox-row .sub { font-size: 12.5px; color: var(--muted-fg); margin-top: 2px; }
+
+/* Responsive */
+@media (max-width: 720px) {
+  .goal-grid, .review-grid, .two-col { grid-template-columns: 1fr; }
+  .area-card { grid-template-columns: 1fr; }
+  .area-map { width: 100%; height: 140px; }
+  .shell-top { padding: 0 12px; }
+  .shell-nav { display: none; }
+  .step-card { padding: 22px; }
+  .timeline-track { padding: 0; }
+}
+</style>
+</head>
+<body>
+
+<a class="back-link" href="index.html">
+  <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M8 2L3 6.5l5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  Owner Ads project
+</a>
+
+<div class="shell">
+  <header class="shell-top">
+    <div class="brand"><span class="brand-mark">O</span>Owner</div>
+    <nav class="shell-nav">
+      <span class="shell-nav-item">Orders</span>
+      <span class="shell-nav-item">Menu</span>
+      <span class="shell-nav-item">Customers</span>
+      <span class="shell-nav-item active">Marketing</span>
+      <span class="shell-nav-item">Settings</span>
+    </nav>
+    <div class="shell-spacer"></div>
+    <div class="shell-right">
+      <div class="shell-loc">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1.5C4 1.5 2.5 3 2.5 5c0 2.5 3.5 5.5 3.5 5.5s3.5-3 3.5-5.5c0-2-1.5-3.5-3.5-3.5z" stroke="currentColor" stroke-width="1.3"/><circle cx="6" cy="5" r="1.3" stroke="currentColor" stroke-width="1.3"/></svg>
+        318 Court St
+      </div>
+      <div class="shell-avatar">J</div>
+    </div>
+  </header>
+
+  <main class="flow">
+
+    <div class="flow-head">
+      <div class="flow-eyebrow">Owner Ads · New campaign</div>
+      <h1 class="flow-title">Let's get your restaurant in front of more customers.</h1>
+      <p class="flow-subtitle">A few quick questions and your ad goes live on Google Search and Google Maps. We'll do the rest.</p>
+    </div>
+
+    <!-- Stepper -->
+    <nav class="stepper" id="stepper">
+      <button class="stepper-item active" data-step="1"><span class="stepper-dot">1</span>Goal</button>
+      <button class="stepper-item" data-step="2"><span class="stepper-dot">2</span>Existing ads</button>
+      <button class="stepper-item" data-step="3"><span class="stepper-dot">3</span>Google Business</button>
+      <button class="stepper-item" data-step="4"><span class="stepper-dot">4</span>Where you serve</button>
+      <button class="stepper-item" data-step="5"><span class="stepper-dot">5</span>About you</button>
+      <button class="stepper-item" data-step="6"><span class="stepper-dot">6</span>Budget</button>
+      <button class="stepper-item" data-step="7"><span class="stepper-dot">7</span>Review your ad</button>
+      <button class="stepper-item" data-step="8"><span class="stepper-dot">8</span>Launch</button>
+    </nav>
+
+    <!-- ─────────────── STEP 1: Goal ─────────────── -->
+    <section class="step active" data-step="1">
+      <div class="step-card">
+        <h2>What do you want more of?</h2>
+        <p class="lead">Pick one. We'll tune your ad to bring you more of what you choose. You can change this anytime later.</p>
+
+        <div class="goal-grid">
+          <button class="goal-card selected" data-goal="online-orders">
+            <div class="goal-icon">🛵</div>
+            <div class="goal-name">More online orders</div>
+            <div class="goal-desc">Show up when people search for delivery and pickup near you.</div>
+          </button>
+          <button class="goal-card" data-goal="dine-in">
+            <div class="goal-icon">🪑</div>
+            <div class="goal-name">More dine-in</div>
+            <div class="goal-desc">Drive walk-in customers and reservations from people nearby.</div>
+          </button>
+          <button class="goal-card" data-goal="both">
+            <div class="goal-icon">🍽️</div>
+            <div class="goal-name">Both</div>
+            <div class="goal-desc">Promote both online orders and dine-in with a balanced campaign.</div>
+          </button>
+        </div>
+      </div>
+
+      <div class="flow-footer">
+        <span></span>
+        <button class="btn primary" onclick="goToStep(2)">Continue
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- ─────────────── STEP 2: Prior ads check ─────────────── -->
+    <section class="step" data-step="2">
+      <div class="step-card">
+        <h2>One quick question before we set things up.</h2>
+        <p class="lead">Are you currently running, or have you ever run, Google ads for your restaurant? This includes ads run by you, a marketing agency, or anyone else on your behalf.</p>
+
+        <div class="choice-stack">
+          <button class="choice-card" data-priorads="never" onclick="pickPrior(this, 'never')">
+            <span class="choice-radio"></span>
+            <div>
+              <div class="label">No, I've never run Google ads</div>
+              <div class="sub">You're starting fresh. We'll handle everything from here.</div>
+            </div>
+          </button>
+          <button class="choice-card" data-priorads="had" onclick="pickPrior(this, 'had')">
+            <span class="choice-radio"></span>
+            <div>
+              <div class="label">I have in the past, but nothing is running now</div>
+              <div class="sub">Great — as long as nothing is currently active in your Google Ads account, we're good to go.</div>
+            </div>
+          </button>
+          <button class="choice-card" data-priorads="running" onclick="pickPrior(this, 'running')">
+            <span class="choice-radio"></span>
+            <div>
+              <div class="label">Yes, I have ads running right now</div>
+              <div class="sub">No problem — but you'll need to pause those campaigns before we launch yours.</div>
+            </div>
+          </button>
+        </div>
+
+        <div class="warning-callout" id="priorads-warning" style="display:none">
+          <span class="icon">!</span>
+          <div class="body">
+            <strong>Why this matters:</strong> If two Google Ads campaigns from the same advertiser run at the same time, they'll compete against each other in the auction. Your ad won't perform well, you'll pay more per click, and in some cases Google may suspend the account. We need to be the only campaign running.
+          </div>
+        </div>
+
+        <div class="pause-block" id="pause-block">
+          <h4>Here's what to do</h4>
+          <ol>
+            <li>Open <strong>Google Ads</strong> (ads.google.com) in a new tab and sign in to the account that's running your campaigns.</li>
+            <li>Go to <strong>Campaigns</strong>. For each active campaign, click the status toggle to pause it.</li>
+            <li>Wait until every campaign shows status <strong>Paused</strong>.</li>
+            <li>Come back here and check the box below.</li>
+          </ol>
+          <label class="pause-confirm">
+            <input type="checkbox" id="pause-confirm-cb" onchange="updatePauseConfirm()">
+            <span><strong>I've paused all of my existing Google Ads campaigns.</strong></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="flow-footer">
+        <button class="btn ghost" onclick="goToStep(1)">← Back</button>
+        <button class="btn primary" id="step2-next" onclick="goToStep(3)" disabled>Continue
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- ─────────────── STEP 3: Google Business Profile ─────────────── -->
+    <section class="step" data-step="3">
+      <div class="step-card">
+        <h2>Connect your Google Business listing.</h2>
+        <p class="lead">This is your restaurant's listing on Google Maps. We'll use your photos, hours, and reviews so your ad looks like you on day one.</p>
+
+        <div class="gbp-card" id="gbp-not-connected">
+          <div class="gbp-logo">G</div>
+          <div class="gbp-title">Sign in with Google</div>
+          <div class="gbp-sub">You'll be redirected to Google to confirm you want to share your Business Profile info. You can disconnect anytime.</div>
+          <button class="btn primary large" onclick="connectGBP()">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="white" stroke-width="1.5"/><path d="M5 8l2 2 4-4" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Connect Google Business
+          </button>
+        </div>
+
+        <div class="gbp-connected" id="gbp-connected">
+          <div class="gbp-conn-head">
+            <div class="gbp-conn-icon">✓</div>
+            <div class="gbp-conn-text">
+              <div class="biz">Junior's Pizzeria</div>
+              <div class="addr">318 Court St, Brooklyn, NY 11231 · ★ 4.7 (1,349 reviews)</div>
+            </div>
+          </div>
+          <div class="gbp-conn-grid">
+            <div class="gbp-conn-stat"><strong>12</strong>Photos pulled in</div>
+            <div class="gbp-conn-stat"><strong>7</strong>Open days/week</div>
+            <div class="gbp-conn-stat"><strong>4.7</strong>Average rating</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-footer">
+        <button class="btn ghost" onclick="goToStep(2)">← Back</button>
+        <button class="btn primary" id="step3-next" onclick="goToStep(4)" disabled>Continue
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- ─────────────── STEP 4: Service area & website ─────────────── -->
+    <section class="step" data-step="4">
+      <div class="step-card">
+        <h2>Where do you serve customers?</h2>
+        <p class="lead">We'll show your ad to people inside this area when they search Google. We pulled your address from your Google Business listing — confirm or change it below.</p>
+
+        <div class="field">
+          <label class="field-label">Your website <span class="sub">(where ad clicks go)</span></label>
+          <div class="input-wrap">
+            <span class="input-prefix">🌐</span>
+            <input class="input with-prefix" type="text" value="juniorspizzeria.com/order" />
+          </div>
+          <div class="field-help">By default we'll send people to your online ordering page. Change this if you'd rather send them somewhere else.</div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Service area</label>
+          <div class="area-card">
+            <div class="area-map"></div>
+            <div class="area-info">
+              <div class="where">Within <span id="radius-text">4</span> miles of your restaurant</div>
+              <div class="addr">318 Court St, Brooklyn, NY 11231</div>
+              <div class="radius-row">
+                <input type="range" min="1" max="15" value="4" id="radius-slider" oninput="updateRadius(this.value)">
+                <span class="radius-value"><span id="radius-num">4</span> miles</span>
+              </div>
+            </div>
+          </div>
+          <div class="field-help">A smaller area concentrates your spend on nearby customers. A larger area reaches more people but costs more to compete for.</div>
+        </div>
+      </div>
+
+      <div class="flow-footer">
+        <button class="btn ghost" onclick="goToStep(3)">← Back</button>
+        <button class="btn primary" onclick="goToStep(5)">Continue
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- ─────────────── STEP 5: Describe your restaurant ─────────────── -->
+    <section class="step" data-step="5">
+      <div class="step-card">
+        <h2>Tell us about your restaurant.</h2>
+        <p class="lead">We'll use this to write your ad. Plain English is best — write it the way you'd describe your restaurant to a friend.</p>
+
+        <div class="detected-vertical">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M3 6.5l2.5 2.5L10 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          We detected this is a <strong>&nbsp;pizzeria</strong>&nbsp; from your website. Looks right?
+        </div>
+
+        <div class="field">
+          <label class="field-label">What you offer</label>
+          <textarea class="input" rows="3">Hand-tossed New York pizza, Sicilian slices, classic pastas, and family-style entrées. We've been on Court Street since 1991.</textarea>
+        </div>
+
+        <div class="field">
+          <label class="field-label">What makes you stand out <span class="sub">(optional but helps)</span></label>
+          <textarea class="input" rows="2">Brick oven baked daily. Gluten-free crust available. Open late on Fridays and Saturdays.</textarea>
+        </div>
+      </div>
+
+      <div class="flow-footer">
+        <button class="btn ghost" onclick="goToStep(4)">← Back</button>
+        <button class="btn primary" onclick="goToStep(6)">Continue
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- ─────────────── STEP 6: Daily budget ─────────────── -->
+    <section class="step" data-step="6">
+      <div class="step-card">
+        <h2>Choose your daily spend.</h2>
+        <p class="lead">You won't pay anything yet — your partner is handling billing. This is just how much we'll spend on Google each day to bring you customers.</p>
+
+        <div class="budget-display">
+          <div class="amt">$<span id="budget-amt">22</span><small>/day</small></div>
+          <div class="rec">Recommended for your area</div>
+        </div>
+
+        <input type="range" min="5" max="100" value="22" step="1" class="budget-slider" id="budget-slider" oninput="updateBudget(this.value)">
+        <div class="budget-scale">
+          <span>$5</span>
+          <span>$25</span>
+          <span>$50</span>
+          <span>$100+</span>
+        </div>
+
+        <div class="budget-projection" id="budget-proj">
+          <strong>At $22/day,</strong> based on what other pizzerias in Brooklyn see, we'd expect roughly 18–28 new online orders per week once your ad is fully ramped up. Most of your spend will go toward people actively searching for pizza in your service area.
+        </div>
+      </div>
+
+      <div class="flow-footer">
+        <button class="btn ghost" onclick="goToStep(5)">← Back</button>
+        <button class="btn primary" onclick="goToStep(7)">Continue
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- ─────────────── STEP 7: Review the ad ─────────────── -->
+    <section class="step" data-step="7">
+      <div class="step-card">
+        <h2>Here's the ad we wrote for you.</h2>
+        <p class="lead">Edit any of the headlines or search terms below. The preview on the right shows what people will actually see on Google.</p>
+
+        <div class="ai-banner">
+          <div class="ai-icon">✦</div>
+          <div>
+            <div class="ai-banner-title">Want a different take?</div>
+            <div class="ai-banner-sub">We'll rewrite everything in a different style. You can also edit each line individually.</div>
+          </div>
+          <button class="ai-banner-btn">Rewrite with AI</button>
+        </div>
+
+        <div class="review-grid">
+          <div>
+            <div class="field">
+              <label class="field-label">Headlines</label>
+              <div class="headlines-stack">
+                <div class="headline-line">
+                  <input class="input" type="text" value="Brick-Oven Pizza, Delivered Hot">
+                  <button class="regen-btn" title="Rewrite this line">↻</button>
+                </div>
+                <div class="headline-line">
+                  <input class="input" type="text" value="Junior's Pizzeria — Brooklyn">
+                  <button class="regen-btn" title="Rewrite this line">↻</button>
+                </div>
+                <div class="headline-line">
+                  <input class="input" type="text" value="Order Online for Pickup or Delivery">
+                  <button class="regen-btn" title="Rewrite this line">↻</button>
+                </div>
+                <div class="headline-line">
+                  <input class="input" type="text" value="Family-owned since 1991">
+                  <button class="regen-btn" title="Rewrite this line">↻</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field-label">Description</label>
+              <textarea class="input" rows="3">Family-owned New York pizzeria since 1991. Order online for fast pickup or local delivery — gluten-free crust available. Open late Friday and Saturday.</textarea>
+            </div>
+
+            <div class="field">
+              <label class="field-label">Search terms <span class="sub">(what people might type)</span></label>
+              <div class="chips">
+                <span class="chip">pizza near me <span class="x">×</span></span>
+                <span class="chip">brick oven pizza <span class="x">×</span></span>
+                <span class="chip">pizza delivery brooklyn <span class="x">×</span></span>
+                <span class="chip">italian food court st <span class="x">×</span></span>
+                <span class="chip">pizza by the slice <span class="x">×</span></span>
+                <span class="chip">late night pizza <span class="x">×</span></span>
+                <span class="chip">gluten free pizza <span class="x">×</span></span>
+                <span class="add-chip">+ Add</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="preview-pane">
+            <div class="preview-eyebrow">Preview · what people will see on Google</div>
+
+            <div class="search-ad">
+              <div class="search-ad-head">
+                <span class="search-sponsored">Sponsored</span>
+                <span class="search-favicon">J</span>
+                <div>
+                  <div class="search-domain">juniorspizzeria.com</div>
+                  <div class="search-domain-sub">Junior's Pizzeria · Brooklyn, NY</div>
+                </div>
+              </div>
+              <div class="search-headline">Brick-Oven Pizza, Delivered Hot</div>
+              <div class="search-desc">Family-owned New York pizzeria since 1991. Order online for fast pickup or local delivery — gluten-free crust available.</div>
+              <div class="search-sitelinks">
+                <span>Order online</span><span>Today's specials</span><span>See the menu</span>
+              </div>
+            </div>
+
+            <div class="map-card">
+              <div class="map-card-head">
+                <span class="map-pin-mini"></span>
+                <div>
+                  <div class="map-card-title">Junior's Pizzeria</div>
+                  <div class="map-card-meta">★ 4.7 · Pizza · 0.6 mi · Open</div>
+                </div>
+                <span class="map-card-badge">Sponsored</span>
+              </div>
+              <div class="map-card-row">
+                <span class="map-card-action">Directions</span>
+                <span class="map-card-action">Call</span>
+                <span class="map-card-action primary">Order online</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-footer">
+        <button class="btn ghost" onclick="goToStep(6)">← Back</button>
+        <button class="btn primary" onclick="goToStep(8)">Looks good — continue
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- ─────────────── STEP 8: Launch ─────────────── -->
+    <section class="step" data-step="8">
+      <div class="step-card launch-card" id="launch-pre">
+        <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:14px;color:var(--muted-fg);margin-bottom:10px;">Ready to launch</div>
+        <h2 class="launch-title">You're all set.</h2>
+        <p class="launch-sub">Hit launch and your ad goes live on Google Search and Google Maps within an hour. Before you do, here's what to expect over the next few weeks.</p>
+
+        <div class="timeline">
+          <div class="timeline-head">Your ad's first few weeks</div>
+          <div class="timeline-track">
+            <div class="timeline-step now">
+              <div class="dot"></div>
+              <div class="week">Week 1</div>
+              <div class="what">Ad goes live. Google starts learning.</div>
+            </div>
+            <div class="timeline-step">
+              <div class="dot"></div>
+              <div class="week">Weeks 2–3</div>
+              <div class="what">Numbers swing around. That's normal.</div>
+            </div>
+            <div class="timeline-step">
+              <div class="dot"></div>
+              <div class="week">Week 4</div>
+              <div class="what">Things settle into a real pattern.</div>
+            </div>
+            <div class="timeline-step">
+              <div class="dot"></div>
+              <div class="week">Week 5+</div>
+              <div class="what">You're optimized. Steady customers.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="launch-expectations">
+          <strong>One thing to know:</strong> Google needs about three to four weeks of learning time before your ad finds the right audience. Early numbers will look uneven — some days great, some days quiet. That's how it's supposed to work. Don't pause the ad in week one based on week-one numbers. We'll walk you through what's happening on your dashboard every step of the way.
+        </div>
+
+        <button class="btn primary large" onclick="launchCampaign()" style="font-size:15px;padding:14px 32px;">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 14L14 2M14 2H6M14 2v8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Launch my ad
+        </button>
+      </div>
+
+      <div class="step-card launch-card" id="launch-post" style="display:none;">
+        <div class="launch-emoji">🎉</div>
+        <h2 class="launch-title">Your ad is live.</h2>
+        <p class="launch-sub">Welcome to Owner Ads. Your ad just went live on Google. We'll send you a note tomorrow morning with your first results. In the meantime, you can head to your dashboard anytime to see what's happening.</p>
+
+        <a href="dashboard-prototype.html" class="btn primary large" style="font-size:15px;padding:14px 32px;">
+          Go to my dashboard
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+
+      <div class="flow-footer" id="launch-footer-pre">
+        <button class="btn ghost" onclick="goToStep(7)">← Back to edit</button>
+        <span></span>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="confetti-layer" id="confetti"></div>
+
+<script>
+// ─── State ───
+const state = {
+  step: 1,
+  priorAds: null,        // 'never' | 'had' | 'running'
+  pauseConfirmed: false,
+  gbpConnected: false,
+};
+
+// ─── Navigation ───
+function goToStep(n) {
+  // Gate: step 3+ requires prior-ads question answered AND, if "running", pause confirmed
+  if (n >= 3) {
+    if (!state.priorAds) { n = 2; }
+    else if (state.priorAds === 'running' && !state.pauseConfirmed) { n = 2; }
+  }
+  // Gate: step 4+ requires GBP connected
+  if (n >= 4 && !state.gbpConnected) { n = 3; }
+
+  state.step = n;
+  document.querySelectorAll('.step').forEach(el => {
+    el.classList.toggle('active', Number(el.dataset.step) === n);
+  });
+  document.querySelectorAll('.stepper-item').forEach(el => {
+    const s = Number(el.dataset.step);
+    el.classList.toggle('active', s === n);
+    el.classList.toggle('done', s < n);
+  });
+  // Smooth scroll to top of step
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Stepper: clicking a chip jumps you, but only forward to steps you've actually unlocked
+document.querySelectorAll('.stepper-item').forEach(el => {
+  el.addEventListener('click', () => {
+    const target = Number(el.dataset.step);
+    // Allow going back freely, allow going forward if subsequent gating allows
+    goToStep(target);
+  });
+});
+
+// ─── Step 1: Goal cards ───
+document.querySelectorAll('.goal-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.goal-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+  });
+});
+
+// ─── Step 2: Prior-ads gate ───
+function pickPrior(btn, val) {
+  document.querySelectorAll('[data-priorads]').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  state.priorAds = val;
+  state.pauseConfirmed = (val !== 'running');
+  document.getElementById('priorads-warning').style.display = (val === 'running') ? 'grid' : 'none';
+  document.getElementById('pause-block').classList.toggle('visible', val === 'running');
+  document.getElementById('pause-confirm-cb').checked = false;
+  recomputeStep2Next();
+}
+function updatePauseConfirm() {
+  state.pauseConfirmed = document.getElementById('pause-confirm-cb').checked;
+  recomputeStep2Next();
+}
+function recomputeStep2Next() {
+  const btn = document.getElementById('step2-next');
+  if (!state.priorAds) { btn.disabled = true; return; }
+  if (state.priorAds === 'running' && !state.pauseConfirmed) { btn.disabled = true; return; }
+  btn.disabled = false;
+}
+
+// ─── Step 3: GBP connect ───
+function connectGBP() {
+  // Simulate OAuth round-trip
+  const btn = event.target.closest('button');
+  const original = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.7" stroke-dasharray="20 8" /></svg>Connecting to Google…';
+  setTimeout(() => {
+    document.getElementById('gbp-not-connected').style.display = 'none';
+    document.getElementById('gbp-connected').classList.add('visible');
+    document.getElementById('step3-next').disabled = false;
+    state.gbpConnected = true;
+  }, 900);
+}
+
+// ─── Step 4: Radius slider ───
+function updateRadius(v) {
+  document.getElementById('radius-text').textContent = v;
+  document.getElementById('radius-num').textContent = v;
+}
+
+// ─── Step 6: Budget slider ───
+function updateBudget(v) {
+  const n = Number(v);
+  document.getElementById('budget-amt').textContent = n;
+  const ordersLow = Math.round(n * 0.7);
+  const ordersHi = Math.round(n * 1.2);
+  let blurb;
+  if (n < 12) {
+    blurb = `<strong>At $${n}/day,</strong> you'll show up in search results during some windows of the day but you'll miss out on demand at peak hours. Most pizzerias see this budget bring in roughly ${ordersLow}–${ordersHi} new online orders per week once the ad is fully ramped up.`;
+  } else if (n < 35) {
+    blurb = `<strong>At $${n}/day,</strong> based on what other pizzerias in Brooklyn see, we'd expect roughly ${ordersLow}–${ordersHi} new online orders per week once your ad is fully ramped up. Most of your spend will go toward people actively searching for pizza in your service area.`;
+  } else {
+    blurb = `<strong>At $${n}/day,</strong> you'll have one of the more aggressive ad budgets in your area — expect roughly ${ordersLow}–${ordersHi} new online orders per week and stronger coverage at every meal time, including late nights and weekends.`;
+  }
+  document.getElementById('budget-proj').innerHTML = blurb;
+}
+
+// ─── Step 8: Launch ───
+function launchCampaign() {
+  document.getElementById('launch-pre').style.display = 'none';
+  document.getElementById('launch-footer-pre').style.display = 'none';
+  document.getElementById('launch-post').style.display = 'block';
+
+  // Confetti
+  const layer = document.getElementById('confetti');
+  layer.classList.add('on');
+  const colors = ['#0a8a3c', '#34c759', '#f5a623', '#e63946', '#1a73e8', '#9b51e0'];
+  for (let i = 0; i < 80; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = (Math.random() * 100) + 'vw';
+    piece.style.background = colors[i % colors.length];
+    piece.style.animationDelay = (Math.random() * 0.6) + 's';
+    piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+    layer.appendChild(piece);
+  }
+  setTimeout(() => {
+    layer.classList.remove('on');
+    layer.innerHTML = '';
+  }, 4000);
+}
+</script>
+</body>
+</html>

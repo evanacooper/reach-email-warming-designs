@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Owner Ads — Dashboard Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --primary: hsl(210 30% 25%);
+  --bg: hsl(220 13% 97%);
+  --fg: hsl(225 15% 16%);
+  --muted-fg: hsl(220 10% 45%);
+  --subtle-fg: hsl(220 10% 35%);
+  --border: hsl(220 13% 90%);
+  --border-strong: hsl(220 13% 82%);
+  --card: hsl(0 0% 100%);
+  --shell: hsl(220 14% 96%);
+  --radius: 0.625rem;
+
+  --owner: hsl(142 70% 32%);
+  --owner-strong: hsl(142 72% 26%);
+  --owner-bg: hsl(142 76% 96%);
+  --owner-bg-2: hsl(142 65% 92%);
+  --owner-border: hsl(142 55% 78%);
+  --owner-fg-on-bg: hsl(142 72% 22%);
+
+  --amber: hsl(38 92% 50%);
+  --amber-bg: hsl(38 100% 96%);
+  --amber-border: hsl(38 90% 80%);
+  --amber-fg: hsl(28 85% 35%);
+
+  --blue: hsl(217 91% 50%);
+  --blue-bg: hsl(217 100% 97%);
+  --blue-border: hsl(217 80% 85%);
+  --blue-fg: hsl(217 80% 36%);
+
+  --slate-bg: hsl(220 14% 96%);
+  --slate-border: hsl(220 13% 88%);
+}
+
+html, body {
+  min-height: 100%;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--fg);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+.back-link {
+  position: fixed; top: 12px; left: 12px; z-index: 9999;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500;
+  color: #64748b; background: white; border: 1px solid #e2e8f0;
+  padding: 5px 11px; border-radius: 6px; text-decoration: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.back-link:hover { color: #1e293b; background: #f8fafc; }
+
+/* ── Scenario chooser bar ── */
+.scenario-bar {
+  position: sticky; top: 0; z-index: 60;
+  background: linear-gradient(180deg, hsla(220,14%,96%,0.96), hsla(220,14%,96%,0.85));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+.scenario-inner {
+  max-width: 1180px; margin: 0 auto;
+  padding: 12px 24px 12px 140px;
+  display: flex; align-items: center; gap: 16px;
+  font-size: 12.5px;
+  flex-wrap: wrap;
+}
+.scenario-label {
+  font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted-fg);
+}
+.scenario-tabs {
+  display: flex; gap: 4px;
+  background: white; border: 1px solid var(--border); border-radius: 999px;
+  padding: 4px;
+}
+.scenario-tab {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px; font-weight: 600;
+  color: var(--muted-fg);
+  cursor: pointer;
+  border: none; background: transparent; font-family: inherit;
+  white-space: nowrap;
+}
+.scenario-tab:hover { color: var(--fg); }
+.scenario-tab.active {
+  background: var(--owner-bg); color: var(--owner-fg-on-bg);
+}
+.scenario-note { color: var(--muted-fg); font-size: 12px; }
+.scenario-note strong { color: var(--fg); font-weight: 600; }
+
+/* ── Owner shell chrome ── */
+.shell-top {
+  background: white;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 24px;
+  gap: 20px;
+  height: 56px;
+}
+.brand {
+  display: flex; align-items: center; gap: 9px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800; letter-spacing: -.01em; font-size: 15px;
+  color: var(--owner-strong);
+}
+.brand-mark {
+  width: 26px; height: 26px;
+  background: var(--owner); color: white;
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800;
+}
+.shell-nav { display: flex; gap: 2px; font-size: 13px; }
+.shell-nav-item {
+  padding: 8px 12px; border-radius: 6px;
+  color: var(--muted-fg); font-weight: 500;
+}
+.shell-nav-item.active { background: var(--owner-bg); color: var(--owner-fg-on-bg); }
+.shell-spacer { flex: 1; }
+.shell-right { display: flex; align-items: center; gap: 14px; font-size: 13px; color: var(--muted-fg); }
+.shell-loc {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border: 1px solid var(--border); border-radius: 7px;
+}
+.shell-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, #f5a623, #e63946);
+  color: white; font-weight: 700; font-size: 11px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── Dashboard container ── */
+.dash {
+  max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px;
+}
+
+/* ── Page header ── */
+.dash-head {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  gap: 16px; margin-bottom: 24px;
+}
+.dash-eyebrow {
+  font-size: 11.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--owner-fg-on-bg); margin-bottom: 6px;
+}
+.dash-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 26px; font-weight: 800; letter-spacing: -.02em;
+  line-height: 1.1;
+}
+.dash-sub {
+  font-size: 13.5px; color: var(--muted-fg); margin-top: 4px;
+}
+.dash-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+.status-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px;
+  font-size: 12px; font-weight: 700;
+  border-radius: 999px;
+}
+.status-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.status-pill.running { background: var(--owner-bg); color: var(--owner-fg-on-bg); border: 1px solid var(--owner-border); }
+.status-pill.learning { background: var(--blue-bg); color: var(--blue-fg); border: 1px solid var(--blue-border); }
+.status-pill.paused { background: var(--slate-bg); color: var(--subtle-fg); border: 1px solid var(--slate-border); }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px;
+  border-radius: 9px;
+  font-size: 13px; font-weight: 600;
+  border: 1px solid var(--border);
+  background: white; color: var(--fg);
+  cursor: pointer; font-family: inherit;
+  transition: background .15s, border-color .15s;
+  text-decoration: none;
+}
+.btn:hover { background: var(--shell); }
+.btn.primary { background: var(--owner); color: white; border-color: var(--owner); }
+.btn.primary:hover { background: var(--owner-strong); }
+
+/* ── Date range pills ── */
+.date-pills {
+  display: inline-flex; background: white; border: 1px solid var(--border); border-radius: 999px;
+  padding: 4px; gap: 2px;
+}
+.date-pill {
+  padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  color: var(--muted-fg); background: transparent; border: none; cursor: pointer; font-family: inherit;
+}
+.date-pill.active { background: var(--owner-bg); color: var(--owner-fg-on-bg); }
+.date-pill:hover:not(.active) { color: var(--fg); }
+
+/* ── Hero narrative briefing ── */
+.briefing {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px 28px;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.briefing.learning {
+  background: linear-gradient(135deg, white, var(--blue-bg));
+  border-color: var(--blue-border);
+}
+.briefing.healthy {
+  background: linear-gradient(135deg, white, var(--owner-bg));
+  border-color: var(--owner-border);
+}
+.briefing.slow {
+  background: linear-gradient(135deg, white, var(--amber-bg));
+  border-color: var(--amber-border);
+}
+.briefing.fresh {
+  background: linear-gradient(135deg, white, var(--shell));
+}
+
+.briefing-head {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 10px;
+}
+.briefing-eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted-fg);
+}
+.briefing-eyebrow .marker {
+  display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--owner); margin-right: 7px; vertical-align: middle;
+}
+.briefing.learning .briefing-eyebrow .marker { background: var(--blue); }
+.briefing.healthy .briefing-eyebrow .marker { background: var(--owner); }
+.briefing.slow .briefing-eyebrow .marker { background: var(--amber); }
+.briefing.fresh .briefing-eyebrow .marker { background: var(--muted-fg); }
+
+.briefing-time {
+  font-size: 11.5px; color: var(--muted-fg);
+}
+
+.briefing-body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 19px; line-height: 1.5; font-weight: 600;
+  color: var(--fg); letter-spacing: -.011em;
+  max-width: 860px;
+}
+.briefing-body strong {
+  background: linear-gradient(transparent 62%, var(--owner-bg-2) 62%);
+  padding: 0 2px;
+  font-weight: 700;
+}
+.briefing.learning .briefing-body strong {
+  background: linear-gradient(transparent 62%, hsl(217 100% 92%) 62%);
+}
+.briefing.slow .briefing-body strong {
+  background: linear-gradient(transparent 62%, hsl(38 100% 90%) 62%);
+}
+
+.briefing-followup {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid hsla(0,0%,0%,0.06);
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.briefing-followup .label {
+  font-size: 12px; color: var(--muted-fg); font-weight: 500;
+}
+.briefing-chip {
+  padding: 6px 12px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 12.5px; font-weight: 600; color: var(--fg);
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap: 5px;
+}
+.briefing-chip:hover { background: var(--shell); }
+
+/* ── Learning-phase timeline (only when in learning phase) ── */
+.learning-card {
+  background: white;
+  border: 1px solid var(--blue-border);
+  border-radius: 14px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+  display: grid; grid-template-columns: 1fr; gap: 16px;
+}
+.learning-card-head {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.learning-card-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700; font-size: 15px;
+}
+.learning-card-meta {
+  font-size: 12px; color: var(--muted-fg);
+}
+.timeline-track {
+  position: relative;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
+  padding: 0 12px;
+}
+.timeline-track::before {
+  content: ""; position: absolute; top: 10px; left: 12px; right: 12px; height: 2px;
+  background: linear-gradient(90deg, var(--blue) 0%, var(--blue) 35%, var(--border) 35%);
+  border-radius: 2px;
+}
+.timeline-step { position: relative; }
+.timeline-step .dot {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: white; border: 2px solid var(--border-strong);
+  margin: 0 auto 10px; position: relative; z-index: 2;
+}
+.timeline-step.done .dot { background: var(--blue); border-color: var(--blue); }
+.timeline-step.now .dot {
+  background: var(--blue); border-color: var(--blue);
+  box-shadow: 0 0 0 5px var(--blue-bg);
+}
+.timeline-step .week {
+  text-align: center; font-size: 11px; font-weight: 700; letter-spacing: .04em;
+  color: var(--muted-fg); text-transform: uppercase; margin-bottom: 2px;
+}
+.timeline-step.done .week, .timeline-step.now .week { color: var(--blue-fg); }
+.timeline-step .what {
+  text-align: center; font-size: 11.5px; color: var(--subtle-fg);
+  line-height: 1.4;
+}
+
+/* ── KPI strip ── */
+.kpis {
+  display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr; gap: 12px;
+  margin-bottom: 16px;
+}
+.kpi {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.kpi.featured {
+  background: linear-gradient(135deg, white 60%, var(--owner-bg));
+  border-color: var(--owner-border);
+}
+.kpi-label {
+  font-size: 11.5px; color: var(--muted-fg);
+  font-weight: 600; letter-spacing: .02em;
+  display: flex; align-items: center; gap: 5px;
+}
+.kpi-label .info {
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  color: var(--muted-fg);
+  font-size: 9px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: help;
+}
+.kpi-value {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 26px; font-weight: 800; letter-spacing: -.02em; line-height: 1.05;
+}
+.kpi-value.small { font-size: 22px; }
+.kpi-value sup { font-size: 14px; vertical-align: super; font-weight: 700; margin-right: 1px; }
+.kpi-delta {
+  font-size: 11.5px; font-weight: 600; color: var(--owner-fg-on-bg);
+  display: flex; align-items: center; gap: 4px;
+}
+.kpi-delta.down { color: var(--amber-fg); }
+.kpi-delta.flat { color: var(--muted-fg); }
+.kpi-delta.muted { color: var(--muted-fg); }
+.kpi-spark {
+  margin-top: 6px;
+  height: 24px; width: 100%;
+}
+
+/* ── Big chart row ── */
+.row {
+  display: grid;
+  grid-template-columns: 1.7fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.panel {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 20px;
+}
+.panel-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px;
+}
+.panel-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14.5px; font-weight: 700;
+}
+.panel-sub {
+  font-size: 12px; color: var(--muted-fg);
+  margin-bottom: 14px;
+}
+
+.chart-wrap { position: relative; }
+.chart {
+  height: 180px;
+  display: grid;
+  grid-template-columns: repeat(14, 1fr); gap: 6px;
+  align-items: end;
+  padding-top: 8px;
+  border-bottom: 1px dashed var(--border);
+}
+.chart .bar {
+  background: linear-gradient(180deg, hsl(142 65% 55%), var(--owner));
+  border-radius: 4px 4px 0 0;
+  opacity: 0.92;
+}
+.chart .bar.muted {
+  background: linear-gradient(180deg, hsl(220 13% 80%), hsl(220 13% 70%));
+}
+.chart-axis {
+  display: flex; justify-content: space-between;
+  font-size: 10.5px; color: var(--muted-fg);
+  margin-top: 8px;
+}
+
+/* breakdown table */
+.bd-list { display: flex; flex-direction: column; gap: 8px; }
+.bd-item {
+  display: grid; grid-template-columns: 1fr auto auto;
+  gap: 12px; align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.bd-icon {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  background: var(--owner-bg);
+  color: var(--owner-strong);
+  display: inline-flex; align-items: center; justify-content: center;
+  margin-right: 10px; font-size: 13px;
+  flex-shrink: 0;
+}
+.bd-name {
+  display: flex; align-items: center;
+  font-weight: 600; font-size: 13px;
+}
+.bd-name .sub {
+  display: block; font-size: 11.5px; font-weight: 400; color: var(--muted-fg);
+  margin-top: 1px;
+}
+.bd-num {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700; font-size: 14px;
+}
+.bd-delta {
+  font-size: 11.5px; font-weight: 600;
+  color: var(--owner-fg-on-bg);
+  background: var(--owner-bg);
+  border-radius: 6px;
+  padding: 2px 6px;
+  min-width: 38px; text-align: center;
+}
+.bd-delta.down { color: var(--amber-fg); background: var(--amber-bg); }
+.bd-delta.flat { color: var(--muted-fg); background: var(--slate-bg); }
+
+/* ── Campaign card ── */
+.campaign {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 16px;
+  align-items: center;
+}
+.gicon {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  background: white;
+  border: 1px solid var(--border);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 800; color: #4285f4; font-size: 20px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.campaign-meta .name {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700; font-size: 15px;
+}
+.campaign-meta .sub {
+  color: var(--muted-fg); font-size: 12.5px;
+  margin-top: 2px;
+}
+.campaign-actions { display: flex; gap: 6px; }
+
+/* ── Attribution note ── */
+.attr-note {
+  font-size: 11.5px; color: var(--muted-fg);
+  text-align: center; padding: 14px 12px 0;
+  line-height: 1.5;
+}
+.attr-note a { color: var(--owner-fg-on-bg); text-decoration: none; font-weight: 600; }
+.attr-note a:hover { text-decoration: underline; }
+
+/* ── Empty/launched-just-now state ── */
+.fresh-card {
+  text-align: center;
+  padding: 40px 24px 36px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  margin-bottom: 16px;
+}
+.fresh-icon {
+  width: 60px; height: 60px; border-radius: 50%;
+  background: var(--owner-bg);
+  color: var(--owner-strong);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px;
+  font-size: 28px;
+}
+.fresh-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800; font-size: 22px; letter-spacing: -.015em;
+  margin-bottom: 8px;
+}
+.fresh-sub {
+  font-size: 14px; color: var(--muted-fg); line-height: 1.55;
+  max-width: 480px; margin: 0 auto;
+}
+
+@media (max-width: 1000px) {
+  .kpis { grid-template-columns: 1fr 1fr 1fr; }
+  .row { grid-template-columns: 1fr; }
+  .scenario-inner { padding-left: 24px; }
+  .shell-nav { display: none; }
+}
+@media (max-width: 720px) {
+  .dash-head { flex-direction: column; align-items: flex-start; }
+  .kpis { grid-template-columns: 1fr 1fr; }
+  .briefing-body { font-size: 17px; }
+}
+</style>
+</head>
+<body>
+
+<a class="back-link" href="index.html">
+  <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M8 2L3 6.5l5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  Owner Ads project
+</a>
+
+<!-- Scenario chooser (review-only chrome) -->
+<div class="scenario-bar">
+  <div class="scenario-inner">
+    <span class="scenario-label">Scenario</span>
+    <div class="scenario-tabs" id="scenario-tabs">
+      <button class="scenario-tab" data-sc="fresh">Just launched</button>
+      <button class="scenario-tab active" data-sc="learning">Learning (week 2)</button>
+      <button class="scenario-tab" data-sc="healthy">Healthy (week 8)</button>
+      <button class="scenario-tab" data-sc="slow">Slow week</button>
+    </div>
+    <span class="scenario-note">Toggle to see how the dashboard adapts. <strong>This bar is review-only — the customer won't see it.</strong></span>
+  </div>
+</div>
+
+<header class="shell-top">
+  <div class="brand"><span class="brand-mark">O</span>Owner</div>
+  <nav class="shell-nav">
+    <span class="shell-nav-item">Orders</span>
+    <span class="shell-nav-item">Menu</span>
+    <span class="shell-nav-item">Customers</span>
+    <span class="shell-nav-item active">Marketing</span>
+    <span class="shell-nav-item">Settings</span>
+  </nav>
+  <div class="shell-spacer"></div>
+  <div class="shell-right">
+    <div class="shell-loc">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1.5C4 1.5 2.5 3 2.5 5c0 2.5 3.5 5.5 3.5 5.5s3.5-3 3.5-5.5c0-2-1.5-3.5-3.5-3.5z" stroke="currentColor" stroke-width="1.3"/><circle cx="6" cy="5" r="1.3" stroke="currentColor" stroke-width="1.3"/></svg>
+      318 Court St
+    </div>
+    <div class="shell-avatar">J</div>
+  </div>
+</header>
+
+<main class="dash">
+
+  <!-- Header -->
+  <div class="dash-head">
+    <div>
+      <div class="dash-eyebrow">Marketing · Owner Ads</div>
+      <h1 class="dash-title" id="dash-title">More online orders</h1>
+      <div class="dash-sub" id="dash-sub">Junior's Pizzeria · 318 Court St · Last 30 days</div>
+    </div>
+    <div class="dash-actions">
+      <span class="status-pill" id="status-pill"><span class="dot"></span><span id="status-pill-text">Learning</span></span>
+      <button class="btn">Edit campaign</button>
+      <button class="btn">Pause</button>
+    </div>
+  </div>
+
+  <!-- Date pills -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+    <div class="date-pills">
+      <button class="date-pill">Last 7 days</button>
+      <button class="date-pill active">Last 30 days</button>
+      <button class="date-pill">Lifetime</button>
+    </div>
+    <div style="font-size:12px;color:var(--muted-fg);">
+      Last updated: today, 9:14 am
+    </div>
+  </div>
+
+  <!-- ═══════════════ SCENARIO CONTAINERS ═══════════════ -->
+
+  <!-- ─── SCENARIO: JUST LAUNCHED ─── -->
+  <div class="scenario" data-scenario="fresh" style="display:none;">
+    <div class="briefing fresh">
+      <div class="briefing-head">
+        <div class="briefing-eyebrow"><span class="marker"></span>You're live</div>
+        <span class="briefing-time">· launched 2 hours ago</span>
+      </div>
+      <div class="briefing-body">
+        Your ad is officially live on Google Search and Google Maps. We won't have meaningful numbers for you yet — Google needs a day or two to start showing your ad to the right people. <strong>Check back tomorrow morning</strong> for your first real briefing, and we'll send you a heads-up by email when there's something worth looking at.
+      </div>
+      <div class="briefing-followup">
+        <span class="label">In the meantime:</span>
+        <span class="briefing-chip">📋 See your ad copy</span>
+        <span class="briefing-chip">💰 Adjust your budget</span>
+        <span class="briefing-chip">🔔 Set who gets weekly emails</span>
+      </div>
+    </div>
+
+    <div class="fresh-card">
+      <div class="fresh-icon">⏳</div>
+      <div class="fresh-title">No data yet — that's expected.</div>
+      <div class="fresh-sub">Your dashboard will fill in over the next 24 hours as people start to see and click your ad. We'll text and email you as soon as you have your first conversion.</div>
+    </div>
+
+    <div class="campaign">
+      <span class="gicon">G</span>
+      <div class="campaign-meta">
+        <div class="name">More online orders · Junior's Pizzeria</div>
+        <div class="sub">Launched 2 hours ago · $22/day · Brick oven pizza, pizza delivery brooklyn, late night pizza…</div>
+      </div>
+      <div class="campaign-actions">
+        <button class="btn">Edit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SCENARIO: LEARNING PHASE (WEEK 2) ─── -->
+  <div class="scenario" data-scenario="learning">
+    <div class="briefing learning">
+      <div class="briefing-head">
+        <div class="briefing-eyebrow"><span class="marker"></span>Your ad is learning</div>
+        <span class="briefing-time">· day 9 of about 28</span>
+      </div>
+      <div class="briefing-body">
+        You're nine days into your ad's learning phase, and so far <strong>6 customers have placed online orders worth $387</strong> — a strong start. Numbers will swing around from day to day for the next two to three weeks while Google figures out who in Brooklyn is most likely to order from you. <strong>Don't read too much into any single day yet.</strong> The picture gets a lot clearer by week four.
+      </div>
+      <div class="briefing-followup">
+        <span class="label">Helpful while you wait:</span>
+        <span class="briefing-chip">📈 What is the learning phase?</span>
+        <span class="briefing-chip">💬 See what searches are bringing people to you</span>
+      </div>
+    </div>
+
+    <div class="learning-card">
+      <div class="learning-card-head">
+        <div class="learning-card-title">Where you are in the learning phase</div>
+        <div class="learning-card-meta">Day 9 of ~28 · we'll auto-remove this when you're optimized</div>
+      </div>
+      <div class="timeline-track">
+        <div class="timeline-step done">
+          <div class="dot"></div>
+          <div class="week">Week 1</div>
+          <div class="what">Ad live, Google starts learning</div>
+        </div>
+        <div class="timeline-step now">
+          <div class="dot"></div>
+          <div class="week">Week 2 — now</div>
+          <div class="what">Numbers swing around, that's normal</div>
+        </div>
+        <div class="timeline-step">
+          <div class="dot"></div>
+          <div class="week">Weeks 3–4</div>
+          <div class="what">Patterns start to emerge</div>
+        </div>
+        <div class="timeline-step">
+          <div class="dot"></div>
+          <div class="week">Week 5+</div>
+          <div class="what">Steady customers, optimized</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi featured">
+        <div class="kpi-label">Sales from your ad<span class="info">i</span></div>
+        <div class="kpi-value"><sup>$</sup>387</div>
+        <div class="kpi-delta muted">Early numbers — we'll have a real trend by week 4</div>
+        <svg class="kpi-spark" viewBox="0 0 100 24" preserveAspectRatio="none"><polyline fill="none" stroke="hsl(142 70% 32%)" stroke-width="2" points="0,18 10,14 20,20 30,8 40,16 50,10 60,18 70,6 80,14 90,9 100,12"/></svg>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Online orders</div>
+        <div class="kpi-value">6</div>
+        <div class="kpi-delta muted">vs no ad before</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Calls</div>
+        <div class="kpi-value">3</div>
+        <div class="kpi-delta muted">tap-to-call</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Directions</div>
+        <div class="kpi-value">28</div>
+        <div class="kpi-delta muted">from Google Maps</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Visits<span class="info">i</span></div>
+        <div class="kpi-value">19</div>
+        <div class="kpi-delta muted">estimated</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Daily activity</div>
+          <div style="font-size:11.5px;color:var(--muted-fg)">Orders + calls + directions, last 14 days</div>
+        </div>
+        <div class="panel-sub">You'll see your busiest days emerge over the next 2–3 weeks</div>
+        <div class="chart-wrap">
+          <div class="chart">
+            <div class="bar muted" style="height:12%"></div>
+            <div class="bar muted" style="height:18%"></div>
+            <div class="bar muted" style="height:8%"></div>
+            <div class="bar muted" style="height:25%"></div>
+            <div class="bar muted" style="height:15%"></div>
+            <div class="bar muted" style="height:35%"></div>
+            <div class="bar muted" style="height:22%"></div>
+            <div class="bar muted" style="height:42%"></div>
+            <div class="bar" style="height:50%"></div>
+            <div class="bar" style="height:30%"></div>
+            <div class="bar" style="height:60%"></div>
+            <div class="bar" style="height:38%"></div>
+            <div class="bar" style="height:72%"></div>
+            <div class="bar" style="height:54%"></div>
+          </div>
+          <div class="chart-axis">
+            <span>Apr 27</span><span>May 1</span><span>May 5</span><span>May 9</span><span>May 13</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title">What people did</div></div>
+        <div class="panel-sub">After seeing your ad</div>
+        <div class="bd-list">
+          <div class="bd-item">
+            <span class="bd-name"><span class="bd-icon">🛵</span>Placed online orders<span class="sub" style="display:block;margin-top:1px;"></span></span>
+            <span class="bd-num">6</span>
+            <span class="bd-delta muted">new</span>
+          </div>
+          <div class="bd-item">
+            <span class="bd-name"><span class="bd-icon">📞</span>Called you</span>
+            <span class="bd-num">3</span>
+            <span class="bd-delta muted">new</span>
+          </div>
+          <div class="bd-item">
+            <span class="bd-name"><span class="bd-icon">🗺️</span>Got directions</span>
+            <span class="bd-num">28</span>
+            <span class="bd-delta muted">new</span>
+          </div>
+          <div class="bd-item">
+            <span class="bd-name"><span class="bd-icon">🏪</span>Visited you<span class="sub">estimated by Google</span></span>
+            <span class="bd-num">19</span>
+            <span class="bd-delta muted">est.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="campaign">
+      <span class="gicon">G</span>
+      <div class="campaign-meta">
+        <div class="name">More online orders · Junior's Pizzeria</div>
+        <div class="sub">Running since May 4 · $22/day · 7 search terms · brick oven pizza, late night pizza, pizza near me…</div>
+      </div>
+      <div class="campaign-actions">
+        <button class="btn">Edit</button>
+      </div>
+    </div>
+
+    <div class="attr-note">
+      Sales numbers combine what we track on your site with what Google reports. <a href="#">How we count sales →</a>
+    </div>
+  </div>
+
+  <!-- ─── SCENARIO: HEALTHY (WEEK 8) ─── -->
+  <div class="scenario" data-scenario="healthy" style="display:none;">
+    <div class="briefing healthy">
+      <div class="briefing-head">
+        <div class="briefing-eyebrow"><span class="marker"></span>Strong week</div>
+        <span class="briefing-time">· May 6 – May 12</span>
+      </div>
+      <div class="briefing-body">
+        Last week your ad brought in <strong>$1,847 in online orders across 31 customers</strong> — your best week yet, and up <strong>22% from the week before</strong>. Most of them found you searching for "pizza near me" and "brick oven pizza brooklyn." For every dollar you spent, you got about <strong>$12 back in sales</strong>. Your $22/day budget is starting to bump into peak Friday-night demand — there's room to grow if you want it.
+      </div>
+      <div class="briefing-followup">
+        <span class="label">Worth a look:</span>
+        <span class="briefing-chip">💰 Increase budget to $30/day</span>
+        <span class="briefing-chip">📅 See your busiest days</span>
+        <span class="briefing-chip">🔍 What people searched for</span>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi featured">
+        <div class="kpi-label">Sales from your ad<span class="info">i</span></div>
+        <div class="kpi-value"><sup>$</sup>1,847</div>
+        <div class="kpi-delta">▲ $337 from last week (+22%)</div>
+        <svg class="kpi-spark" viewBox="0 0 100 24" preserveAspectRatio="none"><polyline fill="none" stroke="hsl(142 70% 32%)" stroke-width="2" points="0,18 10,16 20,14 30,15 40,12 50,10 60,11 70,8 80,9 90,5 100,4"/></svg>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Online orders</div>
+        <div class="kpi-value">31</div>
+        <div class="kpi-delta">▲ 6</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Calls</div>
+        <div class="kpi-value">18</div>
+        <div class="kpi-delta">▲ 3</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Directions</div>
+        <div class="kpi-value">112</div>
+        <div class="kpi-delta">▲ 24</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Visits<span class="info">i</span></div>
+        <div class="kpi-value">86</div>
+        <div class="kpi-delta">▲ 22</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Sales from your ad</div>
+          <div style="font-size:11.5px;color:var(--muted-fg)">Last 30 days, daily</div>
+        </div>
+        <div class="panel-sub">Friday and Saturday are your strongest days</div>
+        <div class="chart-wrap">
+          <div class="chart">
+            <div class="bar" style="height:25%"></div>
+            <div class="bar" style="height:35%"></div>
+            <div class="bar" style="height:48%"></div>
+            <div class="bar" style="height:32%"></div>
+            <div class="bar" style="height:52%"></div>
+            <div class="bar" style="height:80%"></div>
+            <div class="bar" style="height:68%"></div>
+            <div class="bar" style="height:42%"></div>
+            <div class="bar" style="height:50%"></div>
+            <div class="bar" style="height:65%"></div>
+            <div class="bar" style="height:58%"></div>
+            <div class="bar" style="height:72%"></div>
+            <div class="bar" style="height:92%"></div>
+            <div class="bar" style="height:85%"></div>
+          </div>
+          <div class="chart-axis">
+            <span>Apr 14</span><span>Apr 21</span><span>Apr 28</span><span>May 5</span><span>May 12</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title">What people did</div></div>
+        <div class="panel-sub">After seeing your ad — last 30 days</div>
+        <div class="bd-list">
+          <div class="bd-item">
+            <span class="bd-name"><span class="bd-icon">🛵</span>Placed online orders</span>
+            <span class="bd-num">31</span>
+            <span class="bd-delta">+6</span>
+          </div>
+          <div class="bd-item">
+            <span class="bd-name"><span class="bd-icon">📞</span>Called you</span>
+            <span class="bd-num">18</span>
+            <span class="bd-delta">+3</span>
+          </div>
+          <div class="bd-item">
+            <span class="bd-name"><span class="bd-icon">🗺️</span>Got directions</span>
+            <span class="bd-num">112</span>
+            <span class="bd-delta">+24</span>
+          </div>
+          <div class="bd-item">
+            <span class="bd-name"><span class="bd-icon">🏪</span>Visited you<span class="sub">estimated by Google</span></span>
+            <span class="bd-num">86</span>
+            <span class="bd-delta">+22</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="campaign">
+      <span class="gicon">G</span>
+      <div class="campaign-meta">
+        <div class="name">More online orders · Junior's Pizzeria</div>
+        <div class="sub">Running since Mar 18 · $22/day · 7 search terms · brick oven pizza, late night pizza, pizza near me…</div>
+      </div>
+      <div class="campaign-actions">
+        <button class="btn">Edit</button>
+      </div>
+    </div>
+
+    <div class="attr-note">
+      Sales numbers combine what we track on your site with what Google reports. <a href="#">How we count sales →</a>
+    </div>
+  </div>
+
+  <!-- ─── SCENARIO: SLOW WEEK ─── -->
+  <div class="scenario" data-scenario="slow" style="display:none;">
+    <div class="briefing slow">
+      <div class="briefing-head">
+        <div class="briefing-eyebrow"><span class="marker"></span>Slower than usual</div>
+        <span class="briefing-time">· May 6 – May 12</span>
+      </div>
+      <div class="briefing-body">
+        Your ad brought in <strong>$612 in online orders across 9 customers</strong> last week — <strong>down about 41% from the week before</strong>. Looking at the data, two things stand out: there were two days of rain that historically slow down delivery orders in Brooklyn, and a few other pizza restaurants in your area increased their ad spend, which raised what it costs you to show up. <strong>This is a normal weekly swing — nothing's broken.</strong> One thing worth considering: a small budget bump for the weekend could help you hold your position against the new competition.
+      </div>
+      <div class="briefing-followup">
+        <span class="label">If you want to act:</span>
+        <span class="briefing-chip">💰 Bump weekend budget by $5</span>
+        <span class="briefing-chip">📊 See what changed</span>
+        <span class="briefing-chip">🤷 Do nothing — see next week</span>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi featured">
+        <div class="kpi-label">Sales from your ad<span class="info">i</span></div>
+        <div class="kpi-value"><sup>$</sup>612</div>
+        <div class="kpi-delta down">▼ $423 from last week (−41%)</div>
+        <svg class="kpi-spark" viewBox="0 0 100 24" preserveAspectRatio="none"><polyline fill="none" stroke="hsl(28 85% 35%)" stroke-width="2" points="0,4 10,5 20,6 30,8 40,7 50,12 60,11 70,14 80,12 90,18 100,16"/></svg>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Online orders</div>
+        <div class="kpi-value">9</div>
+        <div class="kpi-delta down">▼ 6</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Calls</div>
+        <div class="kpi-value">11</div>
+        <div class="kpi-delta down">▼ 2</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Directions</div>
+        <div class="kpi-value">68</div>
+        <div class="kpi-delta down">▼ 18</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Visits<span class="info">i</span></div>
+        <div class="kpi-value">52</div>
+        <div class="kpi-delta down">▼ 11</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Sales from your ad</div>
+          <div style="font-size:11.5px;color:var(--muted-fg)">Last 30 days, daily</div>
+        </div>
+        <div class="panel-sub">Most of this week's dip came from the two rain days</div>
+        <div class="chart-wrap">
+          <div class="chart">
+            <div class="bar" style="height:62%"></div>
+            <div class="bar" style="height:75%"></div>
+            <div class="bar" style="height:82%"></div>
+            <div class="bar" style="height:58%"></div>
+            <div class="bar" style="height:88%"></div>
+            <div class="bar" style="height:95%"></div>
+            <div class="bar" style="height:78%"></div>
+            <div class="bar" style="height:48%"></div>
+            <div class="bar" style="height:18%"></div>
+            <div class="bar" style="height:14%"></div>
+            <div class="bar" style="height:42%"></div>
+            <div class="bar" style="height:35%"></div>
+            <div class="bar" style="height:50%"></div>
+            <div class="bar" style="height:32%"></div>
+          </div>
+          <div class="chart-axis">
+            <span>Apr 14</span><span>Apr 21</span><span>Apr 28</span><span>May 5</span><span>May 12</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title">What people did</div></div>
+        <div class="panel-sub">After seeing your ad — last 7 days vs prior 7</div>
+        <div class="bd-list">
+          <div class="bd-item">
+            <span class="bd-name"><span class="bd-icon">🛵</span>Placed online orders</span>
+            <span class="bd-num">9</span>
+            <span class="bd-delta down">−6</span>
+          </div>
+          <div class="bd-item">
+            <span class="bd-name"><span class="bd-icon">📞</span>Called you</span>
+            <span class="bd-num">11</span>
+            <span class="bd-delta down">−2</span>
+          </div>
+          <div class="bd-item">
+            <span class="bd-name"><span class="bd-icon">🗺️</span>Got directions</span>
+            <span class="bd-num">68</span>
+            <span class="bd-delta down">−18</span>
+          </div>
+          <div class="bd-item">
+            <span class="bd-name"><span class="bd-icon">🏪</span>Visited you<span class="sub">estimated by Google</span></span>
+            <span class="bd-num">52</span>
+            <span class="bd-delta down">−11</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="campaign">
+      <span class="gicon">G</span>
+      <div class="campaign-meta">
+        <div class="name">More online orders · Junior's Pizzeria</div>
+        <div class="sub">Running since Mar 18 · $22/day · 7 search terms · brick oven pizza, late night pizza, pizza near me…</div>
+      </div>
+      <div class="campaign-actions">
+        <button class="btn primary">Bump weekend budget</button>
+        <button class="btn">Edit</button>
+      </div>
+    </div>
+
+    <div class="attr-note">
+      Sales numbers combine what we track on your site with what Google reports. <a href="#">How we count sales →</a>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const titles = {
+  fresh:    { title: 'More online orders',  status: 'Running',  pillClass: 'running'  },
+  learning: { title: 'More online orders',  status: 'Learning', pillClass: 'learning' },
+  healthy:  { title: 'More online orders',  status: 'Running',  pillClass: 'running'  },
+  slow:     { title: 'More online orders',  status: 'Running',  pillClass: 'running'  },
+};
+
+function setScenario(name) {
+  document.querySelectorAll('.scenario').forEach(s => {
+    s.style.display = (s.dataset.scenario === name) ? 'block' : 'none';
+  });
+  document.querySelectorAll('.scenario-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.sc === name);
+  });
+  const meta = titles[name];
+  document.getElementById('dash-title').textContent = meta.title;
+  const pill = document.getElementById('status-pill');
+  pill.classList.remove('running', 'learning', 'paused');
+  pill.classList.add(meta.pillClass);
+  document.getElementById('status-pill-text').textContent = meta.status;
+  // Keep scenario in the URL so a reviewer can deep-link a particular state
+  history.replaceState(null, '', '?scenario=' + name);
+}
+
+document.querySelectorAll('.scenario-tab').forEach(t => {
+  t.addEventListener('click', () => setScenario(t.dataset.sc));
+});
+
+// Date pills toggle
+document.querySelectorAll('.date-pill').forEach(p => {
+  p.addEventListener('click', () => {
+    document.querySelectorAll('.date-pill').forEach(x => x.classList.remove('active'));
+    p.classList.add('active');
+  });
+});
+
+// Initial: pick from URL or default to 'learning' (the most interesting)
+const urlParam = new URLSearchParams(window.location.search).get('scenario');
+const initialScenario = ['fresh','learning','healthy','slow'].includes(urlParam) ? urlParam : 'learning';
+setScenario(initialScenario);
+</script>
+</body>
+</html>

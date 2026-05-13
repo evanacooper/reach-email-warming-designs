@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reach — Owner Ads Designs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --primary: hsl(210 30% 25%);
+  --bg: hsl(220 13% 97%);
+  --fg: hsl(225 15% 16%);
+  --muted-fg: hsl(220 10% 45%);
+  --border: hsl(220 13% 90%);
+  --card: hsl(0 0% 100%);
+  --radius: 0.625rem;
+  --owner: hsl(142 70% 32%);
+  --owner-bg: hsl(142 76% 96%);
+  --owner-border: hsl(142 55% 78%);
+}
+
+html, body {
+  min-height: 100%;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--fg);
+  background: var(--bg);
+}
+
+.page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 56px 24px 80px;
+}
+
+.header { margin-bottom: 48px; }
+
+.eyebrow {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--muted-fg);
+  margin-bottom: 10px;
+}
+
+.title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  color: var(--fg);
+  line-height: 1.15;
+  margin-bottom: 12px;
+}
+
+.subtitle {
+  font-size: 15px;
+  color: var(--muted-fg);
+  line-height: 1.6;
+  max-width: 540px;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 100px;
+  background: var(--owner-bg);
+  border: 1px solid var(--owner-border);
+  color: var(--owner);
+  margin-top: 16px;
+}
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--muted-fg);
+  margin-bottom: 14px;
+}
+
+.cards { display: flex; flex-direction: column; gap: 12px; margin-bottom: 48px; }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  text-decoration: none;
+  display: flex;
+  transition: box-shadow .15s, border-color .15s;
+}
+.card:hover {
+  border-color: hsl(142 70% 32% / .3);
+  box-shadow: 0 2px 12px rgba(0,0,0,.06);
+}
+
+.card-num {
+  width: 52px;
+  flex-shrink: 0;
+  background: hsl(142 70% 32% / .06);
+  border-right: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: hsl(142 70% 32% / .35);
+}
+
+.card-body {
+  padding: 16px 18px;
+  flex: 1;
+}
+
+.card-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--fg);
+  letter-spacing: -.01em;
+  margin-bottom: 4px;
+}
+
+.card-desc {
+  font-size: 13px;
+  color: var(--muted-fg);
+  line-height: 1.5;
+}
+
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.tag {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  color: var(--muted-fg);
+  background: hsl(210 10% 97%);
+}
+
+.card-arrow {
+  display: flex;
+  align-items: center;
+  padding: 0 18px;
+  color: hsl(210 30% 25% / .3);
+  transition: color .15s;
+}
+.card:hover .card-arrow { color: var(--primary); }
+
+.context {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  font-size: 13px;
+  color: var(--muted-fg);
+  line-height: 1.6;
+}
+.context strong { color: var(--fg); font-weight: 600; }
+.context + .context { margin-top: 12px; }
+
+.footer {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  font-size: 12.5px;
+  color: var(--muted-fg);
+}
+.back-link {
+  position: fixed; top: 12px; left: 12px; z-index: 9999;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500;
+  color: #64748b; background: white; border: 1px solid #e2e8f0;
+  padding: 5px 11px; border-radius: 6px; text-decoration: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.back-link:hover { color: #1e293b; background: #f8fafc; }
+
+.external-link {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--owner);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.external-link:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<a class="back-link" href="../index.html">
+  <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M8 2L3 6.5l5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  All projects
+</a>
+<div class="page">
+
+  <a href="../index.html" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:var(--muted-fg);text-decoration:none;margin-bottom:28px;">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    All projects
+  </a>
+
+  <div class="header">
+    <div class="eyebrow">Reach · Acquire · Owner Ads</div>
+    <h1 class="title">Owner Ads — Design Review</h1>
+    <p class="subtitle">A stripped-down, partner-embedded ads product. Owner is the first integration; the data model and UI primitives are partner-agnostic from day one. White-labeled — the end customer sees the partner's brand, not Reach.</p>
+    <div class="status-chip"><span class="status-dot"></span>Design in review</div>
+  </div>
+
+  <div class="section-label">Designs</div>
+  <div class="cards">
+
+    <a class="card" href="onboarding-prototype.html">
+      <div class="card-num">1</div>
+      <div class="card-body">
+        <div class="card-title">Onboarding Flow</div>
+        <div class="card-desc">8-step self-serve onboarding for a restaurant operator with zero ad experience. Goal selection → prior-ads check → GBP connect → website + service area → describe-your-restaurant → daily budget → review the ad → launch with learning-phase expectations.</div>
+        <div class="card-tags">
+          <span class="tag">8 steps</span>
+          <span class="tag">Prior-ads gate</span>
+          <span class="tag">AI-drafted ad copy</span>
+          <span class="tag">Learning-phase expectations</span>
+        </div>
+      </div>
+      <div class="card-arrow">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </a>
+
+    <a class="card" href="dashboard-prototype.html">
+      <div class="card-num">2</div>
+      <div class="card-body">
+        <div class="card-title">Dashboard</div>
+        <div class="card-desc">Narrative-first dashboard. The hero is a 2–4 sentence written briefing in real English — KPIs are supporting evidence underneath. Toggle between four scenarios to see how the product handles its full emotional range.</div>
+        <div class="card-tags">
+          <span class="tag">4 scenarios</span>
+          <span class="tag">Narrative briefing</span>
+          <span class="tag">max(Reach, Google) attribution</span>
+          <span class="tag">Learning-phase surface</span>
+        </div>
+      </div>
+      <div class="card-arrow">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </a>
+
+  </div>
+
+  <div class="section-label">Background</div>
+  <div class="context">
+    <strong>Problem:</strong> Vertical SaaS partners (Owner.com first) need a self-serve, embedded ads product for their SMB customers. Restaurant operators are intimidated by Google Ads, agencies are expensive, and a competitor (Pi) is moving fast on the same opportunity.<br><br>
+    <strong>Approach:</strong> A stripped-down skin on the existing Acquire pipeline. Restaurant-tuned defaults, AI-drafted ad copy, plain-English narrative dashboard. Partner funds ad spend (no customer-facing billing surface). Backend services are partner-agnostic from day one so partner #2 onboards via config, not rebuild.<br><br>
+    <strong>Key differentiator:</strong> Every other ads dashboard (Toast, Pi, Google Ads itself) leads with numbers. Owner Ads leads with a paragraph of real English. The numbers are evidence underneath the story.
+  </div>
+
+  <div class="context">
+    <strong>Companion artifacts:</strong><br>
+    · <a class="external-link" href="https://owner-ads.vercel.app">Pitch one-pager <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style="display:inline-block;vertical-align:middle"><path d="M3 7l4-4M4 3h3v3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></a> (external-facing partner pitch deck, single page)<br>
+    · Customer-facing copy uses the partner's name ("Owner Ads"). Internal artifacts use the project codename.
+  </div>
+
+  <div class="footer">
+    Reach · Internal design review · Not for external distribution
+  </div>
+
+</div>
+</body>
+</html>
