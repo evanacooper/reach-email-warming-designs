@@ -1250,6 +1250,42 @@
 }
 .abh-msg:hover .abh-msg-edit { color: var(--color-text-primary); }
 
+/* Responsive: collapse sequence to vertical stack at narrow widths */
+.abh-flowblock {
+  container-type: inline-size;
+  container-name: abh-row;
+}
+@container abh-row (max-width: 660px) {
+  .abh-seq {
+    flex-direction: column;
+    align-items: stretch;
+    overflow-x: visible;
+  }
+  .abh-startcap { display: none; }
+  .abh-msg {
+    max-width: none;
+    width: 100%;
+    min-width: 0;
+  }
+  .abh-conn {
+    flex-direction: column;
+    align-items: center;
+    min-width: 0;
+    padding: 4px 0;
+    align-self: center;
+  }
+  .abh-conn-line {
+    width: 1.5px;
+    height: 8px;
+    min-width: 0;
+    flex: 0 0 auto;
+  }
+  .abh-end {
+    align-self: center;
+    padding: 4px 0 0;
+  }
+}
+
 /* Drawer */
 .abh-drawer-overlay {
   display: none; position: fixed; inset: 0; z-index: 200;
